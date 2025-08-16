@@ -1,8 +1,8 @@
 import { createSlice, nanoid } from '@reduxjs/toolkit';
 
 const initialState = {
-  user: null, // Will hold user info if logged in
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  status: false, // 'idle' | 'loading' | 'succeeded' | 'failed'
+  userData: null, // Will hold user info if logged in
 };
 
 export const userSlice = createSlice({
@@ -11,11 +11,13 @@ export const userSlice = createSlice({
   reducers: {
     // Action to set user on login
     login: (state, action) => {
-      state.user = action.payload;
+      state.status = true;
+      state.userData = action.payload;
     },
     // Action to clear user on logout
     logout: (state) => {
-      state.user = null;
+      state.status = false;
+      state.userData = null;
     },
   },
 });
@@ -23,6 +25,6 @@ export const userSlice = createSlice({
 export const { login, logout } = userSlice.actions;
 
 // Selector to get the current user from the state
-export const selectUser = (state) => state.user.user;
+export const selectUser = (state) => state.user.userData;
 
 export default userSlice.reducer;
