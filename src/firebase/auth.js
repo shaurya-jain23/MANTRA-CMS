@@ -36,7 +36,7 @@ export class AuthService{
             throw error;
         }
     }
-      async loginWithGoogle() {
+    async loginWithGoogle() {
         try {
             const provider = new GoogleAuthProvider();
             return await signInWithPopup(this.auth, provider);
@@ -51,13 +51,13 @@ export class AuthService{
                 });
         });
     }
-      async logout() {
+    async logout() {
         try {
             await signOut(this.auth);
         } catch (error) {
             console.log("Firebase service :: logout :: error", error);
         }
-  }
+    }
 }
 
 const authService = new AuthService();
