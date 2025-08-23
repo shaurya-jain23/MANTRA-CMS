@@ -3,12 +3,20 @@ import React from 'react';
 
 // A mapping from color names to Tailwind CSS background color classes
 const colorMap = {
-  RED: 'bg-red-500',
-  BLUE: 'bg-blue-500',
-  GREEN: 'bg-green-500',
-  BLACK: 'bg-black',
+  RED: 'bg-red-300',
+  BLUE: 'bg-sky-300',
+  GREEN: 'bg-lime-200',
+  BLACK: 'bg-neutral-800',
   GREY: 'bg-gray-500',
-  WHITE: 'bg-gray-100 border border-gray-300', // White needs a border to be visible
+  WHITE: 'bg-gray-50 border border-gray-300', // White needs a border to be visible
+};
+const textMap = {
+  RED: 'text-red-800',
+  BLUE: 'text-cyan-800',
+  GREEN: 'text-green-700',
+  BLACK: 'text-stone-300',
+  GREY: 'text-gray-800',
+  WHITE: 'text-gray-400', // White needs a border to be visible
 };
 
 function ColorBar({ colorString }) {
@@ -17,7 +25,7 @@ function ColorBar({ colorString }) {
   }
 
   // Parse the string "RED-35, BLUE-15..." into an array of objects
-  const colors = colorString.split(',').map(part => {
+  const colors = colorString.replace(/\s/g, '').split(/[，, ;]/).map(part => {
     const [name, value] = part.trim().split('-');
     return {
       name: name.trim().toUpperCase(),
@@ -29,22 +37,22 @@ function ColorBar({ colorString }) {
   if (total === 0) return null;
 
   return (
-    <div>
-      <h4 className="text-sm font-medium text-gray-500 capitalize mb-1">Color Distribution</h4>
-      <div className="flex w-full h-6 rounded-md overflow-hidden border">
+    <div className='inline-block w-xl'>
+         <div className="flex w-full h-6 overflow-hidden border-0">
         {colors.map((color, index) => (
           <div
             key={index}
-            className={`flex items-center justify-center text-xs font-semibold text-white ${colorMap[color.name] || 'bg-gray-300'}`}
+            className={`flex items-center justify-center text-xs font-semibold ${textMap[color.name]} ${colorMap[color.name] || 'bg-gray-300'}`}
             style={{ width: `${(color.value / total) * 100}%` }}
             title={`${color.name}: ${color.value}`}
           >
             {/* Optionally show text if the segment is wide enough */}
-            {(color.value / total) * 100 > 15 && <span className="truncate">{color.name.slice(0,3)}</span>}
+            {(color.value / total) * 100 > 10 && <span className="truncate">{color.name.slice(0,3)}</span>}
           </div>
         ))}
       </div>
     </div>
+     
   );
 }
 

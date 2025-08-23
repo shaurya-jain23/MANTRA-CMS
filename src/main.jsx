@@ -26,10 +26,6 @@ const router = createBrowserRouter(
           <Protected authentication>
             <DashboardPage />
           </Protected>} />
-      <Route path="/dashboard2" element={
-          <Protected authentication>
-            <Dashboard />
-          </Protected>} />
     </Route>
   )
 );
