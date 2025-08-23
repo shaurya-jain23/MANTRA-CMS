@@ -1,6 +1,6 @@
-// src/components/dashboard/ContainerCard.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {ColorBar} from '../index';
 
 // A helper component for displaying details in the expanded view
 const DetailRow = ({ label, value }) => (
@@ -21,7 +21,9 @@ function ContainerCard({ container, visibleColumns }) {
 
   // Dynamically create a list of key details to show in the collapsed view
   const keyDetails = visibleColumns
-    .map((key) => ({ label: key.replace(/_/g, ' '), value: container[key] }))
+    .map((key) => (
+      key === 'colours' ? { label: 'Color Distribution', value: <ColorBar colorString={container[key]} /> } :
+      { label: key.replace(/_/g, ' '), value: container[key] }))
     .slice(0, 6); // Show up to 4 key details
 
   return (
@@ -46,14 +48,13 @@ function ContainerCard({ container, visibleColumns }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </span>
-      
-        </div>
+        </div >
+
         <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-base text-gray-600">
           {keyDetails.map((detail) => (
-            <p key={detail.label}>
+            <div className='flex gap-2' key={detail.label}>
               <span className="font-semibold">{detail.label.toUpperCase()}:</span>{' '}
-              {/* {detail.value instanceof Date ? detail.value.toLocaleDateString() : detail.value} */}
-              {detail.label === 'eta'?  (detail.value?.seconds ? new Date(detail.value.seconds * 1000).toLocaleDateString() : 'N/A')  : detail.value || 'N/A'}</p>
+              {detail.label === 'eta'?  (detail.value?.seconds ? new Date(detail.value.seconds * 1000).toLocaleDateString() : 'N/A')  : detail.value || 'N/A'}</div>
           ))}
         </div>
          {/* --- Arrow Icon --- */}
