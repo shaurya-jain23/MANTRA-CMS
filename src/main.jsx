@@ -14,6 +14,7 @@ import {
 
 import {Protected} from './components'
 import {DashboardPage, LoginPage, SignupPage} from './pages';
+import Dashboard from './pages/Dasboard.jsx'
 
 // Create the router
 const router = createBrowserRouter(
@@ -23,7 +24,7 @@ const router = createBrowserRouter(
       <Route path="/signup" element={<SignupPage />} /> 
       <Route path="/dashboard" element={
           <Protected authentication>
-            <DashboardPage />
+            <Dashboard />
           </Protected>} />
     </Route>
   )
