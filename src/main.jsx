@@ -14,7 +14,6 @@ import {
 
 import {Protected} from './components'
 import {DashboardPage, LoginPage, SignupPage} from './pages';
-import Dashboard from './pages/Dasboard.jsx'
 
 // Create the router
 const router = createBrowserRouter(

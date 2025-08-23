@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import containerService from '../firebase/container';
-import {FilterPanel, ContainerGrid, SortDropdown} from '../components';
+import {FilterPanel, ContainerGrid, SortDropdown, VisibleColumns} from '../components';
 
 // --- CONFIGURATION FOR COLUMNS ---
 const ALL_AVAILABLE_COLUMNS = [
@@ -19,11 +19,24 @@ const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
   const darkColors = ['BLACK', 'GREY', 'WHITE'];
   let score = 0;
-  colorString.replace(/\s/g, '').split(/[，, ;]/).forEach(part => {
+  const colors = colorString.replace(/\s/g, '').split(/[，, ;]/).map(part => {
     const [name, value] = part.trim().split('-');
-    if (type === 'bright' && brightColors.includes(name.toUpperCase())) score+=parseInt(value, 10);
-    if (type === 'dark' && darkColors.includes(name.toUpperCase())) score+=parseInt(value, 10);
-  });
+    return {
+      name: name.trim().toUpperCase(),
+      value: parseInt(value, 10),
+    };
+  }).filter(color => !isNaN(color.value) && color.value > 0);
+
+  const total = colors.reduce((sum, color) => sum + color.value, 0);
+  colors.forEach(({name, value}) =>{
+    if(type === 'bright' && total > 0 && brightColors.includes(name)){
+      score += parseInt((value / total) * 100, 10);
+    }
+    if(type === 'dark' && total > 0 && darkColors.includes(name)){
+      score += parseInt((value / total) * 100);
+    }
+  })
+  console.log(colorString, score);
   return score;
 };
 
@@ -77,10 +90,11 @@ const DashboardPage = () => {
       } else if (key === 'eta' && filterValue !== 'all') {
         const days = parseInt(filterValue, 10);
         const etaUpperBound = today.getTime() + days * 24 * 60 * 60 * 1000;
+        const etalowerBound = today.getTime() - 10 * 24 * 60 * 60 * 1000;
         processed = processed.filter(c => {const timestamp = c.eta?.seconds ? c.eta.seconds : c.etd?.seconds;
             if (timestamp) {
               const itemDate = new Date(timestamp * 1000);
-              return itemDate.getTime() >= today.getTime() && itemDate.getTime() <= etaUpperBound;
+              return itemDate.getTime() >= etalowerBound && itemDate.getTime() <= etaUpperBound;
             }
             return false;});
       }
@@ -100,36 +114,15 @@ const DashboardPage = () => {
 
     return processed;
   }, [allContainers, activeFilters, sortKey]);
-  // --- MEMOIZED FILTERING & SORTING ---
-//  const filteredContainers = useMemo(() => {
-//     let filtered = [...allContainers];
-//     Object.keys(activeFilters).forEach(key => {
-//       if (activeFilters[key].length > 0) {
-//         filtered = filtered.filter(container => activeFilters[key].includes(container[key]));
-//       }
-//     });
-//     // Default sort by ETA, can be made configurable later if needed
-//     filtered.sort((a, b) => (a.eta || 0) - (b.eta || 0));
-//     return filtered;
-//   }, [allContainers, activeFilters]);
 
   // --- HANDLER FUNCTIONS ---
   const handleFilterApply = (filters) => setActiveFilters(filters);
-
-  const resetFilters = () => {
-    setActiveFilters({ model: [], company: [], status: [], sales_status: [], eta: 'all' });
-  };
 
   const handleColumnChange = (key) => {
     setVisibleColumns((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   };
-
-  // Filters the full column configuration to get only the currently visible ones
-  // const visibleColumnConfig = ALL_AVAILABLE_COLUMNS.filter((col) =>
-  //   visibleColumns.includes(col.key)
-  // );
 
   // --- RENDER LOGIC ---
   if (loading) {
@@ -144,9 +137,13 @@ const DashboardPage = () => {
       </div>
      <FilterPanel 
         allContainers={allContainers}
+        onFilterApply={handleFilterApply}
         activeFilters={activeFilters}
-        onApplyFilters={handleFilterApply}
-        onReset={resetFilters}
+      />
+      <VisibleColumns 
+        visibleColumns={visibleColumns}
+        onColumnChange={handleColumnChange}
+        availableColumns={ALL_AVAILABLE_COLUMNS}
       />
       <ContainerGrid 
         containers={processedContainers}
