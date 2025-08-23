@@ -10,6 +10,7 @@ import ToggleBtn from "./ToggleBtn";
 import Login from "./Login";
 import Signup from "./Signup";
 import ColorBar from "./ColorBar";
+import DropDown from "./DropDown";
 
 import CheckboxGroup from "./dashboard/CheckboxGroup";
 import FilterPanel from "./dashboard/FilterPanel";
@@ -18,4 +19,4 @@ import ContainerCard from "./dashboard/ContainerCard";
 import SortDropdown from "./dashboard/SortDropdown";
 import VisibleColumns from "./dashboard/VisibleColumns";
 // import PostCard from "./PostCard";
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, CheckboxGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, SortDropdown, ToggleBtn, VisibleColumns };
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, CheckboxGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, SortDropdown, ToggleBtn, VisibleColumns, DropDown };
