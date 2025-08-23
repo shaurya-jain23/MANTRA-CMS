@@ -24,6 +24,10 @@ const router = createBrowserRouter(
       <Route path="/signup" element={<SignupPage />} /> 
       <Route path="/dashboard" element={
           <Protected authentication>
+            <DashboardPage />
+          </Protected>} />
+      <Route path="/dashboard2" element={
+          <Protected authentication>
             <Dashboard />
           </Protected>} />
     </Route>
