@@ -33,6 +33,12 @@ export class ContainerService {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const containers = [];
         querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          for (const key in data) {
+            if (data[key] && typeof data[key].toDate === 'function') {
+              data[key] = data[key].toDate();
+            }
+          }
           containers.push({ id: doc.id, ...doc.data() });
         });
         callback(containers); // Send the updated list to the component
