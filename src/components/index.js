@@ -13,5 +13,6 @@ import AvailableContainers from "./AvailableContainers";
 import CheckboxGroup from "./dashboard/CheckboxGroup";
 import ContainerTable from "./dashboard/ContainerTable";
 import FilterPanel from "./dashboard/FilterPanel";
+import ColorBar from "./ColorBar";
 // import PostCard from "./PostCard";
-export { Header, Footer, Logo ,Protected, Container, LogoutBtn, Button, Input, Login, Signup, AvailableContainers, CheckboxGroup, ContainerTable, FilterPanel, /* PostCard, */ /* Select */ };
+export { Header, Footer, Logo ,Protected, Container, LogoutBtn, Button, Input, Login, Signup, AvailableContainers, CheckboxGroup, ContainerTable, FilterPanel, ColorBar };
