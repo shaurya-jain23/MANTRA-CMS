@@ -1,4 +1,3 @@
-// src/components/dashboard/ContainerGrid.jsx
 import React from 'react';
 import ContainerCard from './ContainerCard';
 
