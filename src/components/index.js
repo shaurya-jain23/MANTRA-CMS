@@ -11,12 +11,12 @@ import Login from "./Login";
 import Signup from "./Signup";
 import ColorBar from "./ColorBar";
 import DropDown from "./DropDown";
+import SearchBar from "./SearchBar";
 
-import CheckboxGroup from "./dashboard/CheckboxGroup";
+import FilterOptionGroup from "./dashboard/FilterOptionGroup";
 import FilterPanel from "./dashboard/FilterPanel";
 import ContainerGrid from "./dashboard/ContainerGrid";
 import ContainerCard from "./dashboard/ContainerCard";
-import SortDropdown from "./dashboard/SortDropdown";
 import VisibleColumns from "./dashboard/VisibleColumns";
-// import PostCard from "./PostCard";
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, CheckboxGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, SortDropdown, ToggleBtn, VisibleColumns, DropDown };
+
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar };

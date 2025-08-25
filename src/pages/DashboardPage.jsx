@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import containerService from '../firebase/container';
-import {FilterPanel, ContainerGrid, VisibleColumns, DropDown} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 
 
@@ -37,6 +37,7 @@ const DashboardPage = () => {
   const [sortKey, setSortKey] = useState('eta_asc');
   const [etaKey, setEtaKey] = useState('20')
   const [monthKey, setMonthKey] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [visibleColumns, setVisibleColumns] = useState([
     'model',
     'status',
@@ -90,6 +91,17 @@ const DashboardPage = () => {
             return false;});
         }
     }
+
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      processed = [...allContainers].filter(c => 
+        (String(c.container_no).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.bl_number).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.job_no).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.party_name).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.destination).toLowerCase().includes(lowercasedQuery))
+      );
+    } 
     // monthwise filter
     if (monthKey !== 'all') {
       setEtaKey('all')
@@ -128,7 +140,7 @@ const DashboardPage = () => {
     });
 
     return processed;
-  }, [allContainers, activeFilters, sortKey, monthKey, etaKey]);
+  }, [allContainers, activeFilters, sortKey, monthKey, etaKey, searchQuery]);
 
   // --- HANDLER FUNCTIONS ---
   const handleFilterApply = (filters) => setActiveFilters(filters);
@@ -146,28 +158,33 @@ const DashboardPage = () => {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Container Dashboard</h1>
-        <div className="flex gap-5 items-center">
-          <DropDown
-            label="Port Arrival in"
-            options={etaOptions}
-            selected={etaKey}
-            onChange={(val) => setEtaKey(val)}
-          />
-          <DropDown
-            label="Month"
-            options={monthOptions}
-            selected={monthKey}
-            onChange={(val) => setMonthKey(val)}
-          />
-          <DropDown
-            ref={dropdownRef}
-            label="Sort by"
-            options={sortOptions}
-            selected={sortKey}
-            onChange={(val) => setSortKey(val)}
-          />
+        <div className="w-full mt-6 md:w-auto flex flex-col items-center gap-6">
+          <div className="flex-grow w-1/2">
+             <SearchBar query={searchQuery} setQuery={setSearchQuery} />
+          </div>
+          <div className="flex gap-5 items-center">
+            <DropDown
+              label="Port Arrival in"
+              options={etaOptions}
+              selected={etaKey}
+              onChange={(val) => setEtaKey(val)}
+            />
+            <DropDown
+              label="Month"
+              options={monthOptions}
+              selected={monthKey}
+              onChange={(val) => setMonthKey(val)}
+            />
+            <DropDown
+              ref={dropdownRef}
+              label="Sort by"
+              options={sortOptions}
+              selected={sortKey}
+              onChange={(val) => setSortKey(val)}
+            />
+          </div>
         </div>
       </div>
      <FilterPanel 
