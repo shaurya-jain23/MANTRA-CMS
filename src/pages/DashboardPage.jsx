@@ -1,19 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import containerService from '../firebase/container';
-import {FilterPanel, ContainerGrid, SortDropdown, VisibleColumns} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown} from '../components';
+import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 
-// --- CONFIGURATION FOR COLUMNS ---
-const ALL_AVAILABLE_COLUMNS = [
-  { key: 'company_name', header: 'Company' },
-  { key: 'model', header: 'Model' },
-  { key: 'container_no', header: 'Container No.' },
-  { key: 'destination', header: 'Destination' },
-  { key: 'status', header: 'Container Status' },
-  { key: 'sales_status', header: 'Sales Status' },
-  { key: 'eta', header: 'ETA' },
-  { key: 'port', header: 'Port' },
-  { key: 'colours', header: 'Colours' },
-];
 
 const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
@@ -44,20 +33,21 @@ const getColorScore = (colorString = '', type) => {
 const DashboardPage = () => {
   const [allContainers, setAllContainers] = useState([]); // Holds the master list of all containers from Firestore
   const [loading, setLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState({
-    model: [], company: [], status: [], sales_status: [], eta: 'all',
-  });
+  const [activeFilters, setActiveFilters] = useState({});
   const [sortKey, setSortKey] = useState('eta_asc');
+  const [etaKey, setEtaKey] = useState('20')
+  const [monthKey, setMonthKey] = useState('all');
   const [visibleColumns, setVisibleColumns] = useState([
-    'container_no',
     'model',
-    'sales_status',
+    'status',
     'eta',
+    'port',
+    'colours'
   ]); // Manages which columns are visible
 
+  const dropdownRef = useRef();
   // --- DATA FETCHING ---
   useEffect(() => {
-    // subscribes real-time container data from Firestore.
     const unsubscribe = containerService.getContainers({}, (data) => {
       setAllContainers(data);
       setLoading(false);
@@ -67,40 +57,65 @@ const DashboardPage = () => {
 
   // --- MEMOIZED FILTERING & SORTING ---
   const processedContainers = useMemo(() => {
-    const today2 = new Date();
-    const today = new Date(today2.getTime() -30 * 24 * 60 * 60 * 1000); 
+    const today = new Date();
+    // const today = new Date(today2.getTime() -30 * 24 * 60 * 60 * 1000); 
     const lowerBoundTime = today.getTime() - 20 * 24 * 60 * 60 * 1000;
     const upperBoundTime = today.getTime() + 20 * 24 * 60 * 60 * 1000;
-    // 3. Default ETA Filter
+
+    //Default filter
     let processed = [...allContainers]
-          .filter(c => {
+                            .filter(c => {
+                              const timestamp = c.eta?.seconds ? c.eta.seconds : c.etd?.seconds;
+                              if (timestamp) {
+                                const itemDate = new Date(timestamp * 1000);
+                                return itemDate.getTime() >= lowerBoundTime && itemDate.getTime() <= upperBoundTime;
+                              }
+                              return false;
+                            });
+
+    // eta wise filter
+    if (etaKey !== '20') {
+      const selectedDays = parseInt(etaKey, 10);
+        if(etaKey === 'all'){
+          processed = [...allContainers];
+        } else{
+          const etaUpperBound = today.getTime() + selectedDays * 24 * 60 * 60 * 1000;
+          const etalowerBound = today.getTime() - 10 * 24 * 60 * 60 * 1000;
+          processed = processed.filter(c => {
             const timestamp = c.eta?.seconds ? c.eta.seconds : c.etd?.seconds;
-            if (timestamp) {
-              const itemDate = new Date(timestamp * 1000);
-              return itemDate.getTime() >= lowerBoundTime && itemDate.getTime() <= upperBoundTime;
-            }
-            return false;
-          });
-        
-    // 4. Apply Active Filters
-    Object.keys(activeFilters).forEach(key => {
-      const filterValue = activeFilters[key];
-      if (Array.isArray(filterValue) && filterValue.length > 0) {
-        processed = processed.filter(c => filterValue.includes(c[key]));
-      } else if (key === 'eta' && filterValue !== 'all') {
-        const days = parseInt(filterValue, 10);
-        const etaUpperBound = today.getTime() + days * 24 * 60 * 60 * 1000;
-        const etalowerBound = today.getTime() - 10 * 24 * 60 * 60 * 1000;
-        processed = processed.filter(c => {const timestamp = c.eta?.seconds ? c.eta.seconds : c.etd?.seconds;
             if (timestamp) {
               const itemDate = new Date(timestamp * 1000);
               return itemDate.getTime() >= etalowerBound && itemDate.getTime() <= etaUpperBound;
             }
             return false;});
-      }
+        }
+    }
+    // monthwise filter
+    if (monthKey !== 'all') {
+      setEtaKey('all')
+      const selectedMonth = parseInt(monthKey, 10);
+        processed = [...allContainers].filter(c => {
+          const timestamp = c.eta?.seconds ? c.eta.seconds : c.etd?.seconds;
+          if (timestamp) {
+            const itemDate = new Date(timestamp * 1000);
+            return itemDate.getMonth() === selectedMonth;
+          }
+          return false;
+        });
+    }
+    
+    //filterpanel filters
+    Object.keys(activeFilters).forEach(key => {
+      const filterValue = activeFilters[key];
+      if (Array.isArray(filterValue) && filterValue.length > 0) {
+        processed = processed.filter(c => {
+          const match = c[key]?.trim().replace(/\s+/g, '_').toLowerCase()
+          return filterValue.includes(match)
+        });
+      } 
     });
 
-    // 2. Apply Sorting
+    //sorting
     const [key, direction] = sortKey.split('_');
     processed.sort((a, b) => {
       if (key === 'eta') return direction === 'asc' ? (a.eta || 0) - (b.eta || 0) : (b.eta || 0) - (a.eta || 0);
@@ -113,7 +128,7 @@ const DashboardPage = () => {
     });
 
     return processed;
-  }, [allContainers, activeFilters, sortKey]);
+  }, [allContainers, activeFilters, sortKey, monthKey, etaKey]);
 
   // --- HANDLER FUNCTIONS ---
   const handleFilterApply = (filters) => setActiveFilters(filters);
@@ -133,7 +148,27 @@ const DashboardPage = () => {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">Container Dashboard</h1>
-        <SortDropdown sortKey={sortKey} setSortKey={setSortKey} />
+        <div className="flex gap-5 items-center">
+          <DropDown
+            label="Port Arrival in"
+            options={etaOptions}
+            selected={etaKey}
+            onChange={(val) => setEtaKey(val)}
+          />
+          <DropDown
+            label="Month"
+            options={monthOptions}
+            selected={monthKey}
+            onChange={(val) => setMonthKey(val)}
+          />
+          <DropDown
+            ref={dropdownRef}
+            label="Sort by"
+            options={sortOptions}
+            selected={sortKey}
+            onChange={(val) => setSortKey(val)}
+          />
+        </div>
       </div>
      <FilterPanel 
         allContainers={allContainers}

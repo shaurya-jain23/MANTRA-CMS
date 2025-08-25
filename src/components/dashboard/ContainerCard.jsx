@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {ColorBar} from '../index';
+import { ChevronDown } from "lucide-react";
+
 
 // A helper component for displaying details in the expanded view
 const DetailRow = ({ label, value }) => (
@@ -38,15 +40,10 @@ function ContainerCard({ container, visibleColumns }) {
             {container.container_no}
           </h3>
           <span className='pr-2'>
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className={`h-8 w-8 text-gray-600 transition-transform duration-500 ${isExpanded ? 'rotate-180' : ''}`} 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <ChevronDown
+              className={`w-8 h-8 ml-2 text-gray-600 duration-500 transition-transform ${
+                isExpanded ? "rotate-180" : ""
+              }`} />
           </span>
         </div >
 

@@ -25,8 +25,8 @@ function ColorBar({ colorString }) {
   }
 
   // Parse the string "RED-35, BLUE-15..." into an array of objects
-  const colors = colorString.replace(/\s/g, '').split(/[，, ;]/).map(part => {
-    const [name, value] = part.trim().split('-');
+  const colors = colorString.replace(/\s/g, '').split(/[，, ; \s]/).map(part => {
+    const [name, value] = part.trim().split(/[- :]/);
     return {
       name: name.trim().toUpperCase(),
       value: parseInt(value, 10),
