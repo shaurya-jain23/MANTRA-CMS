@@ -24,7 +24,7 @@ const SelectedFilters = ({ filters, onRemove }) => {
     return count + (Array.isArray(values) ? values.length : 0);
   }, 0);
   return (
-    <div className="p-4 border-l border-gray-200 w-1/4">
+    <div className="p-4 md:border-l border-t border-gray-200 md:w-1/4">
       <div className="flex items-center justify-between mb-4">
         <h4 className="font-semibold text-sm">{totalFilterCount} filters selected</h4>
       </div>
@@ -103,10 +103,10 @@ function FilterPanel({ allContainers, onFilterApply, activeFilters}) {
 
 
   return (
-    <div className='flex flex-col my-10 rounded-lg shadow-xl bg-white'>
-      <div className="flex ">
+    <div className='flex w-full flex-col my-2 md:my-10 rounded-lg shadow-xl bg-white'>
+      <div className="flex flex-col flex-wrap md:flex-row">
         {/* Left Sidebar */}
-        <div className="w-1/4 p-4 space-y-2 border-r border-gray-200">
+        <div className="w-full md:w-1/4 p-4 space-y-2 border-b md:border-r border-gray-200">
           <h3 className="font-bold text-lg mb-4">Filters</h3>
           {mainFilters.map(filter => (
             <FilterSection

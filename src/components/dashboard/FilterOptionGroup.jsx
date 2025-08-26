@@ -19,7 +19,6 @@ const FilterOption = ({ label, value, type, isSelected, onSelect }) => {
           name={type === 'radio' ? 'radio-group' : value}
           checked={checked}
           onChange={() => onSelect(value)}
-          // Visually hide the default input but keep it accessible
           className="absolute opacity-0 w-full h-full cursor-pointer"
         />
         {checked && (
@@ -44,13 +43,9 @@ function FilterOptionGroup({ activePanel, currentOptions, selectedOptions, onCha
   };
   return (
     <>
-       <div className="w-1/2 ">
+       <div className="w-full md:w-1/2">
         {currentOptions && (
-          <div className='p-6 grid grid-cols-2'>
-            {/* <div className="flex items-center justify-between mb-4">
-              <h4 className="font-semibold text-sm">Show only</h4>
-              <button className="text-blue-500 text-xs font-semibold">CLEAR</button>
-            </div> */}
+          <div className='p-6 grid grid-cols-1 sm:grid-cols-2'>
             {currentOptions.options.map(option => (
               <FilterOption
                 key={option?.value}
