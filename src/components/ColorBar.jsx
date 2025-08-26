@@ -8,7 +8,7 @@ const colorMap = {
   GREEN: 'bg-lime-200',
   BLACK: 'bg-neutral-800',
   GREY: 'bg-gray-500',
-  WHITE: 'bg-gray-50 border border-gray-300', // White needs a border to be visible
+  WHITE: 'bg-gray-50 border border-gray-300 rounded-l-lg', // White needs a border to be visible
 };
 const textMap = {
   RED: 'text-red-800',
@@ -18,6 +18,15 @@ const textMap = {
   GREY: 'text-gray-800',
   WHITE: 'text-gray-400', // White needs a border to be visible
 };
+
+const colorOrder = {
+  RED: 3,
+  BLUE: 5,
+  GREEN: 6,
+  BLACK: 3,
+  GRAY: 2,
+  WHITE: 1, 
+}
 
 function ColorBar({ colorString }) {
   if (!colorString || typeof colorString !== 'string') {
@@ -31,14 +40,17 @@ function ColorBar({ colorString }) {
       name: name.trim().toUpperCase(),
       value: parseInt(value, 10),
     };
-  }).filter(color => !isNaN(color.value) && color.value > 0);
+  }).filter(color => !isNaN(color.value) && color.value > 0).sort((a, b) => colorOrder[a.name] - colorOrder[b.name]);
+
+  console.log(colors);
+  
 
   const total = colors.reduce((sum, color) => sum + color.value, 0);
   if (total === 0) return null;
 
   return (
     <div className='inline-block w-xl'>
-         <div className="flex w-full h-6 overflow-hidden border-0">
+         <div className="flex w-full h-6 overflow-hidden border-0 rounded-md">
         {colors.map((color, index) => (
           <div
             key={index}
