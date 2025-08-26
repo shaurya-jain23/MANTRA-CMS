@@ -12,6 +12,7 @@ import Signup from "./Signup";
 import ColorBar from "./ColorBar";
 import DropDown from "./DropDown";
 import SearchBar from "./SearchBar";
+import ShowMoreButton from "./ShowMoreButton";
 
 import FilterOptionGroup from "./dashboard/FilterOptionGroup";
 import FilterPanel from "./dashboard/FilterPanel";
@@ -19,4 +20,4 @@ import ContainerGrid from "./dashboard/ContainerGrid";
 import ContainerCard from "./dashboard/ContainerCard";
 import VisibleColumns from "./dashboard/VisibleColumns";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar };
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton };

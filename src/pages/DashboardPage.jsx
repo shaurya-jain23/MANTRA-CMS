@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import containerService from '../firebase/container';
-import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 
 
@@ -38,6 +38,7 @@ const DashboardPage = () => {
   const [etaKey, setEtaKey] = useState('20')
   const [monthKey, setMonthKey] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(10);
   const [visibleColumns, setVisibleColumns] = useState([
     'model',
     'status',
@@ -92,16 +93,6 @@ const DashboardPage = () => {
         }
     }
 
-    if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      processed = [...allContainers].filter(c => 
-        (String(c.container_no).toLowerCase().includes(lowercasedQuery)) ||
-        (String(c.bl_number).toLowerCase().includes(lowercasedQuery)) ||
-        (String(c.job_no).toLowerCase().includes(lowercasedQuery)) ||
-        (String(c.party_name).toLowerCase().includes(lowercasedQuery)) ||
-        (String(c.destination).toLowerCase().includes(lowercasedQuery))
-      );
-    } 
     // monthwise filter
     if (monthKey !== 'all') {
       setEtaKey('all')
@@ -115,6 +106,17 @@ const DashboardPage = () => {
           return false;
         });
     }
+
+    if (searchQuery) {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      processed = [...allContainers].filter(c => 
+        (String(c.container_no).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.bl_number).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.job_no).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.party_name).toLowerCase().includes(lowercasedQuery)) ||
+        (String(c.destination).toLowerCase().includes(lowercasedQuery))
+      );
+    } 
     
     //filterpanel filters
     Object.keys(activeFilters).forEach(key => {
@@ -142,6 +144,18 @@ const DashboardPage = () => {
     return processed;
   }, [allContainers, activeFilters, sortKey, monthKey, etaKey, searchQuery]);
 
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [processedContainers]);
+
+  const handleShowMore = () => {
+    setVisibleCount(prevCount => {
+      if (prevCount === 10) return 25;
+      if (prevCount === 25) return 45; 
+      return processedContainers.length; 
+    });
+  };
+  
   // --- HANDLER FUNCTIONS ---
   const handleFilterApply = (filters) => setActiveFilters(filters);
 
@@ -155,16 +169,17 @@ const DashboardPage = () => {
   if (loading) {
     return <div className="p-8 text-center text-lg font-medium">Loading Dashboard...</div>;
   }
-
+  const containersToShow = processedContainers.slice(0, visibleCount);
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="flex flex-col justify-between">
+    <div className="w-full flex flex-col justify-center items-center p-10 sm:px-20 lg:px-30 space-y-6">
+      <div className="w-full flex flex-col justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Container Dashboard</h1>
-        <div className="w-full mt-6 md:w-auto flex flex-col items-center gap-6">
-          <div className="flex-grow w-1/2">
-             <SearchBar query={searchQuery} setQuery={setSearchQuery} />
-          </div>
-          <div className="flex gap-5 items-center">
+        <div className="mt-6 md:w-auto flex flex-col sm:items-center gap-6">
+            <SearchBar
+            query={searchQuery}
+            setQuery={setSearchQuery}
+            resultCount={processedContainers.length} />
+          <div className="flex gap-5 items-center flex-wrap sm:justify-center">
             <DropDown
               label="Port Arrival in"
               options={etaOptions}
@@ -198,9 +213,13 @@ const DashboardPage = () => {
         availableColumns={ALL_AVAILABLE_COLUMNS}
       />
       <ContainerGrid 
-        containers={processedContainers}
+        containers={containersToShow}
+        entries={processedContainers.length}
         visibleColumns={ALL_AVAILABLE_COLUMNS.filter(col => visibleColumns.includes(col.key))}
       />
+      {visibleCount < processedContainers.length && (
+        <ShowMoreButton onClick={handleShowMore} />
+      )}
     </div>
   );
 };
