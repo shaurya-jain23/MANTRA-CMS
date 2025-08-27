@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {ColorBar} from '../index';
-import { ChevronDown } from "lucide-react";
-import {salesStatusMap, containerStatusMap, containerDetailsOrder} from '../../assets/utils'
-
+import html2canvas from 'html2canvas-pro';
+import { ColorBar, SalesCardTemp } from '../index';
+import { ChevronDown, Download } from 'lucide-react';
+import { salesStatusMap, containerStatusMap, containerDetailsOrder } from '../../assets/utils';
 
 const DetailRow = ({ label, value }) => (
   <div className="py-2 flex justify-between border-b border-gray-100 last:border-b-0">
@@ -12,25 +12,49 @@ const DetailRow = ({ label, value }) => (
   </div>
 );
 
-function ContainerCard({ container, visibleColumns }) {
+function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
+  const salesCardRef = useRef();
 
   const handleBookClick = (e) => {
     e.stopPropagation(); // Prevent the card from toggling when the button is clicked
     navigate(`/book/${container.id}`);
   };
 
+  const handleDownloadClick = (e) => {
+    e.stopPropagation();
+    onDownloadRequest(); // Call the function passed from the parent grid
+  };
+
+  // const handleDownloadSalesCard = async (e) => {
+  //   e.stopPropagation(); // Prevent card from toggling
+  //   const cardElement = salesCardRef.current;
+  //   if (!cardElement) return;
+
+  //   const canvas = await html2canvas(cardElement, { scale: 2 });
+  //   const dataUrl = canvas.toDataURL('image/png');
+
+  //   const link = document.createElement('a');
+  //   link.href = dataUrl;
+  //   link.download = `MANTRA_Container_${container.container_no}.png`;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
+
   // Dynamically create a list of key details to show in the collapsed view
   const keyDetails = visibleColumns
-    .map((key) => (
-      key === 'colours' ? { label: 'Color Distribution', value: <ColorBar colorString={container[key]} /> } :
-      { label: key.replace(/_/g, ' '), value: container[key] }))
+    .map((key) =>
+      key === 'colours'
+        ? { label: 'Color Distribution', value: <ColorBar colorString={container[key]} /> }
+        : { label: key.replace(/_/g, ' '), value: container[key] }
+    )
     .slice(0, 6); // Show up to 4 key details
-  
-   // --- Logic for the new 2-column layout ---
+
+  // --- Logic for the new 2-column layout ---
   const allDetailKeys = Object.keys(container)
-    .filter(key => ['id', 'update_timestamps', 'booking_order'].indexOf(key) === -1)
+    .filter((key) => ['id', 'update_timestamps', 'booking_order'].indexOf(key) === -1)
     .sort((a, b) => containerDetailsOrder[a] - containerDetailsOrder[b]);
 
   const midPoint = Math.ceil(allDetailKeys.length / 2);
@@ -50,42 +74,63 @@ function ContainerCard({ container, visibleColumns }) {
             </h3>
             <span
               className={`py-1 px-2 inline-flex text-sm leading-5 font-medium rounded-md ${
-                containerStatusMap.find((doc)=> doc.status===container.status ? true: null )?.colour
+                containerStatusMap.find((doc) => (doc.status === container.status ? true : null))
+                  ?.colour
               }`}
             >
               {container.status.toUpperCase()}
             </span>
           </div>
-          <span className='pr-2'>
-            <ChevronDown
-              className={`w-8 h-8 ml-2 text-gray-600 duration-500 transition-transform ${
-                isExpanded ? "rotate-180" : ""
-              }`} />
-          </span>
-        </div >
-        {/* --- Arrow Icon --- */}
-        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-base text-gray-600 w-full">
-          {keyDetails.map((detail) => (
-            <div className='flex gap-2 flex-wrap' key={detail.label}>
-              <span className="font-semibold">{detail.label.toUpperCase()}:</span>{' '}
-              {detail.label === 'eta'?  (detail.value?.seconds ? new Date(detail.value.seconds * 1000).toLocaleDateString() : 'N/A')  : detail.value || 'N/A'}</div>
-          ))}
-        </div>
-        {container.sales_status && <div className="flex justify-end">
-            <span
-              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                salesStatusMap.find((doc)=> doc.status===container.sales_status ? true: null )?.colour
-              }`}
-            >
-              {container.sales_status}
+          <div>
+            <span className="pr-2">
+              <ChevronDown
+                className={`w-8 h-8 ml-2 text-gray-600 duration-500 transition-transform ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
+              />
             </span>
-          </div>}
-
+          </div>
+        </div>
+        {/* --- Arrow Icon --- */}
+        <div className='flex gap-2 lg:justify-between flex-col lg:flex-row'>
+          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-base text-gray-600">
+            {keyDetails.map((detail) => (
+              <div className="flex gap-2 flex-wrap" key={detail.label}>
+                <span className="font-semibold">{detail.label.toUpperCase()}:</span>{' '}
+                {detail.label === 'eta'
+                  ? detail.value?.seconds
+                    ? new Date(detail.value.seconds * 1000).toLocaleDateString()
+                    : 'N/A'
+                  : detail.value || 'N/A'}
+              </div>
+            ))}
+          </div>
+          {container.sales_status && (
+            <div className="flex flex-col items-end gap-1.5 min-w-50">
+              <span
+                className={`px-3 py-1 flex text-xs leading-5 font-semibold rounded-full ${
+                  salesStatusMap.find((doc) =>
+                    doc.status === container.sales_status ? true : null
+                  )?.colour
+                }`}
+              >
+                {container.sales_status}
+              </span>
+              <button
+                onClick={handleDownloadClick}
+                className="p-1 text-gray-500 hover:text-blue-600"
+              >
+                <Download size={23} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-      
+
       {/* --- Expanded View --- */}
-        <div
-        className={`transition-all duration-500 ease-in-out overflow-hidden ${isExpanded ? 'max-h-screen' : 'max-h-0'}`}>
+      <div
+        className={`transition-all duration-500 ease-in-out overflow-hidden ${isExpanded ? 'max-h-screen' : 'max-h-0'}`}
+      >
         <div className="px-6 py-4 border-t border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-10">
             {/* Left Column */}
@@ -94,7 +139,13 @@ function ContainerCard({ container, visibleColumns }) {
                 <DetailRow
                   key={key}
                   label={key.replace(/_/g, ' ')}
-                  value={key === 'eta' || key === 'etd' ? (container[key]?.seconds ? new Date(container[key].seconds * 1000).toLocaleDateString() : 'N/A') : container[key]}
+                  value={
+                    key === 'eta' || key === 'etd'
+                      ? container[key]?.seconds
+                        ? new Date(container[key].seconds * 1000).toLocaleDateString()
+                        : 'N/A'
+                      : container[key]
+                  }
                 />
               ))}
             </dl>
@@ -104,7 +155,13 @@ function ContainerCard({ container, visibleColumns }) {
                 <DetailRow
                   key={key}
                   label={key.replace(/_/g, ' ')}
-                  value={key === 'eta' || key === 'etd' ? (container[key]?.seconds ? new Date(container[key].seconds * 1000).toLocaleDateString() : 'N/A') : container[key]}
+                  value={
+                    key === 'eta' || key === 'etd'
+                      ? container[key]?.seconds
+                        ? new Date(container[key].seconds * 1000).toLocaleDateString()
+                        : 'N/A'
+                      : container[key]
+                  }
                 />
               ))}
             </dl>
@@ -115,12 +172,11 @@ function ContainerCard({ container, visibleColumns }) {
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
               disabled={container.sales_status !== 'Available for sale'}
             >
-              {(container.sales_status === 'Available for sale') ? 'Book Now' : 'Not Available'}
+              {container.sales_status === 'Available for sale' ? 'Book Now' : 'Not Available'}
             </button>
           </div>
         </div>
       </div>
-      
     </div>
   );
 }
