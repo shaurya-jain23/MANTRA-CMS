@@ -42,14 +42,12 @@ function ColorBar({ colorString }) {
     };
   }).filter(color => !isNaN(color.value) && color.value > 0).sort((a, b) => colorOrder[a.name] - colorOrder[b.name]);
 
-  console.log(colors);
-  
 
   const total = colors.reduce((sum, color) => sum + color.value, 0);
   if (total === 0) return null;
 
   return (
-    <div className='inline-block w-xl'>
+    <div className='inline-block w-md'>
          <div className="flex w-full h-6 overflow-hidden border-0 rounded-md">
         {colors.map((color, index) => (
           <div
