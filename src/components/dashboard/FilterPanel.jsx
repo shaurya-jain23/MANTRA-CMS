@@ -103,7 +103,7 @@ function FilterPanel({ allContainers, onFilterApply, activeFilters}) {
 
 
   return (
-    <div className='flex w-full flex-col my-2 md:my-10 rounded-lg shadow-xl bg-white'>
+    <div className='flex w-full flex-col my-4 md:my-10 rounded-lg shadow-xl bg-white'>
       <div className="flex flex-col flex-wrap md:flex-row">
         {/* Left Sidebar */}
         <div className="w-full md:w-1/4 p-4 space-y-2 border-b md:border-r border-gray-200">

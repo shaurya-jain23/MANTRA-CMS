@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import containerService from '../firebase/container';
-import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
-
+import {jsPDF} from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
@@ -165,6 +166,40 @@ const DashboardPage = () => {
     );
   };
 
+  const handleExportData = (fileType) => {
+    if (fileType === 'PDF') {
+      const doc = new jsPDF();
+      
+      // Set Header
+      doc.setFontSize(18);
+      doc.text("Containers Report", 14, 22);
+      doc.setFontSize(11);
+      doc.setTextColor(100);
+      doc.text(`Date: ${new Date().toLocaleDateString() }`, 14, 30);
+
+      // Define table columns from visibleColumns state
+      const tableColumn = visibleColumns.map(key => ALL_AVAILABLE_COLUMNS.find(c => c.key === key)?.header || key);
+      
+      // Define table rows from the processed (filtered and sorted) data
+      const tableRows = processedContainers.map(container => {
+        return visibleColumns.map(key => {
+          const value = container[key];
+          if (key === 'eta') return (value?.seconds ? new Date(value.seconds * 1000).toLocaleDateString(): 'N/A');
+          return value || 'N/A';
+        });
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 35,
+      });
+
+      doc.save(`ContainerReport_${new Date().toLocaleDateString()}.pdf`);
+    }
+    // Add logic for XLSX later if needed
+  };
+
   // --- RENDER LOGIC ---
   if (loading) {
     return <div className="p-8 text-center text-lg font-medium">Loading Dashboard...</div>;
@@ -219,6 +254,11 @@ const DashboardPage = () => {
       />
       {visibleCount < processedContainers.length && (
         <ShowMoreButton onClick={handleShowMore} />
+      )}
+      {processedContainers.length > 0 && (
+        <div className="w-full mt-8">
+          <ExportControls onExport={handleExportData} />
+        </div>
       )}
     </div>
   );

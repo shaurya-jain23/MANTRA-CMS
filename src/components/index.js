@@ -19,5 +19,7 @@ import FilterPanel from "./dashboard/FilterPanel";
 import ContainerGrid from "./dashboard/ContainerGrid";
 import ContainerCard from "./dashboard/ContainerCard";
 import VisibleColumns from "./dashboard/VisibleColumns";
+import SalesCardTemp from "./dashboard/SalesCardTemp";
+import ExportControls from "./dashboard/ExportControls";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton };
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls };
