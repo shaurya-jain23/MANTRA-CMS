@@ -3,7 +3,7 @@ import {ColorBar} from '../index';
 
 // This component is designed to be rendered off-screen for image capture.
 const SalesCardTemp = React.forwardRef(({ container }, ref) => {
-  const today = new Date();
+  const today = new Date().toLocaleDateString();
   const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() : null;
 
   return (

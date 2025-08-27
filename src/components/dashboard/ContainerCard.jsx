@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas-pro';
 import { ColorBar, SalesCardTemp } from '../index';
 import { ChevronDown, Download } from 'lucide-react';
+import {Button} from '../index'
 import { salesStatusMap, containerStatusMap, containerDetailsOrder } from '../../assets/utils';
 
 const DetailRow = ({ label, value }) => (
@@ -16,6 +17,7 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const salesCardRef = useRef();
+  const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() : null;
 
   const handleBookClick = (e) => {
     e.stopPropagation(); // Prevent the card from toggling when the button is clicked
@@ -26,6 +28,16 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
     e.stopPropagation();
     onDownloadRequest(); // Call the function passed from the parent grid
   };
+
+  const handleTrackClick = (e) => {
+    e.stopPropagation(); // Prevent the card from toggling when the button is clicked
+    if (container.container_no) {
+      const url = `https://www.ldb.co.in/ldb/containersearch/39/${container.container_no}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } else {
+      alert('Tracking link not available for this container.');
+    }
+  }
 
   // const handleDownloadSalesCard = async (e) => {
   //   e.stopPropagation(); // Prevent card from toggling
@@ -105,10 +117,10 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
               </div>
             ))}
           </div>
-          {container.sales_status && (
+          
             <div className="flex flex-col items-end gap-1.5 min-w-50">
               <span
-                className={`px-3 py-1 flex text-xs leading-5 font-semibold rounded-full ${
+                className={`px-3 py-1 flex text-xs leading-5 font-semibold ${container.sales_status? '': 'hidden'} rounded-full ${
                   salesStatusMap.find((doc) =>
                     doc.status === container.sales_status ? true : null
                   )?.colour
@@ -123,7 +135,7 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
                 <Download size={23} />
               </button>
             </div>
-          )}
+          
         </div>
       </div>
 
@@ -166,14 +178,22 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
               ))}
             </dl>
           </div>
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={handleBookClick}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:bg-gray-400"
-              disabled={container.sales_status !== 'Available for sale'}
-            >
-              {container.sales_status === 'Available for sale' ? 'Book Now' : 'Not Available'}
-            </button>
+          <div className="mt-4 flex justify-end gap-2">
+            <div className={`${eta && eta <= new Date().toLocaleDateString() ? 'block' : 'hidden' } w-40`}>
+              <Button type="submit" bgColor='bg-blue-600' className="hover:bg-blue-700 text-sm" onClick={handleTrackClick}>
+                Track Shipment
+              </Button>
+            </div>
+            <div>
+              <Button
+                onClick={handleBookClick}
+                bgColor='bg-blue-800'
+                className="text-sm font-medium hover:bg-blue-600 disabled:bg-gray-400"
+                disabled={container.sales_status !== 'Available for sale'}
+              >
+                {container.sales_status === 'Available for sale' ? 'Book Now' : 'Not Available'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
