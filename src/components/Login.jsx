@@ -13,17 +13,12 @@ function Login() {
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [error, setError] = useState('');
 
-
-
   const handleLogin = async (data) => {
     setError('');
     try {
-        const session = await authService.login(data);
-        if (session) {
-        const user = session.user;
-        console.log(user);
-        if(user) dispatch(storeLogin({email: user.email, uid: user.uid, displayName: user.displayName,}));
-        navigate('/dashboard');
+        const userData = await authService.login(data);
+        if (userData) {
+            dispatch(storeLogin(userData));
         }
     } catch (err) {
         setError(err.message);
@@ -34,13 +29,10 @@ function Login() {
  const handleGoogleLogin = async () => {
     setError('');
     try {
-        const session = await authService.loginWithGoogle();
-        if (session) {
-        const user = session.user;
-        // Dispatch user info to the Redux store
-        if(user) dispatch(storeLogin({email: user.email, uid: user.uid, displayName: user.displayName,}));
-        // Redirect to the dashboard
-        navigate('/dashboard');
+        const userData = await authService.loginWithGoogle();
+        if (userData) {
+            dispatch(storeLogin(userData));
+            // navigate('/dashboard');
         }
     } catch (err) {
         setError(err.message);

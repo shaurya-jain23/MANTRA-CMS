@@ -15,17 +15,14 @@ const Signup = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [error, setError] = useState('');
 
-  // --- HANDLER FUNCTION ---
 
   const handleSignup = async (data) => {
     setError('');
     try {
-      // Use the createAccount method from our auth service
-      const session = await authService.createAccount(data);
-      if (session) {
-        const user = session.user;
-        if(user) dispatch(storeLogin({email: user.email, uid: user.uid, displayName: user.displayName,}));
-        navigate('/dashboard');
+      const userData = await authService.createAccount(data);
+      if (userData) {
+        dispatch(storeLogin(userData));
+        // navigate('/dashboard');
       }
     } catch (err) {
       setError(err.message);
