@@ -40,9 +40,9 @@ function Login() {
     }
 }
   return (
-    <div className="flex-grow flex items-center justify-center h-full bg-gray-100">
-        <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-center text-gray-800">MANTRA-CMS <br />Login</h2>
+    <div className="flex-grow flex items-center justify-center h-full bg-gray-50">
+        <div className="w-19/20 max-w-md p-4 sm:p-8 space-y-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">MANTRA-CMS <br />Login</h2>
         
             {error && <p className="text-sm text-center text-red-500">{error}</p>}
         
@@ -61,15 +61,15 @@ function Login() {
             />
             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
             
-            <Input
-                label="Password: "
-                type="password"
-                placeholder="Enter your password"
-                {...register('password', { required: 'Password is required' })}
-            />
+                <Input
+                    label="Password: "
+                    type="password"
+                    placeholder="Enter your password"
+                    {...register('password', { required: 'Password is required' })}
+                />
             {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
 
-            <Button type="submit" className="hover:bg-indigo-700">
+            <Button type="submit" className="hover:bg-blue-700">
                 Sign In
             </Button>
             </form>
