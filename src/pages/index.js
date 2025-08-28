@@ -1,5 +1,7 @@
+import HomePage from "./HomePage"
 import LoginPage from "./LoginPage"
 import SignupPage from "./SignupPage"
 import DashboardPage from "./DashboardPage";
+import PendingApprovalPage from "./PendingApprovalPage";
 
-export {LoginPage, SignupPage, DashboardPage};
+export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage};
