@@ -55,7 +55,11 @@ const DashboardPage = () => {
       setAllContainers(data);
       setLoading(false);
     });
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // --- MEMOIZED FILTERING & SORTING ---
