@@ -13,14 +13,25 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage} from './pages';
 
 // Create the router
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} /> 
+      <Route path="/" element={<HomePage />}/>
+      <Route path="/login" element={
+          <Protected authentication={false}>
+            <LoginPage />
+          </Protected>} />
+      <Route path="/signup" element={
+        <Protected authentication={false}>
+            <SignupPage />
+          </Protected>} /> 
+      <Route path="/pending-approval" element={
+        <Protected authentication>
+            <PendingApprovalPage />
+          </Protected>} /> 
       <Route path="/dashboard" element={
           <Protected authentication>
             <DashboardPage />

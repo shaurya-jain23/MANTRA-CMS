@@ -13,13 +13,10 @@ function App() {
 
   useEffect(() => {
     authService.getCurrentUser()
-      .then((user)=> {
+      .then(async(user)=> {
         if(user){
-          dispatch(login({
-            email: user.email,
-            uid: user.uid,
-            displayName: user.displayName,
-          }))
+          console.log(user);
+          dispatch(login(user))
         } else{
           dispatch(logout())
         }
