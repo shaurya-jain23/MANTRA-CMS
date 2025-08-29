@@ -13,6 +13,7 @@ import ColorBar from "./ColorBar";
 import DropDown from "./DropDown";
 import SearchBar from "./SearchBar";
 import ShowMoreButton from "./ShowMoreButton";
+import Errors from "./Errors";
 
 import FilterOptionGroup from "./dashboard/FilterOptionGroup";
 import FilterPanel from "./dashboard/FilterPanel";
@@ -22,4 +23,4 @@ import VisibleColumns from "./dashboard/VisibleColumns";
 import SalesCardTemp from "./dashboard/SalesCardTemp";
 import ExportControls from "./dashboard/ExportControls";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls };
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors };

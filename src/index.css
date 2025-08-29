@@ -2,4 +2,5 @@
 
 @theme {
   --shadow-3xl: 0 4px 15px rgba(0, 0, 0, 0.2); 
+  --breakpoint-xs: 400px;
 }
