@@ -13,7 +13,7 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage} from './pages';
 
 // Create the router
 const router = createBrowserRouter(
@@ -28,14 +28,20 @@ const router = createBrowserRouter(
         <Protected authentication={false}>
             <SignupPage />
           </Protected>} /> 
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/pending-approval" element={
         <Protected authentication>
             <PendingApprovalPage />
           </Protected>} /> 
       <Route path="/dashboard" element={
-          <Protected authentication>
+        <Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']}>
             <DashboardPage />
-          </Protected>} />
+        </Protected>} />
+      <Route path="/users" element={
+        <Protected authentication allowedRoles={['superuser']}>
+            <UsersPage />
+        </Protected>} />
+      <Route path="*" element={<NotFoundPage/>} />
     </Route>
   )
 );
