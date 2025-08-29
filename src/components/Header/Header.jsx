@@ -66,16 +66,16 @@ function Header() {
         {/* Mobile Menu (Dropdown) */}
         
           <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-screen' : 'max-h-0'}`}>
-            <ul className="flex flex-col items-start space-y-4 py-4 pl-8 text-sm sm:text-base">
+            <ul className="flex flex-col gap-4 items-start justify-center space-y-4  sm:space-y-4 py-4 pl-8 text-sm sm:text-base">
               {navItems.map((item) =>
                 item.active ? (
-                  <li key={item.name}>
+                  <li className='m-0' key={item.name}>
                     <NavLink
                       to={item.slug}
                       onClick={toggleMenu} // Close menu on click
                       className={({ isActive }) =>
                         `inline-block px-4 py-2 duration-200 rounded-full font-medium w-full text-center
-                        ${isActive ? "text-blue-700 bg-indigo-50" : "text-gray-700 hover:text-blue-700"}`
+                        ${isActive ? "text-blue-700 bg-blue-50" : "text-gray-700 bg-gray-100 hover:text-blue-700"}`
                       }
                     >
                       {item.name}
