@@ -1,14 +1,13 @@
-// src/components/dashboard/ColorBar.jsx
 import React from 'react';
 
-// A mapping from color names to Tailwind CSS background color classes
 const colorMap = {
   RED: 'bg-red-300',
   BLUE: 'bg-sky-300',
   GREEN: 'bg-lime-200',
   BLACK: 'bg-neutral-800',
   GREY: 'bg-gray-500',
-  WHITE: 'bg-gray-50 border border-gray-300 rounded-l-lg', // White needs a border to be visible
+  GRAY: 'bg-gray-500',
+  WHITE: 'bg-gray-50 border border-gray-300 rounded-l-lg',
 };
 const textMap = {
   RED: 'text-red-800',
@@ -16,7 +15,7 @@ const textMap = {
   GREEN: 'text-green-700',
   BLACK: 'text-stone-300',
   GREY: 'text-gray-800',
-  WHITE: 'text-gray-400', // White needs a border to be visible
+  WHITE: 'text-gray-400', 
 };
 
 const colorOrder = {
@@ -24,13 +23,14 @@ const colorOrder = {
   BLUE: 5,
   GREEN: 6,
   BLACK: 3,
+  GREY: 2,
   GRAY: 2,
   WHITE: 1, 
 }
 
 function ColorBar({ colorString }) {
   if (!colorString || typeof colorString !== 'string') {
-    return null; // Don't render if the data is missing or invalid
+    return null; 
   }
 
   // Parse the string "RED-35, BLUE-15..." into an array of objects
@@ -47,8 +47,8 @@ function ColorBar({ colorString }) {
   if (total === 0) return null;
 
   return (
-    <div className='inline-block w-md'>
-         <div className="flex w-full h-6 overflow-hidden border-0 rounded-md">
+    <div className='w-xs sm:w-md'>
+         <div className="w-full flex h-6 overflow-hidden border-0 rounded-md">
         {colors.map((color, index) => (
           <div
             key={index}

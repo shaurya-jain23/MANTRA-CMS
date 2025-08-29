@@ -7,9 +7,9 @@ import {Button} from '../index'
 import { salesStatusMap, containerStatusMap, containerDetailsOrder } from '../../assets/utils';
 
 const DetailRow = ({ label, value }) => (
-  <div className="py-2 flex justify-between border-b border-gray-100 last:border-b-0">
-    <dt className="text-sm font-medium text-gray-500 capitalize">{label}</dt>
-    <dd className="text-sm text-gray-900 text-right truncate">{value || 'N/A'}</dd>
+  <div className="py-2 flex flex-col xs:flex-row sm:justify-between border-b border-gray-100 last:border-b-0 gap-2">
+    <dt className="text-sm font-medium text-gray-500 capitalize">{label}:</dt>
+    <dd className="text-sm text-wrap text-gray-900 sm:text-right truncate">{value || 'N/A'}</dd>
   </div>
 );
 
@@ -17,7 +17,8 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const salesCardRef = useRef();
-  const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() : null;
+  const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() :'N/A';
+  const etd = container.etd?.seconds ? new Date(container.etd.seconds * 1000).toLocaleDateString() : 'N/A';
 
   const handleBookClick = (e) => {
     e.stopPropagation(); // Prevent the card from toggling when the button is clicked
@@ -78,14 +79,14 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
       onClick={() => setIsExpanded(!isExpanded)}
     >
       {/* --- Collapsed View --- */}
-      <div className="p-6 w-full">
+      <div className="p-4 sm:p-6 w-full">
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-lg font-bold text-gray-800 truncate pr-4">
               {container.container_no}
             </h3>
             <span
-              className={`py-1 px-2 inline-flex text-sm leading-5 font-medium rounded-md ${
+              className={`py-1 px-2 inline-flex text-xs sm:text-sm leading-5 font-medium rounded-3xl sm:rounded-md ${
                 containerStatusMap.find((doc) => (doc.status === container.status ? true : null))
                   ?.colour
               }`}
@@ -103,22 +104,19 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
             </span>
           </div>
         </div>
-        {/* --- Arrow Icon --- */}
-        <div className='flex gap-2 lg:justify-between flex-col lg:flex-row'>
+        <div className='flex gap-3 sm:gap-2 lg:justify-between flex-col lg:flex-row'>
           <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-base text-gray-600">
             {keyDetails.map((detail) => (
-              <div className="flex gap-2 flex-wrap" key={detail.label}>
+              <div className="flex gap-2 flex-wrap w-full sm:w-fit" key={detail.label}>
                 <span className="font-semibold">{detail.label.toUpperCase()}:</span>{' '}
                 {detail.label === 'eta'
-                  ? detail.value?.seconds
-                    ? new Date(detail.value.seconds * 1000).toLocaleDateString()
-                    : 'N/A'
+                  ? eta
                   : detail.value || 'N/A'}
               </div>
             ))}
           </div>
           
-            <div className="flex flex-col items-end gap-1.5 min-w-50">
+            <div className="flex flex-row sm:flex-col justify-end sm:items-end gap-1.5 min-w-50">
               <span
                 className={`px-3 py-1 flex text-xs leading-5 font-semibold ${container.sales_status? '': 'hidden'} rounded-full ${
                   salesStatusMap.find((doc) =>

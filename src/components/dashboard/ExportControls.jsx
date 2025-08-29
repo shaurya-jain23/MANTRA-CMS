@@ -8,7 +8,7 @@ function ExportControls({ onExport }) {
   };
 
   return (
-    <div className="flex items-center justify-end gap-4 p-4 bg-gray-50 rounded-lg">
+    <div className="flex flex-col items-start xs:flex-row xs:items-center justify-end gap-4 p-4 bg-gray-50 rounded-lg">
       <span className="text-sm font-medium text-gray-700">Export Data As:</span>
       <select 
         value={fileType} 

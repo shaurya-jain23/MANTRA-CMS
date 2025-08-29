@@ -32,8 +32,6 @@ const FilterOption = ({ label, value, type, isSelected, onSelect }) => {
   );
 };
 
-
-
 function FilterOptionGroup({ activePanel, currentOptions, selectedOptions, onChange }) {
   const handleCheckboxChange = (option) => {
     const newSelection = selectedOptions.includes(option)
@@ -45,7 +43,7 @@ function FilterOptionGroup({ activePanel, currentOptions, selectedOptions, onCha
     <>
        <div className="w-full md:w-1/2">
         {currentOptions && (
-          <div className='p-6 grid grid-cols-1 sm:grid-cols-2'>
+          <div className='p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2'>
             {currentOptions.options.map(option => (
               <FilterOption
                 key={option?.value}

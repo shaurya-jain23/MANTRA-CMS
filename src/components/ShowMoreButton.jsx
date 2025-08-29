@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 
 function ShowMoreButton({ onClick }) {
   return (
-    <div className="relative -mt-10 h-20 pointer-events-none w-full">
+    <div className="relative -mt-3 xs:-mt-10 h-20 pointer-events-none w-full">
       <div className="absolute bottom-0 w-full h-full bg-gradient-to-t from-gray-50 via-gray-50/80 to-transparent backdrop-blur-sm"></div>
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 pointer-events-auto">
         <button

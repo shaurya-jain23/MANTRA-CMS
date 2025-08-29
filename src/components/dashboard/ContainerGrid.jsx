@@ -37,7 +37,7 @@ function ContainerGrid({ containers, visibleColumns, entries }) {
   }
 
   return (
-    <div>
+    <div className='xs:mb-5 mb-0'>
       {selectedContainer && (
         <div className="absolute -left-[9999px] top-0">
           <SalesCardTemp ref={salesCardRef} container={selectedContainer} />

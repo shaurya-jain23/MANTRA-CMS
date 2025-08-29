@@ -210,15 +210,15 @@ const DashboardPage = () => {
   }
   const containersToShow = processedContainers.slice(0, visibleCount);
   return (
-    <div className="w-full flex flex-col justify-center items-center p-10 sm:px-20 lg:px-30 space-y-6">
+    <div className="w-full flex flex-col justify-center items-center px-5 py-10 sm:px-10 md:px-20 lg:px-30 space-y-6">
       <div className="w-full flex flex-col justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Container Dashboard</h1>
-        <div className="mt-6 md:w-auto flex flex-col sm:items-center gap-6">
+        <div className="mt-6 md:w-auto flex flex-col sm:items-center gap-4 sm:gap-6">
             <SearchBar
             query={searchQuery}
             setQuery={setSearchQuery}
             resultCount={processedContainers.length} />
-          <div className="flex gap-5 items-center flex-wrap sm:justify-center">
+          <div className="flex gap-3 sm:gap-5 items-center flex-wrap sm:justify-center">
             <DropDown
               label="Port Arrival in"
               options={etaOptions}
@@ -260,7 +260,7 @@ const DashboardPage = () => {
         <ShowMoreButton onClick={handleShowMore} />
       )}
       {processedContainers.length > 0 && (
-        <div className="w-full mt-8">
+        <div className="w-full sm:mt-8">
           <ExportControls onExport={handleExportData} />
         </div>
       )}
