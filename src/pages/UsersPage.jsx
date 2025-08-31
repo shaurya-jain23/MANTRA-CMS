@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import userService from '../firebase/user';
 
 // Define the available roles and statuses
-const ROLES = ['superuser', 'admin', 'sales', 'accounts', 'transporter', 'cha', 'store'];
+const ROLES = ['superuser', 'admin', 'manager' ,'sales', 'accounts', 'transporter', 'cha', 'store'];
 const STATUSES = ['active', 'pending', 'disabled'];
 
 function UsersPage() {

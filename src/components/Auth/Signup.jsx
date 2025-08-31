@@ -5,9 +5,9 @@ import { useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
 
 // Imports for our services, components, and state management
-import authService from '../firebase/auth'; 
-import { login as storeLogin } from '../features/user/userSlice';
-import { Button, Input } from '../components';
+import authService from '../../firebase/auth'; 
+import { login as storeLogin } from '../../features/user/userSlice';
+import { Button, Input, Select } from '../index';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -19,6 +19,8 @@ const Signup = () => {
   const handleSignup = async (data) => {
     setError('');
     try {
+      console.log(data);
+      
       const userData = await authService.createAccount(data);
       if (userData) {
         dispatch(storeLogin(userData));
@@ -42,10 +44,18 @@ const Signup = () => {
           <Input
             label="Full Name"
             type="text"
-            placeholder="Enter your Full Name"
-            {...register('name', { required: 'Full Name is required' })}
+            placeholder="Enter your full name"
+            {...register('fullname', { required: 'Full Name is required' })}
           />
-          {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+          {errors.fullname && <p className="text-sm text-red-500">{errors.fullname.message}</p>}
+
+          <Input
+            label="Phone Number"
+            type="tel"
+            placeholder="Enter your phone number"
+            {...register('phone', { required: 'Phone Number is required' })}
+          />
+          {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
           
           <Input
             label="Email"
@@ -75,7 +85,19 @@ const Signup = () => {
           />
           {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
 
-          <Button type="submit" className="hover:bg-indigo-700 !mt-6">
+          <Select
+            label="Role/Post"
+            placeholder="Select your role"
+            defaultValue="Select your role"
+            options={['Manager', 'Sales', 'Accounts', 'Store', 'Transporter', 'Admin']}
+            {...register('role', {
+              required: 'Please select your role',
+              validate: value => value !== 'Select your role' || 'Please select your role'
+            })}
+          />
+          {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
+
+          <Button type="submit" className="hover:bg-blue-700 !mt-6">
             Create Account
           </Button>
         </form>

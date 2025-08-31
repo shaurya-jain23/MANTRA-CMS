@@ -3,9 +3,9 @@ import {Link, useNavigate} from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import {useForm} from 'react-hook-form'
 
-import { Button, Input } from './index';
-import { login as storeLogin } from '../features/user/userSlice';
-import authService from '../firebase/auth';
+import { Button, Input } from '../index';
+import { login as storeLogin } from '../../features/user/userSlice';
+import authService from '../../firebase/auth';
 
 function Login() {
     const navigate = useNavigate();
@@ -32,7 +32,6 @@ function Login() {
         const userData = await authService.loginWithGoogle();
         if (userData) {
             dispatch(storeLogin(userData));
-            // navigate('/dashboard');
         }
     } catch (err) {
         setError(err.message);
