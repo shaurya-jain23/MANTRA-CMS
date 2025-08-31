@@ -42,7 +42,7 @@ const DashboardPage = () => {
   const [visibleCount, setVisibleCount] = useState(10);
   const [visibleColumns, setVisibleColumns] = useState([
     'model',
-    'status',
+    'destination',
     'eta',
     'port',
     'colours'

@@ -65,6 +65,7 @@ function FilterPanel({ allContainers, onFilterApply, activeFilters}) {
     company_name: [...new Set(allContainers.map(c => c.company_name?.trim().toUpperCase()).filter(Boolean))],
     status: [...new Set(allContainers.map(c => c.status?.trim().toUpperCase()).filter(Boolean))],
     sales_status: [...new Set(allContainers.map(c => c.sales_status?.trim().toUpperCase()).filter(Boolean))],
+    port: [...new Set(allContainers.map(c => c.port?.trim().toUpperCase()).filter(Boolean))],
   }), [allContainers]);
 
   const handleLocalChange = (filterName, value) => {

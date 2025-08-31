@@ -9,8 +9,16 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
-import { doc, getDoc, setDoc } from "firebase/firestore";
+
+
+const generateUsername = (name) => {
+  if (!name) return '';
+  const sanitizedName = name.replace(/\s+/g, '').toLowerCase();
+  const randomNumber = Math.floor(10 + Math.random() * 90); // 2-digit number
+  return `${sanitizedName}${randomNumber}`;
+};
 
 export class AuthService{
     auth;
@@ -23,26 +31,40 @@ export class AuthService{
         const userRef = doc(db, "users", uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
-            return userSnap.data();
+            const userProfileData=  userSnap.data();
+            if (userProfileData.created_at && typeof userProfileData.created_at.toDate === 'function') {
+                userProfileData.created_at = userProfileData.created_at.toDate().toISOString();
+            }
+            if (userProfileData.updated_at && typeof userProfileData.updated_at.toDate === 'function') {
+                userProfileData.updated_at = userProfileData.updated_at.toDate().toISOString();
+            }
+            return userProfileData;
         }
         return null;
     }
-    async createAccount({email, password, name}){
+    async createAccount(userData){
         try {
-            const userCredential = await createUserWithEmailAndPassword(this.auth, email, password, name);
+            const userCredential = await createUserWithEmailAndPassword(this.auth, userData.email, userData.password, userData.fullname);
             const user = userCredential.user;
             if(user){
-                await updateProfile(userCredential.user, { displayName: name });
-                await setDoc(doc(db, "users", user.uid), {
+                await updateProfile(userCredential.user, { displayName: userData.fullname });
+                const userProfile = {
                     uid: user.uid,
                     email: user.email,
-                    displayName: name,
-                    role: 'sales', 
+                    displayName: userData.fullname,
+                    phone: userData.phone,
+                    role: userData.role || 'sales',
+                    username: generateUsername(userData.fullname),
+                    photoURL: userData.photoURL || null, 
                     status: 'pending', 
-                });
-                return this.login({ email, password });
+                    created_at: serverTimestamp(),
+                    profileComplete: true, 
+                }
+                await setDoc(doc(db, "users", user.uid), userProfile);
+                const loginData = {email: userData.email, password: userData.password};
+                return this.login(loginData);
             }
-            return user;
+            return userProfile;
         } catch (error) {
             throw error;
         }
@@ -68,17 +90,19 @@ export class AuthService{
             if (user) {
             let profile = await this.getUserProfile(user.uid);
                 if (!profile) {
-                    await setDoc(doc(db, "users", user.uid), {
+                    profile = {
                         uid: user.uid,
                         email: user.email,
                         displayName: user.displayName,
-                        role: 'sales',
+                        photoURL: user.photoURL || null, 
+                        username: generateUsername(user.displayName),
                         status: 'pending',
-                    });
-                    profile = await this.getUserProfile(user.uid);
+                        created_at: serverTimestamp(),
+                        profileComplete: false, 
+                    }
+                    await setDoc(doc(db, "users", user.uid), profile);
                 }
-            const userData  = {email: user.email, uid: user.uid, displayName: user.displayName, ...profile}
-            return userData;
+            return profile;
             }
         } catch (error) {
             throw error;

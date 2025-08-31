@@ -9,6 +9,7 @@ import { selectUser, selectIsLoggedIn } from '../../features/user/userSlice.js';
 function Header() {
   const authStatus = useSelector(selectIsLoggedIn);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const userData = useSelector(selectUser);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -18,8 +19,12 @@ function Header() {
     { name: 'Home', slug: "/", active: true },
     { name: "Login", slug: "/login", active: !authStatus },
     { name: "Signup", slug: "/signup", active: !authStatus },
-    { name: "Dashboard", slug: "/dashboard", active: authStatus },
+    { name: "Dashboard", slug: "/dashboard", active: authStatus},
   ];
+
+  if (authStatus && userData?.role === 'superuser') {
+    navItems.push({ name: "Manage Users", slug: "/users", active: true });
+  }
 
   return (
     <header className="shadow-lg sticky top-0 z-50 bg-white">
@@ -34,7 +39,7 @@ function Header() {
           </div>
           <ul className="hidden md:flex items-center ml-auto space-x-4">
             {navItems.map((item) =>
-              item.active ? (
+              item.active? (
                 <li key={item.name}>
                   <NavLink
                     to={item.slug}

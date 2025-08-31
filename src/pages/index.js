@@ -6,4 +6,6 @@ import PendingApprovalPage from "./PendingApprovalPage";
 import UsersPage from "./UsersPage";    
 import NotFoundPage from "./NotFoundPage";
 import UnauthorizedPage from "./UnauthorizedPage";
-export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage};
+import ProfilePage from "./ProfilePage";
+import UpdateProfilePage from "./UpdateProfilePage";
+export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage};

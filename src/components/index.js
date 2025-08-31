@@ -7,13 +7,15 @@ import Button from "./Button";
 import Input from "./Input";
 import Logo from "./Logo";
 import ToggleBtn from "./ToggleBtn";
-import Login from "./Login";
-import Signup from "./Signup";
+import Login from "./Auth/Login";
+import Signup from "./Auth/Signup";
 import ColorBar from "./ColorBar";
 import DropDown from "./DropDown";
 import SearchBar from "./SearchBar";
 import ShowMoreButton from "./ShowMoreButton";
 import Errors from "./Errors";
+import Select from "./Select"
+import UpdateProfile from "./Auth/UpdateProfile";
 
 import FilterOptionGroup from "./dashboard/FilterOptionGroup";
 import FilterPanel from "./dashboard/FilterPanel";
@@ -23,4 +25,4 @@ import VisibleColumns from "./dashboard/VisibleColumns";
 import SalesCardTemp from "./dashboard/SalesCardTemp";
 import ExportControls from "./dashboard/ExportControls";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors };
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile };

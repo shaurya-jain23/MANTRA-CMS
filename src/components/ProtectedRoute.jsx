@@ -9,6 +9,7 @@ function Protected({children, authentication= true,allowedRoles = []}) {
     const isLoggedIn = useSelector(selectIsLoggedIn);
     const userData = useSelector(selectUser);
     
+    
     useEffect(()=>{
         // if(authentication && userStatus !== authentication){
         //     navigate("/login");
@@ -22,17 +23,24 @@ function Protected({children, authentication= true,allowedRoles = []}) {
           // Page like /login or /signup when already logged in → redirect to dashboard
           navigate("/dashboard");
         } else if (authentication && isLoggedIn) {
-          // User logged in, now check their status
-          if (userData?.status === "pending") {
-            navigate("/pending-approval");
-          } else if (userData?.status === "active") {
-              if (allowedRoles.length > 0 && !allowedRoles.includes(userData.role)) {
+            if (!userData?.profileComplete) {
+              navigate("/update-profile");
+            }
+            else if (userData?.status === "pending") {
+              navigate("/pending-approval");
+            } 
+            else if (userData?.status === "active") {
+              if (allowedRoles?.length > 0 && !allowedRoles.includes(userData.role)) {
                 navigate("/unauthorized");
               }
-          } else if(userData?.status === 'disabled'){
-            // fallback (unknown status, block access)
-            navigate('/login');
-          }
+              else{
+                navigate("/dashboard");
+              }
+              
+            }
+            else if(userData?.status === 'disabled'){
+              navigate('/login');
+            }
         }
         setLoader(false);
     }, [isLoggedIn, navigate, authentication, userData]);

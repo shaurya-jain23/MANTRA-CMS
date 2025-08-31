@@ -7,6 +7,7 @@ import {SalesCardTemp} from '../index';
 function ContainerGrid({ containers, visibleColumns, entries }) {
 
   const [selectedContainer, setSelectedContainer] = useState(null);
+  const [expandedCardId, setExpandedCardId] = useState(null);
   const salesCardRef = useRef();
 
   const handleDownloadRequest = (container) => {
@@ -16,7 +17,9 @@ function ContainerGrid({ containers, visibleColumns, entries }) {
       triggerDownload();
     }, 100);
   };
-  
+  const handleToggleCard = (cardId) => {
+    setExpandedCardId(prevId => (prevId === cardId ? null : cardId));
+  };
   const triggerDownload = async () => {
     const cardElement = salesCardRef.current;
     if (!cardElement || !selectedContainer) return;
@@ -53,6 +56,8 @@ function ContainerGrid({ containers, visibleColumns, entries }) {
             container={container} 
             visibleColumns={visibleColumns.map(key => key.key)}
             onDownloadRequest={() => handleDownloadRequest(container)}
+            isExpanded={expandedCardId === container.id}
+            onToggle={() => handleToggleCard(container.id)}
           />
         ))}
       </div>

@@ -13,8 +13,8 @@ const DetailRow = ({ label, value }) => (
   </div>
 );
 
-function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpanded, onToggle }) {
+  // const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const salesCardRef = useRef();
   const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() :'N/A';
@@ -76,7 +76,7 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest }) {
   return (
     <div
       className="bg-white shadow-3xl  transform translate-y-0 hover:-translate-y-1 transition duration-300 ease-in-out cursor-pointer border-gray-200 rounded-sm"
-      onClick={() => setIsExpanded(!isExpanded)}
+      onClick={onToggle}
     >
       {/* --- Collapsed View --- */}
       <div className="p-4 sm:p-6 w-full">
