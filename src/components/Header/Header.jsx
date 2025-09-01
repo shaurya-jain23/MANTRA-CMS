@@ -23,7 +23,14 @@ function Header() {
   ];
 
   if (authStatus && userData?.role === 'superuser') {
-    navItems.push({ name: "Manage Users", slug: "/users", active: true });
+    navItems.push({ name: "Manage Users", slug: "/users", active: authStatus });
+  }
+  if (authStatus) {
+    const allowedRoles = ['admin', 'superuser', 'sales', 'accounts'];
+    const dealerText = (userData.role === 'sales') ? 'My Dealers' : 'Dealers';
+    if(allowedRoles.includes(userData.role)){
+      navItems.push({ name: dealerText, slug: "/dealers", active: authStatus });
+    }
   }
 
   return (

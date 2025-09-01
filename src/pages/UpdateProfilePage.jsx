@@ -1,7 +1,6 @@
-import React from 'react'
 import {UpdateProfile} from '../components'
 
-function UpdateProfile() {
+function UpdateProfilePage() {
   return (
     <div className="py-8">
       <UpdateProfile/>
@@ -9,4 +8,4 @@ function UpdateProfile() {
   )
 }
 
-export default UpdateProfile
+export default UpdateProfilePage

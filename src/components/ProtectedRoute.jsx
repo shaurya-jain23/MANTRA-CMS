@@ -33,10 +33,9 @@ function Protected({children, authentication= true,allowedRoles = []}) {
               if (allowedRoles?.length > 0 && !allowedRoles.includes(userData.role)) {
                 navigate("/unauthorized");
               }
-              else{
+              else if(!allowedRoles || allowedRoles.length === 0){
                 navigate("/dashboard");
               }
-              
             }
             else if(userData?.status === 'disabled'){
               navigate('/login');

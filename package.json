@@ -12,6 +12,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.11",
+    "country-state-city": "^3.2.1",
     "firebase": "^12.1.0",
     "html2canvas-pro": "^1.5.11",
     "jspdf": "^3.0.2",

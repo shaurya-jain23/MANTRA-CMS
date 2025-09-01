@@ -29,7 +29,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50  flex flex-col">
       <Header/>
-      <main className='my-auto'>
+      <main className="flex-grow">
          <Outlet /> 
       </main>
       <Footer/>

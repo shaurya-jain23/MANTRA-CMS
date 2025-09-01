@@ -13,7 +13,7 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage} from './pages';
 
 // Create the router
 const router = createBrowserRouter(
@@ -44,6 +44,10 @@ const router = createBrowserRouter(
       <Route path="/dashboard" element={
         <Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']}>
             <DashboardPage />
+        </Protected>} />
+      <Route path="/dealers" element={
+        <Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']}>
+            <DealersPage />
         </Protected>} />
       <Route path="/users" element={
         <Protected authentication allowedRoles={['superuser']}>

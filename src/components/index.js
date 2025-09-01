@@ -25,4 +25,7 @@ import VisibleColumns from "./dashboard/VisibleColumns";
 import SalesCardTemp from "./dashboard/SalesCardTemp";
 import ExportControls from "./dashboard/ExportControls";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile };
+import DealerCard from "./Dealers/DealerCard";
+import DealerForm from "./Dealers/DealerForm";
+
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm };
