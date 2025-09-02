@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/user/userSlice';
 import dealerService from '../firebase/dealers';
-import { Button, DealerCard, DealerForm } from '../components';
+import { Button, DealerCard, DealerForm, Container } from '../components';
 import { PlusCircle } from 'lucide-react';
 import { State } from 'country-state-city';
 
@@ -61,8 +61,8 @@ function DealersPage() {
   };
 
   return (
-    <div className="w-full flex flex-col justify-center items-center px-5 py-10 sm:px-10 md:px-20 lg:px-30 space-y-6">
-      <div className="w-full flex flex-col justify-betwee">
+    <Container>
+      <div className="w-full flex flex-col justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Dealer Management</h1>
         <div className="mt-6 flex justify-end">
             <Button
@@ -72,7 +72,6 @@ function DealersPage() {
                 <PlusCircle size={20} className="mr-2"/> Register Dealer
             </Button>
         </div>
-
       </div>
       {loading && <p>Loading dealers...</p>}
       {error && <p className="text-red-500">{error}</p>}
@@ -102,7 +101,7 @@ function DealersPage() {
         isOpen={isFormOpen}
       />
       
-    </div>
+    </Container>
   );
 }
 

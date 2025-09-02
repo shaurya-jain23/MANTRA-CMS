@@ -5,6 +5,7 @@ import {
   doc, 
   updateDoc, 
   getDocs, 
+  getDoc,
   query, 
   where, 
   serverTimestamp 
@@ -66,6 +67,16 @@ class DealerService {
       return dealers;
     } catch (error) {
       console.error("Error fetching salesperson's dealers:", error);
+      throw new Error("Could not fetch dealers.");
+    }
+  }
+  async getDealerById(dealerId) {
+    try {
+      const docRef = doc(db, "dealers", dealerId);
+      const docSnap = await getDoc(docRef);
+      return docSnap.data();
+    } catch (error) {
+      console.error("Error fetching dealer:", error);
       throw new Error("Could not fetch dealers.");
     }
   }
