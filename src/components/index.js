@@ -16,6 +16,10 @@ import ShowMoreButton from "./ShowMoreButton";
 import Errors from "./Errors";
 import Select from "./Select"
 import UpdateProfile from "./Auth/UpdateProfile";
+import ModalContainer from "./container/ModalContainer";
+import CheckBox from "./CheckBox";
+import HeaderContainer from "./container/HeaderContainer";
+import ConfirmationAlert from "./ConfirmationAlert";
 
 import FilterOptionGroup from "./dashboard/FilterOptionGroup";
 import FilterPanel from "./dashboard/FilterPanel";
@@ -28,4 +32,7 @@ import ExportControls from "./dashboard/ExportControls";
 import DealerCard from "./Dealers/DealerCard";
 import DealerForm from "./Dealers/DealerForm";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm };
+import BookingForm from "./Bookings/BookingForm";
+import BookingCard from "./Bookings/BookingCard";
+
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert};

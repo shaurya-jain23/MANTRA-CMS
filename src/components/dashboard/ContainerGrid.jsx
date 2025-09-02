@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas-pro';
 import {SalesCardTemp} from '../index';
 
 
-function ContainerGrid({ containers, visibleColumns, entries }) {
+function ContainerGrid({ containers, visibleColumns, entries, onBookNow }) {
 
   const [selectedContainer, setSelectedContainer] = useState(null);
   const [expandedCardId, setExpandedCardId] = useState(null);
@@ -58,6 +58,7 @@ function ContainerGrid({ containers, visibleColumns, entries }) {
             onDownloadRequest={() => handleDownloadRequest(container)}
             isExpanded={expandedCardId === container.id}
             onToggle={() => handleToggleCard(container.id)}
+            onBookNow={() => onBookNow(container)}
           />
         ))}
       </div>

@@ -4,3 +4,11 @@
   --shadow-3xl: 0 4px 15px rgba(0, 0, 0, 0.2); 
   --breakpoint-xs: 400px;
 }
+
+@layer base {
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
