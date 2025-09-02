@@ -39,6 +39,20 @@ export class ContainerService {
       throw error;
     }
   }
+  async getContainerById(containerId) {
+    try {
+      const docRef = doc(db, 'containers', containerId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+      } else {
+        throw new Error("No such container found!");
+      }
+    } catch (error) {
+      console.error("Error fetching container by ID:", error);
+      throw error;
+    }
+  }
 }
 
 const containerService = new ContainerService();

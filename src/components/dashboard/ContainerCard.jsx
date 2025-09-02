@@ -13,7 +13,7 @@ const DetailRow = ({ label, value }) => (
   </div>
 );
 
-function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpanded, onToggle }) {
+function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpanded, onToggle, onBookNow }) {
   // const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const salesCardRef = useRef();
@@ -21,8 +21,8 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
   const etd = container.etd?.seconds ? new Date(container.etd.seconds * 1000).toLocaleDateString() : 'N/A';
 
   const handleBookClick = (e) => {
-    e.stopPropagation(); // Prevent the card from toggling when the button is clicked
-    navigate(`/book/${container.id}`);
+    e.stopPropagation(); 
+    onBookNow(container);
   };
 
   const handleDownloadClick = (e) => {

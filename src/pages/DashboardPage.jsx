@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import containerService from '../firebase/container';
-import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls, BookingForm} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import bookingService from '../firebase/bookings';
+import dealerService from '../firebase/dealers';
+import { useNavigate } from 'react-router-dom';
 
 const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
@@ -34,6 +37,7 @@ const getColorScore = (colorString = '', type) => {
 const DashboardPage = () => {
   const [allContainers, setAllContainers] = useState([]); // Holds the master list of all containers from Firestore
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [activeFilters, setActiveFilters] = useState({});
   const [sortKey, setSortKey] = useState('eta_asc');
   const [etaKey, setEtaKey] = useState('20')
@@ -47,6 +51,9 @@ const DashboardPage = () => {
     'port',
     'colours'
   ]); // Manages which columns are visible
+
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedContainer, setSelectedContainer] = useState(null);
 
   const dropdownRef = useRef();
   // --- DATA FETCHING ---
@@ -172,11 +179,13 @@ const DashboardPage = () => {
 
   const handleExportData = (fileType) => {
     if (fileType === 'PDF') {
-      const doc = new jsPDF();
+      const doc = new jsPDF({
+        orientation: "landscape",
+      });
       
       // Set Header
       doc.setFontSize(18);
-      doc.text("Containers Report", 14, 22);
+      doc.text("Big Models Available Containers", 14, 22);
       doc.setFontSize(11);
       doc.setTextColor(100);
       doc.text(`Date: ${new Date().toLocaleDateString() }`, 14, 30);
@@ -202,6 +211,29 @@ const DashboardPage = () => {
       doc.save(`ContainerReport_${new Date().toLocaleDateString()}.pdf`);
     }
     // Add logic for XLSX later if needed
+  };
+
+  const handleOpenBookingModal = (container) => {
+    setSelectedContainer(container);
+    setIsBookingModalOpen(true);
+  };
+
+  const handleCloseBookingModal = () => {
+    setSelectedContainer(null);
+    setIsBookingModalOpen(false);
+  };
+
+  const handleBookingSubmit = async (bookingData) => {
+    try {
+        await bookingService.createBooking(bookingData);
+        // Also update the container's status locally to provide instant feedback
+        const dealer = await dealerService.getDealerById(bookingData.dealerId); // You'd need to add this method to your service
+        await bookingService.updateContainerStatus(bookingData.containerId, `Pending Booking Apporval`, dealer.trade_name);
+        handleCloseBookingModal();
+        navigate('/bookings');
+    } catch (error) {
+        alert(error.message);
+    }
   };
 
   // --- RENDER LOGIC ---
@@ -251,10 +283,17 @@ const DashboardPage = () => {
         onColumnChange={handleColumnChange}
         availableColumns={ALL_AVAILABLE_COLUMNS}
       />
+      <BookingForm
+        container={selectedContainer}
+        onSubmit={handleBookingSubmit}
+        onCancel={handleCloseBookingModal}
+        isOpen= {isBookingModalOpen}
+      />
       <ContainerGrid 
         containers={containersToShow}
         entries={processedContainers.length}
         visibleColumns={ALL_AVAILABLE_COLUMNS.filter(col => visibleColumns.includes(col.key))}
+        onBookNow={handleOpenBookingModal}
       />
       {visibleCount < processedContainers.length && (
         <ShowMoreButton onClick={handleShowMore} />

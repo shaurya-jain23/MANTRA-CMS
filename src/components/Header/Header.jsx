@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Container, Logo, LogoutBtn } from '../index.js';
+import { HeaderContainer, Logo, LogoutBtn } from '../index.js';
 import { Menu, X } from 'lucide-react'; 
 import { selectUser, selectIsLoggedIn } from '../../features/user/userSlice.js';
 
@@ -32,10 +32,18 @@ function Header() {
       navItems.push({ name: dealerText, slug: "/dealers", active: authStatus });
     }
   }
+  if (authStatus) {
+    const allowedRoles = ['admin', 'superuser', 'sales'];
+    const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
+    if(allowedRoles.includes(userData.role)){
+      navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
+    }
+   
+  }
 
   return (
     <header className="shadow-lg sticky top-0 z-50 bg-white">
-      <Container>
+      <HeaderContainer>
         <nav className="flex items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
           {/* Logo */}
           <div className="mr-4 flex items-center">
@@ -102,7 +110,7 @@ function Header() {
               )}
             </ul>
           </div>
-      </Container>
+      </HeaderContainer>
     </header>
   );
 }
