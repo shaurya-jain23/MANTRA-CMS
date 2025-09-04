@@ -17,9 +17,6 @@ class DealerService {
     try {
       const docRef = await addDoc(collection(db, 'dealers'), {
         ...dealerData,
-        district: dealerData.district.toUpperCase(),
-        state: dealerData.state.toUpperCase(),
-        trade_name: dealerData.trade_name.toUpperCase(),
         registered_by_id: user.uid,
         registered_by_name: user.displayName,
         status: 'Active', // Default status

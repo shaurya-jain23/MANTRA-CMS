@@ -35,6 +35,9 @@ function DealersPage() {
         dealer.state = State.getStatesOfCountry('IN').find(s => s.name === dealer.state).isoCode;
         setDealerToEdit(dealer);
     }
+    else{
+      setDealerToEdit(null);
+    }
     setIsFormOpen(true);
   };
 
@@ -44,7 +47,10 @@ function DealersPage() {
   };
 
   const handleFormSubmit = async (data) => {
-    data.state = State.getStateByCodeAndCountry(data.state, 'IN').name;
+    data.state = State.getStateByCodeAndCountry(data.state, 'IN').name.toUpperCase();
+    data.district= data.district.toUpperCase();
+    data.trade_name= data.trade_name.toUpperCase();
+
     if (dealerToEdit) { 
       await dealerService.updateDealer(dealerToEdit.id, data);
       setDealers(dealers.map(d => d.id === dealerToEdit.id ? { ...d, ...data } : d));
@@ -95,6 +101,7 @@ function DealersPage() {
       )}
 
       <DealerForm
+        key={dealerToEdit ? dealerToEdit.id : "new"}
         dealerToEdit={dealerToEdit}
         onSubmit={handleFormSubmit}
         onCancel={handleCloseForm}
