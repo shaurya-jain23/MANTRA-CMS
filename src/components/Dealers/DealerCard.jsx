@@ -4,7 +4,13 @@ import { Button, Select } from '../index';
 
 function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
   const userRole = userData?.role;
-  const isAuthor = dealer && userData ? dealer.registered_by_id === userData.uid : false;
+  const isAuthor = dealer?.registered_by_id === userData?.uid;
+  
+  // const isAuthor = dealer && userData ? dealer.registered_by_id === userData.uid : false;
+
+  const showEditButton = isAuthor || userRole === 'superuser';
+  const showRegisteredBy = userRole === 'admin' || userRole === 'superuser';
+  
   return (
   <div className="bg-white p-4 rounded-sm shadow-sm border border-gray-200 w-full">
     <div className="flex justify-between items-start">
@@ -17,7 +23,7 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
             className="text-xs "
             options={['Active', 'Disabled']}
           />
-          {(isAuthor || userRole== 'superuser') &&
+          {showEditButton &&
             <Button type="submit" className="hover:bg-blue-600 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" onClick={() => onEdit({...dealer})}>
             <SquarePen size={18}/>
           </Button>
@@ -27,7 +33,7 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
     <p className="text-sm text-gray-600 mt-2">GST: {dealer.gst_no}</p>
     <p className="text-sm text-gray-600">{dealer.contact_person} - {dealer.contact_number}</p>
     <p className="text-sm text-gray-500 mt-1">{dealer.district}, {dealer.state} - {dealer.pincode}</p>
-    {(userRole === 'admin' || userRole === 'superuser') && (
+    {showRegisteredBy && (
       <p className="text-xs text-gray-400 mt-3 pt-2 border-t">Registered By: {dealer.registered_by_name}</p>
     )}
   </div>

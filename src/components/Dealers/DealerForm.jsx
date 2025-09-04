@@ -6,22 +6,48 @@ import { State, City } from 'country-state-city';
 function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
     const { register, handleSubmit, control,reset, watch, setValue, formState: { errors } } = useForm({
     defaultValues: dealerToEdit || { status: 'Active' },
+    shouldUnregister: true,
     });
-    useEffect(() => {
-    reset(dealerToEdit || { status: 'Active' });
-  }, [dealerToEdit, reset]);
-    
-    // const selectedState = watch('state');
-    const [selectedCountry, setSelectedCountry] = useState('IN');
-    const [indianStates, setIndianStates] = useState(State.getStatesOfCountry(selectedCountry));
-    
-    const [selectedStateCode, setSelectedStateCode] = useState(dealerToEdit?.state || null);
-    const [districts, setDistricts] = useState(City.getCitiesOfState(selectedCountry , selectedStateCode || []));
 
-    const handleStateChange = (state) => {
-        setSelectedStateCode(state);
-        setDistricts(City.getCitiesOfState(selectedCountry , state.isoCode));
-    }
+
+
+    const selectedStateCode = watch('state');
+
+  
+    useEffect(() => {
+    if (isOpen){
+      if (dealerToEdit) {
+        reset(dealerToEdit);
+        const countryCode = 'IN'; // Assuming a fixed country code for now
+        const stateData = State.getStatesOfCountry(countryCode).find(
+          (s) => s.isoCode === dealerToEdit.state
+        );
+        if (stateData) {
+          const districts = City.getCitiesOfState(countryCode, stateData.isoCode);
+          setValue('district', dealerToEdit.district, { shouldValidate: true });
+        }
+      } 
+      }
+      else{
+        reset({ status: 'Active' });
+      }
+  }, [isOpen, dealerToEdit, reset, setValue]);
+
+    const allIndianStates = State.getStatesOfCountry('IN');
+    const districts = selectedStateCode ? City.getCitiesOfState('IN', selectedStateCode) : [];
+
+    useEffect(() => {
+      if (dealerToEdit && districts.length > 0) {
+        const defaultDistrict = districts.find(d => d.name == dealerToEdit.district);
+        if (defaultDistrict) {
+        setValue('district', defaultDistrict.name, { shouldDirty: true, shouldValidate: true });
+        }
+        else{
+          setValue('district', '-- Select District --')
+        }
+      }
+      
+    }, [selectedStateCode, dealerToEdit, setValue]);
 
 //   useEffect(() => {
 //     const pincode = watch('pincode');
@@ -66,17 +92,16 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
           <Controller
               name="state"
               control={control}
-              rules={{ required: 'Please select dealer state', validate: value => value !== '-- Select State --' }}
+              rules={{ required: 'Please select dealer state',
+                      validate: value => value !== '-- Select State --' || 'Please select dealer state' }}
               render={({ field }) => (
               <Select
                   placeholder="-- Select State --"
                   {...field}
                   required
                   defaultValue="-- Select State --"
-                  onChange={(e) => {
-                      field.onChange(e)
-                      handleStateChange(indianStates.find(s => s.isoCode === e.target.value))}}
-                      options={indianStates.map(state => ({value: state.isoCode, name: state.name}))}
+                  options={allIndianStates.map(state => ({value: state.isoCode, name: state.name}))}
+                  
               />
               )}
           />
@@ -85,13 +110,14 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
               name="district"
               control={control}
               required
-              rules={{ required: 'Please select dealer city', validate: value => value !== '-- Select City --' }}
+              rules={{ required: 'Please select dealer District',
+                       validate: value => value !== '-- Select District --' || 'Please select dealer district' }}
               render={({ field }) => (
               <Select
-                  placeholder="-- Select City --"
+                  placeholder="-- Select District --"
                   {...field}
                   disabled={!selectedStateCode}
-                  defaultValue="-- Select City --"
+                  defaultValue="-- Select District --"
                   options={districts.map(district => ({value: district.isoCode, name: district.name}))}
               />
               )}
