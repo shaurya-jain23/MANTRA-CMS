@@ -35,12 +35,15 @@ const monthOptions = [
 const ALL_AVAILABLE_COLUMNS = [
   { key: 'company_name', header: 'Company' },
   { key: 'model', header: 'Model' },
+  { key: 'party_name', header: 'Party Name' },
   { key: 'container_no', header: 'Container No.' },
   { key: 'destination', header: 'Destination' },
   { key: 'status', header: 'Container Status' },
   { key: 'sales_status', header: 'Sales Status' },
   { key: 'eta', header: 'ETA' },
   { key: 'port', header: 'Port' },
+  { key: 'battery', header: 'Battery' },
+  { key: 'charger', header: 'Charger' },
   { key: 'colours', header: 'Colours' },
 ];
 
@@ -49,7 +52,8 @@ const salesStatusMap = [
   {status: 'Blocked', colour: 'bg-gray-300 text-gray-800'},
   {status: 'Sold', colour: 'bg-yellow-100 text-yellow-800'},
   {status: 'Booked for Adampur', colour: 'bg-blue-100 text-blue-800'},
-  {status: 'Booked for Noida', colour: 'bg-orange-100 text-orange-800'}
+  {status: 'Booked for Noida', colour: 'bg-orange-100 text-orange-800'},
+  {status: 'Pending Approval', colour: 'bg-fuchsia-100 text-fuchsia-800'}
 ]
 const containerStatusMap = [
   {status: 'At Sea', colour: 'bg-sky-100 text-sky-800'},

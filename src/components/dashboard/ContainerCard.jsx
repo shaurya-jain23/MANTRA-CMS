@@ -63,7 +63,7 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
         ? { label: 'Color Distribution', value: <ColorBar colorString={container[key]} /> }
         : { label: key.replace(/_/g, ' '), value: container[key] }
     )
-    .slice(0, 6); // Show up to 4 key details
+    .slice(0, 8); // Show up to 4 key details
 
   // --- Logic for the new 2-column layout ---
   const allDetailKeys = Object.keys(container)
