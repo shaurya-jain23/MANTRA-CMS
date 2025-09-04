@@ -77,17 +77,35 @@ class BookingService {
       const bookingSnap = await getDoc(bookingRef);
       if (!bookingSnap.exists()) throw new Error("Booking not found!");
       const containerRef = bookingData.containerRef;
-      await updateDoc(bookingRef, { ...bookingData, status: 'Pending', rejectionReason: '' });
-      await updateDoc(containerRef, { 
-          sales_status: 'Pending Approval',
-          party_name: '' ,
-          destination: ''
-        });
+      const updatePayload = {
+            ...bookingData,
+            dealerRef: doc(db, 'dealers', bookingData.dealerId),
+            status: 'Pending', 
+            rejectionReason: '',
+            updatedAt: serverTimestamp(),
+        };
+        if(bookingData.status === 'Approved'){
+          if(bookingData.party_name !== bookingSnap.data().party_name){
+              await updateDoc(containerRef, { 
+              sales_status: 'Pending Approval',
+              party_name: '' ,
+              destination: ''
+          });
+          }
+          else if(bookingData.destination !== bookingSnap.data().destination){
+              await updateDoc(containerRef, { 
+                sales_status: 'Pending Approval',
+                destination: ''
+              });
+          }
+        }
+      await updateDoc(bookingRef, updatePayload);
     } catch (error) {
       console.error("Error updating booking:", error);
       throw new Error("Could not update booking.");
     }
     }
+
     async deleteBooking(bookingId) {
     try {
       const bookingRef = doc(db, 'bookings', bookingId);
@@ -107,30 +125,6 @@ class BookingService {
     }
     }
   
-    // async approveBooking(bookingId) {
-    //     try {
-    //     const bookingRef = doc(db, 'bookings', bookingId);
-    //     const bookingSnap = await getDoc(bookingRef);
-    //     if (!bookingSnap.exists()) throw new Error("Booking not found!");
-    //     const bookingData = bookingSnap.data();
-        
-    //     const dealerSnap = await getDoc(bookingData.dealerRef);
-        
-    //     const containerRef = bookingData.containerRef;
-    //     //Update the booking status to Approved
-    //     await updateDoc(bookingRef, { status: 'Approved', rejectionReason: '' });
-
-    //     await updateDoc(containerRef, { 
-    //       sales_status: `Blocked`,
-    //       party_name: dealerSnap.exists() ? dealerSnap.data().trade_name : null,
-    //       destination: bookingData.placeOfDelivery
-    //     });
-
-    //     // Update the container's sales status and party name
-    //     } catch (error) {
-    //     throw error;
-    //     }
-    // }
 
     async approveAndSyncBooking(bookingId) {
         try {

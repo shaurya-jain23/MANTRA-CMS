@@ -78,3 +78,79 @@ export const approveAndSyncBooking = https.onCall({ secrets: [googleServiceAccou
     throw new https.HttpsError("internal", "An error occurred while syncing.", error.message);
   }
 });
+
+
+export const deleteAndSyncBooking = https.onCall({ secrets: [googleServiceAccountKey] }, async (request) => {
+    if (!request.auth) throw new https.HttpsError("unauthenticated", "You must be logged in.");
+
+    const { bookingId } = request.data;
+    
+    try {
+        const bookingRef = db.collection("bookings").doc(bookingId);
+        const bookingSnap = await bookingRef.get();
+        const bookingData = bookingSnap.data();
+        if (!bookingSnap.exists) throw new https.HttpsError("not-found", "Booking not found.");
+
+        const containerRef = bookingSnap.data().containerRef;
+
+        // 1. Update Firestore
+        await containerRef.update({ sales_status: "Available for Sale", party_name: "", destination: "" });
+        await bookingRef.delete();
+
+        if(bookingData.status === 'Approved'){
+          // 2. Sync with Google Sheet
+          const sheet = await getMasterSheet(googleServiceAccountKey.value());
+          const rows = await sheet.getRows();
+          const containerSnap = await containerRef.get();
+          const containerNo = containerSnap.data().container_no;
+          const rowIndex = rows.findIndex(row => row.get("CONTAINER NO") === containerNo);
+
+          if (rowIndex > -1) {
+              rows[rowIndex].set("PARTY NAME", "");
+              rows[rowIndex].set("Destination", "");
+              rows[rowIndex].set("SALES Status", "Available for Sale");
+              rows[rowIndex].set("Booking Remarks", "");
+              await rows[rowIndex].save();
+          }
+          
+          return { success: true, message: "Booking deleted and synced." };
+        }
+
+    } catch (error) {
+        console.error("Error in deleteAndSyncBooking:", error);
+        throw new https.HttpsError("internal", "An error occurred.", error.message);
+    }
+});
+
+
+// export const updateAndSyncBooking = https.onCall({ secrets: [googleServiceAccountKey] }, async (request) => {
+//     if (!request.auth) throw new https.HttpsError("unauthenticated", "You must be logged in.");
+
+//     const { bookingId, updatedData } = request.data;
+
+//     try {
+//         const bookingRef = db.collection("bookings").doc(bookingId);
+        
+//         // 1. Update Firestore
+//         await bookingRef.update({ ...updatedData, status: "Pending", rejectionReason: "" });
+
+//         // 2. Sync with Google Sheet (update remarks and status)
+//         const sheet = await getMasterSheet(googleServiceAccountKey.value());
+//         const rows = await sheet.getRows();
+//         const bookingSnap = await bookingRef.get();
+//         const containerSnap = await bookingSnap.data().containerRef.get();
+//         const containerNo = containerSnap.data().container_no;
+//         const rowIndex = rows.findIndex(row => row.get("CONTAINER NO") === containerNo);
+
+//         if (rowIndex > -1) {
+//             rows[rowIndex].set("SALES Status", "Pending Booking"); // Reflects the re-approval needed
+//             rows[rowIndex].set("Booking Remarks", formatBookingRemarks(updatedData));
+//             await rows[rowIndex].save();
+//         }
+
+//         return { success: true, message: "Booking updated and synced." };
+//     } catch (error) {
+//         console.error("Error in updateAndSyncBooking:", error);
+//         throw new https.HttpsError("internal", "An error occurred.", error.message);
+//     }
+// });

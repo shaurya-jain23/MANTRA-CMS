@@ -8,13 +8,7 @@ function BookingCard({ booking, userRole, onEdit, onAction }) {
     if (status === 'Rejected') return 'bg-red-100 text-red-800';
     return 'bg-yellow-100 text-yellow-800'; // Pending
   };
-
-  const handleReject = () => {
-    const reason = prompt("Please provide a reason for rejection:");
-    if (reason) {
-      onReject(booking.id, reason);
-    }
-  };
+  const isAdmin = userRole === 'admin' || userRole === 'superuser';
 
   const canEdit = userRole === 'sales' && (booking.status === 'Pending' || booking.status === 'Approved');
 
@@ -44,25 +38,45 @@ function BookingCard({ booking, userRole, onEdit, onAction }) {
             </span>
       </div>
         </div>
-        <div className='mt-2 flex flex-col md:flex-row gap-1.5 flex-wrap md:gap-x-6 md:gap-y-2'>
-            <p className="text-sm text-gray-600"><strong>Dealer:</strong> {booking.dealer?.trade_name}</p>
-            <p className="text-sm text-gray-600"><strong>Place of Delivery:</strong> {booking.placeOfDelivery}</p>
-            <p className="text-sm text-gray-600"><strong>Price:</strong> ₹{booking.pricePerPiece}/psc</p>
-            <p className="text-sm text-gray-600"><strong>Freight:</strong> {booking.transport.included === 'true' ? 'Included' : `₹${booking.transport.charges} Extra`}</p>
-            <p className="text-sm text-gray-600">
-                {booking.withBattery || booking.withCharger || booking.withTyre ? (<strong>Extras:</strong>
-                ) : (
-                <strong>No Extras</strong>
-                )} 
-                {' '}
-                {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''} 
-            </p>
-            {/* <p className="text-sm text-gray-600"> 
-            <strong>Extras:</strong> {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''}  </p> */}
-            <p className="text-sm text-gray-500 w-full">
-            Remarks: {booking.remarks || 'N/A'}
-            </p>
+        <div className='mt-2 '>
+          <h2 className='text-base font-medium text-gray-600 mb-1'>Container Details:</h2>
+          <div className='flex flex-col md:flex-row gap-1.5 flex-wrap md:gap-x-6 md:gap-y-2'>
+              {isAdmin && 
+                        <>
+                            <p><strong className="text-gray-600">Company:</strong> {booking.container?.company_name}</p>
+                            <p><strong className="text-gray-600">Status:</strong> {booking.container?.status}</p>
+                        </>
+                }
+              <p className="text-sm text-gray-600"><strong>Model:</strong> {booking.container?.model}</p>
+              <p className="text-sm text-gray-600"><strong>Specifications:</strong> {booking.container?.specifications}</p>
+              <p className="text-sm text-gray-600"><strong>Quantity:</strong> ₹{booking.container?.qty}</p>
+              <p className="text-sm text-gray-600"><strong>Port:</strong>{booking.container?.port}</p>
+          </div>
         </div>
+        
+        <div className='mt-2 '>
+          <h2 className='text-base font-medium text-gray-600 mb-1'>Booking Details:</h2>
+          <div className='flex flex-col md:flex-row gap-1.5 flex-wrap md:gap-x-6 md:gap-y-2'>
+              <p className="text-sm text-gray-600"><strong>Dealer:</strong> {booking.dealer?.trade_name}</p>
+              <p className="text-sm text-gray-600"><strong>Place of Delivery:</strong> {booking.placeOfDelivery}</p>
+              <p className="text-sm text-gray-600"><strong>Price:</strong> ₹{booking.pricePerPiece}/psc</p>
+              <p className="text-sm text-gray-600"><strong>Freight:</strong> {booking.transport.included === 'true' ? 'Included' : `₹${booking.transport.charges} Extra`}</p>
+              <p className="text-sm text-gray-600">
+                  {booking.withBattery || booking.withCharger || booking.withTyre ? (<strong>Extras:</strong>
+                  ) : (
+                  <strong>No Extras</strong>
+                  )} 
+                  {' '}
+                  {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''} 
+              </p>
+              {/* <p className="text-sm text-gray-600"> 
+              <strong>Extras:</strong> {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''}  </p> */}
+              <p className="text-sm text-gray-500 w-full">
+              Remarks: {booking.remarks || 'N/A'}
+              </p>
+          </div>
+        </div>
+
 
         {booking.status === 'Rejected' && (
             <div className="mt-2 p-2 md:px-6 bg-red-50 border-l-4 border-red-400 w-fit">
@@ -70,7 +84,7 @@ function BookingCard({ booking, userRole, onEdit, onAction }) {
             <Button className="mt-2 text-xs">Resend Request</Button>
             </div>
         )}
-        {(userRole === 'superuser' || userRole === 'admin') && (
+        {isAdmin && (
           <p className="text-xs text-gray-400 mt-3 pt-2 border-t">
             Requested By: {booking.requested_by_name}
           </p>

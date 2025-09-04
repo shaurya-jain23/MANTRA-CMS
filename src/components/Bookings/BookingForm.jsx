@@ -9,6 +9,8 @@ import { Input, Button, ModalContainer,Select, CheckBox } from '../index';
 function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit }) {
   const [dealers, setDealers] = useState([]);
   const userData = useSelector(selectUser);
+  const userRole = userData?.role;
+  const isAdmin = userRole === 'admin' || userRole === 'superuser';
   const [step, setStep] = useState(1); 
   const [formData, setFormData] = useState({});
   const [transportIncluded, settransportIncluded] = useState(true);
@@ -46,7 +48,8 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
 
     useEffect(() => {
         if (userData?.uid) {
-        dealerService.getDealersBySalesperson(userData.uid).then(setDealers);
+            isAdmin ? dealerService.getAllDealers().then(setDealers) : 
+            dealerService.getDealersBySalesperson(userData.uid).then(setDealers);
         }
     }, [userData]);
 
@@ -68,6 +71,12 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                 <div className="mb-2 p-4 bg-gray-50 rounded-sm shadow-sm">
                 <h3 className="font-medium text-md mb-3">Container Details</h3>
                 <div className="flex flex-wrap sm:gap-4 md:gap-y-2 md:gap-x-6 text-sm">
+                    {isAdmin && 
+                        <>
+                            <p><strong className="text-gray-600">Company:</strong> {container?.company_name}</p>
+                            <p><strong className="text-gray-600">Status:</strong> {container?.status}</p>
+                        </>
+                    }
                     <p><strong className="text-gray-600">Model:</strong> {container?.model}</p>
                     <p><strong className="text-gray-600">Specifications:</strong> {container?.specifications}</p>
                     <p><strong className="text-gray-600">Quantity:</strong> {container?.qty}</p>
@@ -80,15 +89,14 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                     <Controller
                         name="dealerId"
                         control={control}
-                        rules={{ required: 'Please select a dealer', validate: value => value !== '-- Select Dealer --' }}
+                        rules={{ required: 'Please select a dealer',
+                                validate: value => value !== '-- Select Dealer --' || 'Please select dealer state' }}
                         render={({ field }) => (
                         <Select
                             placeholder="-- Select Dealer --"
                             {...field}
                             required
                             defaultValue="-- Select Dealer --"
-                            onChange={(e) => {
-                                field.onChange(e.target.value)}}
                             options={dealers.map(d => ({value: d.id, name: d.trade_name}))}
                         />
                         )}
@@ -189,6 +197,12 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                     <div className="mb-2 p-4 bg-gray-50 rounded-sm shadow-sm">
                         <h3 className="font-medium text-md mb-3">Booking Details</h3>
                         <div className="flex flex-wrap sm:gap-4 md:gap-y-2 md:gap-x-6 text-sm mb-2">
+                            {isAdmin && 
+                                <>
+                                    <p><strong className="text-gray-600">Company:</strong> {container?.company_name}</p>
+                                    <p><strong className="text-gray-600">Status:</strong> {container?.status}</p>
+                                </>
+                            }
                             <p><strong className="text-gray-600">Model:</strong> {container?.model}</p>
                             <p><strong className="text-gray-600">Specifications:</strong> {container?.specifications}</p>
                             <p><strong className="text-gray-600">Quantity:</strong> {container?.qty}</p>
