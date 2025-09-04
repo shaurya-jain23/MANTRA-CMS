@@ -12,6 +12,10 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 
+import { getFunctions, httpsCallable } from 'firebase/functions';
+const functions = getFunctions();
+const approveAndSyncBookingCallable = httpsCallable(functions, 'approveAndSyncBooking');
+
 class BookingService {
   // Create a new booking request in the 'bookings' collection
     async createBooking(bookingData) {
@@ -26,7 +30,6 @@ class BookingService {
             rejectionReason: '',
             createdAt: serverTimestamp(),
         };
-        console.log(bookingPayload);
         
         const docRef = await addDoc(collection(db, 'bookings'), bookingPayload);
         return { id: docRef.id, ...bookingPayload };
@@ -71,8 +74,15 @@ class BookingService {
     async updateBooking(bookingId, bookingData) {
     try {
       const bookingRef = doc(db, 'bookings', bookingId);
-      // If a booking is edited, it must be re-approved.
+      const bookingSnap = await getDoc(bookingRef);
+      if (!bookingSnap.exists()) throw new Error("Booking not found!");
+      const containerRef = bookingData.containerRef;
       await updateDoc(bookingRef, { ...bookingData, status: 'Pending', rejectionReason: '' });
+      await updateDoc(containerRef, { 
+          sales_status: 'Pending Approval',
+          party_name: '' ,
+          destination: ''
+        });
     } catch (error) {
       console.error("Error updating booking:", error);
       throw new Error("Could not update booking.");
@@ -81,26 +91,70 @@ class BookingService {
     async deleteBooking(bookingId) {
     try {
       const bookingRef = doc(db, 'bookings', bookingId);
+      const bookingSnap = await getDoc(bookingRef);
+      if (!bookingSnap.exists()) throw new Error("Booking not found!");
+      const bookingData = bookingSnap.data();
+      const containerRef = bookingData.containerRef;
       await deleteDoc(bookingRef);
+      await updateDoc(containerRef, { 
+          sales_status: 'Available for sale',
+          party_name: '' ,
+          destination: ''
+        });
     } catch (error) {
       console.error("Error deleting booking:", error);
       throw new Error("Could not delete booking.");
     }
     }
   
-    async approveBooking(bookingId) {
+    // async approveBooking(bookingId) {
+    //     try {
+    //     const bookingRef = doc(db, 'bookings', bookingId);
+    //     const bookingSnap = await getDoc(bookingRef);
+    //     if (!bookingSnap.exists()) throw new Error("Booking not found!");
+    //     const bookingData = bookingSnap.data();
+        
+    //     const dealerSnap = await getDoc(bookingData.dealerRef);
+        
+    //     const containerRef = bookingData.containerRef;
+    //     //Update the booking status to Approved
+    //     await updateDoc(bookingRef, { status: 'Approved', rejectionReason: '' });
+
+    //     await updateDoc(containerRef, { 
+    //       sales_status: `Blocked`,
+    //       party_name: dealerSnap.exists() ? dealerSnap.data().trade_name : null,
+    //       destination: bookingData.placeOfDelivery
+    //     });
+
+    //     // Update the container's sales status and party name
+    //     } catch (error) {
+    //     throw error;
+    //     }
+    // }
+
+    async approveAndSyncBooking(bookingId) {
         try {
-        const bookingRef = doc(db, 'bookings', bookingId);
-        await updateDoc(bookingRef, { status: 'Approved', rejectionReason: '' });
+            const result = await approveAndSyncBookingCallable({ bookingId });
+            return result.data;
         } catch (error) {
-        throw error;
+            console.error("Error calling approveAndSyncBooking function:", error);
+            throw new Error("Failed to approve and sync booking.");
         }
     }
 
     async rejectBooking(bookingId, reason) {
         try {
         const bookingRef = doc(db, 'bookings', bookingId);
+        const bookingSnap = await getDoc(bookingRef);
+        if (!bookingSnap.exists()) throw new Error("Booking not found!");
+        const bookingData = bookingSnap.data();
+        const containerRef = bookingData.containerRef;
         await updateDoc(bookingRef, { status: 'Rejected', rejectionReason: reason });
+        await updateDoc(containerRef, { 
+          sales_status: 'Available for sale',
+          party_name: '' ,
+          destination: ''
+        });
         } catch (error) {
         throw error;
         }

@@ -46,11 +46,19 @@ function BookingCard({ booking, userRole, onEdit, onAction }) {
         </div>
         <div className='mt-2 flex flex-col md:flex-row gap-1.5 flex-wrap md:gap-x-6 md:gap-y-2'>
             <p className="text-sm text-gray-600"><strong>Dealer:</strong> {booking.dealer?.trade_name}</p>
-            <p className="text-sm text-gray-600"><strong>Place of Delivery:</strong> {booking.dealer?.district}, {booking.dealer?.state}</p>
+            <p className="text-sm text-gray-600"><strong>Place of Delivery:</strong> {booking.placeOfDelivery}</p>
             <p className="text-sm text-gray-600"><strong>Price:</strong> ₹{booking.pricePerPiece}/psc</p>
             <p className="text-sm text-gray-600"><strong>Freight:</strong> {booking.transport.included === 'true' ? 'Included' : `₹${booking.transport.charges} Extra`}</p>
             <p className="text-sm text-gray-600">
-            <strong>Extras:</strong> {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''}  </p>
+                {booking.withBattery || booking.withCharger || booking.withTyre ? (<strong>Extras:</strong>
+                ) : (
+                <strong>No Extras</strong>
+                )} 
+                {' '}
+                {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''} 
+            </p>
+            {/* <p className="text-sm text-gray-600"> 
+            <strong>Extras:</strong> {booking.withBattery ? 'With Battery' : ''} {booking.withCharger ? 'With Charger' : ''} {booking.withTyre ? 'With Tyre' : ''}  </p> */}
             <p className="text-sm text-gray-500 w-full">
             Remarks: {booking.remarks || 'N/A'}
             </p>

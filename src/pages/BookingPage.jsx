@@ -39,8 +39,9 @@ function BookingsPage() {
 
     switch (action) {
       case 'approve':
-        await bookingService.approveBooking(bookingId);
+        await bookingService.approveAndSyncBooking(bookingId);
         setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: 'Approved' } : b));
+        alert("Booking approved and synced!");
         break;
       case 'reject':
         await bookingService.rejectBooking(bookingId, reason);
@@ -66,8 +67,6 @@ function BookingsPage() {
     // Logic to handle both create and update will be needed here if you add a create button
     // For now, this handles the edit flow
     if (bookingToEdit) {
-        console.log(formData);
-        
       await bookingService.updateBooking(bookingToEdit.id, formData);
       // Refresh the list to show the updated "Pending" status
       bookingService.getBookings(userData).then(setBookings);

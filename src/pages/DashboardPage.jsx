@@ -47,6 +47,7 @@ const DashboardPage = () => {
   const [visibleColumns, setVisibleColumns] = useState([
     'model',
     'destination',
+    'party_name',
     'eta',
     'port',
     'colours'
@@ -228,7 +229,7 @@ const DashboardPage = () => {
         await bookingService.createBooking(bookingData);
         // Also update the container's status locally to provide instant feedback
         const dealer = await dealerService.getDealerById(bookingData.dealerId); // You'd need to add this method to your service
-        await bookingService.updateContainerStatus(bookingData.containerId, `Pending Booking Apporval`, dealer.trade_name);
+        await bookingService.updateContainerStatus(bookingData.containerId, `Pending Apporval`, dealer.trade_name);
         handleCloseBookingModal();
         navigate('/bookings');
     } catch (error) {

@@ -13,17 +13,26 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
   const [formData, setFormData] = useState({});
   const [transportIncluded, settransportIncluded] = useState(true);
   const eta = container?.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() :'N/A';
-  const {register, handleSubmit ,control,reset ,watch,formState: { errors },} = useForm({
+  const {register, handleSubmit ,control,reset, setValue ,watch,formState: { errors },} = useForm({
         defaultValues:  bookingToEdit || { 
             transport: { included: 'true', charges: 0 }
         },
   });
 
-  useEffect(() => {
-      reset(bookingToEdit || { status: 'Active' });
+    useEffect(() => {
+        reset(bookingToEdit || { status: 'Active' });
     }, [bookingToEdit, reset]);
 
-
+    useEffect(()=> {
+        const subscription = watch((value, {name})=> {
+            if(name === 'dealerId'){
+                setValue('placeOfDelivery', dealers.find(d => d.id === value.dealerId)?.district || '')
+            }
+        })
+        return () =>{
+            subscription.unsubscribe()
+        }
+    }, [watch, setValue, dealers])
 
     const goToPreview = (data) => {
         setFormData(data);
@@ -79,20 +88,34 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                             required
                             defaultValue="-- Select Dealer --"
                             onChange={(e) => {
-                                field.onChange(e)}}
+                                field.onChange(e.target.value)}}
                             options={dealers.map(d => ({value: d.id, name: d.trade_name}))}
                         />
                         )}
                     />
                 {errors.dealerId && <p className="text-red-500 text-sm">{errors.dealerId.message}</p>}
                 <Input
-                    label="Price per Piece (₹)"
+                    label="Price per Piece (₹): "
+                    placeholder="Price per Piece of Container"
                     type="number"
                     required
                     className="!w-1/2"
                     {...register('pricePerPiece', { required: true, valueAsNumber: true })}
                 />
                 {errors.pricePerPiece && <p className="text-red-500 text-sm">{errors.pricePerPiece.message}</p>}
+                
+                <Input
+                    label="Place of Delivery: "
+                    placeholder="Place of Delivery"
+                    type="text"
+                    required
+                    className="!w-1/2"
+                    {...register('placeOfDelivery', { required: true})}
+                    // onInput={(e) => {
+                    //     setValue("placeOfDelivery", (e.currentTarget.value));
+                    // }}
+                />
+                {errors.placeOfDelivery && <p className="text-red-500 text-sm">{errors.placeOfDelivery.message}</p>}
                 <div className="space-y-2">
                     <label className="font-normal text-md">Freight Charges</label>
                     <div className="flex items-center mt-2">
@@ -174,11 +197,16 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                         </div>
                         <div className='flex flex-col md:flex-row gap-1.5 flex-wrap sm:gap-4 md:gap-x-6 md:gap-y-2'>
                             <p className="text-sm text-gray-600"><strong>Dealer:</strong> {dealers.find(d => d.id === formData.dealerId)?.trade_name}</p>
-                            <p className="text-sm text-gray-600"><strong>Place of Delivery:</strong> {dealers.find(d => d.id === formData.dealerId)?.district}</p>
+                            <p className="text-sm text-gray-600"><strong>Place of Delivery:</strong> {formData.placeOfDelivery}</p>
                             <p className="text-sm text-gray-600"><strong>Price:</strong> ₹{formData.pricePerPiece}/psc</p>
                             <p className="text-sm text-gray-600"><strong>Freight:</strong> {formData.transport.included === 'true' ? 'Included' : `₹${formData.transport.charges} Extra`}</p>
                             <p className="text-sm text-gray-600">
-                            <strong>Extras:</strong> {formData.withBattery ? 'With Battery' : ''} {formData.withCharger ? 'With Charger' : ''} {formData.withTyre ? 'With Tyre' : ''}
+                                {formData.withBattery || formData.withCharger || formData.withTyre ? (<strong>Extras:</strong>
+                                ) : (
+                                <strong>No Extras</strong>
+                                )} 
+                                {' '}
+                                {formData.withBattery ? 'With Battery' : ''} {formData.withCharger ? 'With Charger' : ''} {formData.withTyre ? 'With Tyre' : ''} 
                             </p>
                             <p className="text-sm text-gray-500 w-full">Remarks: {formData.remarks || 'N/A'}</p>
                         </div>
