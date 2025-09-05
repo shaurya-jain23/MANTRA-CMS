@@ -35,4 +35,9 @@ import DealerForm from "./Dealers/DealerForm";
 import BookingForm from "./Bookings/BookingForm";
 import BookingCard from "./Bookings/BookingCard";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert};
+import SalesCard from "./Sales/SalesCard";
+import StatCard from "./Sales/StatCard";
+import Pagination from "./Sales/Pagination";
+import Tabs from "./Sales/Tabs";
+
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs};

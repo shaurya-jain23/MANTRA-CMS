@@ -10,5 +10,6 @@ import ProfilePage from "./ProfilePage";
 import UpdateProfilePage from "./UpdateProfilePage";
 import DealersPage from "./DealersPage";
 import BookingsPage from "./BookingPage";
+import SalesPage from "./SalesPage";
 
-export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage};
+export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage};

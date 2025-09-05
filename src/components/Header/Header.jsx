@@ -21,7 +21,17 @@ function Header() {
     { name: "Signup", slug: "/signup", active: !authStatus },
     { name: "Dashboard", slug: "/dashboard", active: authStatus},
   ];
-
+  if (authStatus) {
+    const allowedRoles = ['admin', 'superuser', 'sales'];
+    const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
+    const salesText = (userData.role === 'sales') ? 'Available Containers' : 'Sales Panel';
+    if(allowedRoles.includes(userData.role)){
+      navItems.push({ name: salesText, slug: '/sales', active: authStatus });
+    }
+    if(allowedRoles.includes(userData.role)){
+      navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
+    }
+  }
   if (authStatus && userData?.role === 'superuser') {
     navItems.push({ name: "Manage Users", slug: "/users", active: authStatus });
   }
@@ -32,14 +42,7 @@ function Header() {
       navItems.push({ name: dealerText, slug: "/dealers", active: authStatus });
     }
   }
-  if (authStatus) {
-    const allowedRoles = ['admin', 'superuser', 'sales'];
-    const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
-    if(allowedRoles.includes(userData.role)){
-      navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
-    }
-   
-  }
+  
 
   return (
     <header className="shadow-lg sticky top-0 z-50 bg-white">
