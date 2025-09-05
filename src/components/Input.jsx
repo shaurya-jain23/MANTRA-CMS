@@ -11,7 +11,7 @@ const Input = function Input({
 }, ref) {
   const id = useId();
   return (
-    <div className='flex flex-col'>
+    <div className='flex flex-col w-full'>
         {label && <label htmlFor={id} className="text-sm font-medium text-gray-700">
           {label}{required && <span className='text-red-500'> *</span>}
         </label>}

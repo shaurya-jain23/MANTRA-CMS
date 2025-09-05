@@ -102,12 +102,13 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                         )}
                     />
                 {errors.dealerId && <p className="text-red-500 text-sm">{errors.dealerId.message}</p>}
+                <div className="flex w-full gap-5">
                 <Input
                     label="Price per Piece (₹): "
                     placeholder="Price per Piece of Container"
                     type="number"
                     required
-                    className="!w-1/2"
+                    className=""
                     {...register('pricePerPiece', { required: true, valueAsNumber: true })}
                 />
                 {errors.pricePerPiece && <p className="text-red-500 text-sm">{errors.pricePerPiece.message}</p>}
@@ -117,12 +118,14 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                     placeholder="Place of Delivery"
                     type="text"
                     required
-                    className="!w-1/2"
+                    className=""
                     {...register('placeOfDelivery', { required: true})}
                     // onInput={(e) => {
                     //     setValue("placeOfDelivery", (e.currentTarget.value));
                     // }}
                 />
+                </div>
+                
                 {errors.placeOfDelivery && <p className="text-red-500 text-sm">{errors.placeOfDelivery.message}</p>}
                 <div className="space-y-2">
                     <label className="font-normal text-md">Freight Charges</label>
@@ -158,12 +161,6 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
                     )}
                 </div>
                 <div className="flex items-center space-x-6">
-                    {/* <CheckBox
-                        label='Battery'
-                        value='withBattery'
-                        type='radio'
-                        {...register('withBattery')}
-                    /> */}
                     <label className="font-semibold">Extras:</label>
                     <div className="flex items-center">
                     <input type="checkbox" {...register('withBattery')} />
