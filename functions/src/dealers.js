@@ -10,7 +10,7 @@ export const onDealerWriteSyncToSheet = firestore.onDocumentWritten({
     secrets: [googleServiceAccountKey]
 }, async (event) => {
     
-    const sheet = await getGoogleSheet(googleServiceAccountKey.value(), "Dealers"); // Get the 'Dealers' sheet
+    const {sheet} = await getGoogleSheet(googleServiceAccountKey.value(), "Dealers"); // Get the 'Dealers' sheet
     if (!sheet) {
         console.error("The 'Dealers' sheet was not found.");
         return;

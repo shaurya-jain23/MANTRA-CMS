@@ -15,6 +15,7 @@ import {
 import { getFunctions, httpsCallable } from 'firebase/functions';
 const functions = getFunctions();
 const approveAndSyncBookingCallable = httpsCallable(functions, 'approveAndSyncBooking');
+const deleteAndSyncBookingCallable = httpsCallable(functions, 'deleteAndSyncBooking');
 
 class BookingService {
   // Create a new booking request in the 'bookings' collection
@@ -108,22 +109,13 @@ class BookingService {
 
     async deleteBooking(bookingId) {
     try {
-      const bookingRef = doc(db, 'bookings', bookingId);
-      const bookingSnap = await getDoc(bookingRef);
-      if (!bookingSnap.exists()) throw new Error("Booking not found!");
-      const bookingData = bookingSnap.data();
-      const containerRef = bookingData.containerRef;
-      await deleteDoc(bookingRef);
-      await updateDoc(containerRef, { 
-          sales_status: 'Available for sale',
-          party_name: '' ,
-          destination: ''
-        });
+      const result = await deleteAndSyncBookingCallable({ bookingId });
+      return result.data;
     } catch (error) {
-      console.error("Error deleting booking:", error);
-      throw new Error("Could not delete booking.");
+      console.error("deleteBooking service error:", error);
+      throw new Error(error.message || "Failed to delete booking.");
     }
-    }
+  }
   
 
     async approveAndSyncBooking(bookingId) {

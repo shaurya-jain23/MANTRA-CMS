@@ -51,7 +51,7 @@ export const approveAndSyncBooking = https.onCall({ secrets: [googleServiceAccou
     
     console.log("Firestore updates successful. Starting Google Sheet sync.");
     // 2. Sync with Google Sheet
-    const sheet = await getGoogleSheet(googleServiceAccountKey.value(), 'MASTER');
+    const {sheet} = await getGoogleSheet(googleServiceAccountKey.value(), 'MASTER');
     await sheet.loadHeaderRow(1);
     const rows = await sheet.getRows();
     const containerNo = containerSnap.data().container_no;
@@ -99,7 +99,7 @@ export const deleteAndSyncBooking = https.onCall({ secrets: [googleServiceAccoun
 
         if(bookingData.status === 'Approved'){
           // 2. Sync with Google Sheet
-          const sheet = await getMasterSheet(googleServiceAccountKey.value());
+          const {sheet} = await getGoogleSheet(googleServiceAccountKey.value(), 'MASTER');
           const rows = await sheet.getRows();
           const containerSnap = await containerRef.get();
           const containerNo = containerSnap.data().container_no;

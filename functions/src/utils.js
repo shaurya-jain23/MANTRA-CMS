@@ -1,11 +1,14 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import { JWT } from "google-auth-library";
+import { google } from "googleapis";
 
 
 export async function getGoogleSheet(key, sheetTitle) {
   const SPREADSHEET_ID = "15jWPAxLgLfWAFPBdOAvRZ5sqHQy-z9SCaoP3eaTgR5c"; // Your Sheet ID
   const credentials = JSON.parse(key);
-  const scopes = ["https://www.googleapis.com/auth/spreadsheets"];
+  const scopes = ["https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.readonly"
+  ];
 
   const auth = new JWT(
     {email: credentials.client_email,
@@ -13,10 +16,29 @@ export async function getGoogleSheet(key, sheetTitle) {
     scopes: scopes,
   },
   );
-
-  const doc = new GoogleSpreadsheet(SPREADSHEET_ID, auth);
-  await doc.loadInfo();
-  return doc.sheetsByTitle[sheetTitle]; // Dynamic sheet title
+  await auth.authorize();
+  try {
+    const drive = google.drive({ version: 'v3', auth });
+    const driveResponse = await drive.files.get({
+      fileId: SPREADSHEET_ID,
+      fields: 'modifiedTime', // Specify which field to return
+    });
+    const lastModifiedTime = driveResponse.data.modifiedTime;
+    const doc = new GoogleSpreadsheet(SPREADSHEET_ID, auth);
+    await doc.loadInfo();
+    const sheet = doc.sheetsByTitle[sheetTitle];
+    if (!sheet) {
+        throw new Error(`Sheet with title "${sheetTitle}" not found.`);
+    }
+    return {
+      sheet: sheet,
+      lastModifiedTime: lastModifiedTime,
+    };
+    
+  } catch (error) {
+    console.error("The Google API returned an error:", error);
+    return null;
+  }
 }
 
 /**
@@ -35,3 +57,5 @@ export function formatBookingRemarks(booking) {
 
     return `Price: ₹${booking.pricePerPiece}/psc ${extras && ('| Extras: ' + extras)} | ${transportInfo}`;
 }
+
+
