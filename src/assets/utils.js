@@ -8,6 +8,31 @@ const sortOptions = [
   { key: 'color_bright', label: 'More Bright Colors' },
   { key: 'color_dark', label: 'More Dark Colors' },
 ];
+const salesSortOptions = [
+  { key: 'eta_asc', label: 'ETA: Soonest First' },
+  { key: 'eta_desc', label: 'ETA: Latest First' },
+  { key: 'model_asc', label: 'Model: A-Z' },
+  { key: 'model_desc', label: 'Model: Z-A' },
+  { key: 'color_bright', label: 'More Bright Colors' },
+  { key: 'color_dark', label: 'More Dark Colors' },
+
+];
+const TABS = [
+    { name: 'All' },
+    { name: 'SINGLE LIGHT' },
+    { name: 'DOUBLE LIGHT' },
+    { name: 'OTHER MODELS' }
+];
+
+const salesColumns = [
+    { header: 'Model', key: 'model' },
+    { header: 'Specifications', key: 'specifications' },
+    { header: 'Qty', key: 'qty' },
+    { header: 'Battery', key: 'battery' },
+    { header: 'Charger', key: 'charger' },
+    { header: 'Colours', key: 'colours' },
+    { header: 'ETA', key: 'eta' },
+  ];
 
 const etaOptions = [
     { key: 'all', label: 'All' },
@@ -92,4 +117,4 @@ const containerDetailsOrder = {
   shipping_rent: 21,
 }
 
-export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder}
+export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder, salesColumns, TABS, salesSortOptions}
