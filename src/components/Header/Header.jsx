@@ -19,21 +19,19 @@ function Header() {
     { name: 'Home', slug: "/", active: true },
     { name: "Login", slug: "/login", active: !authStatus },
     { name: "Signup", slug: "/signup", active: !authStatus },
-    { name: "Dashboard", slug: "/dashboard", active: authStatus},
   ];
   if (authStatus) {
+    const adminRoles = ['admin', 'superuser', 'manager'];
+    if(adminRoles.includes(userData.role)){
+      navItems.push({ name: "Dashboard", slug: "/dashboard", active: authStatus});
+    }
     const allowedRoles = ['admin', 'superuser', 'sales'];
     const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
     const salesText = (userData.role === 'sales') ? 'Available Containers' : 'Sales Panel';
     if(allowedRoles.includes(userData.role)){
       navItems.push({ name: salesText, slug: '/sales', active: authStatus });
-    }
-    if(allowedRoles.includes(userData.role)){
       navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
     }
-  }
-  if (authStatus && userData?.role === 'superuser') {
-    navItems.push({ name: "Manage Users", slug: "/users", active: authStatus });
   }
   if (authStatus) {
     const allowedRoles = ['admin', 'superuser', 'sales', 'accounts'];
@@ -42,6 +40,9 @@ function Header() {
       navItems.push({ name: dealerText, slug: "/dealers", active: authStatus });
     }
   }
+  if (authStatus && userData?.role === 'superuser') {
+    navItems.push({ name: "Manage Users", slug: "/users", active: authStatus });
+    }
   
 
   return (

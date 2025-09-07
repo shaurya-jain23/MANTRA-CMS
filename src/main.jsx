@@ -42,7 +42,7 @@ const router = createBrowserRouter(
             <ProfilePage />
           </Protected>} /> 
       <Route path="/dashboard" element={
-        <Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']}>
+        <Protected authentication allowedRoles={['admin', 'superuser', 'manager']}>
             <DashboardPage />
         </Protected>} />
       <Route path="/sales" element={

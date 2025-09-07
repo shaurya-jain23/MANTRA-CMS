@@ -34,7 +34,7 @@ function Protected({children, authentication= true,allowedRoles = []}) {
                 navigate("/unauthorized");
               }
               else if(!allowedRoles || allowedRoles.length === 0){
-                navigate("/dashboard");
+                navigate("/sales");
               }
             }
             else if(userData?.status === 'disabled'){

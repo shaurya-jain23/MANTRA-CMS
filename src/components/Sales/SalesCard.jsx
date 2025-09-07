@@ -3,7 +3,8 @@ import { Button } from '../';
 import { Download } from 'lucide-react';
 import { ColorBar } from '../index';
 
-function SalesCard({ container, onBookNow,onDownloadRequest }) {
+function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
+
   // Dummy download handler
   const handleDownloadCard = (e) => {
     e.stopPropagation(); // Prevent card click
@@ -22,17 +23,20 @@ function SalesCard({ container, onBookNow,onDownloadRequest }) {
 
   return (
     <>
-    <div className="bg-white p-4 flex flex-col justify-start border border-gray-200 lg:border-0 lg:border-b-1 lg:grid lg:grid-cols-10 lg:gap-3 lg:items-center lg:text-center">
+    <div className={`bg-white p-4 flex flex-col justify-start border border-gray-200 lg:border-0 lg:border-b-1 lg:grid ${isAdmin? 'lg:grid-cols-11' : 'lg:grid-cols-10'} lg:gap-3 lg:items-center lg:text-center`}>
       {/* Container No (1 cols) */}
-      <div className="mb-4 lg:mb-0 text-md pb-2 lg:pb-0 border-b-1 lg:border-b-0 border-gray-200">
-        <p className="font-semibold text-indigo-700">{container.container_no}</p>
+      <div className={`mb-4 lg:mb-0 text-md pb-2 lg:pb-0 border-b-1 lg:border-b-0 border-gray-200 ${isAdmin ? 'lg:col-span-2' : 'lg:col-span-1'}`} >
+        <p className="font-semibold text-blue-700">{container.container_no}</p>
+        {isAdmin && <div className='flex items-center gap-1 lg:justify-center text-sm '>
+        <p className="font-normal lg:hidden lg:text-xs text-gray-500">Company:</p>
+        <p className=" lg:text-center lg:text-gray-500">{container.company_name}</p></div>}
       </div>
 
       {/* Model & Specs (2 cols) */}
       <div className="lg:col-span-2 mb-2 lg:mb-0 flex lg:flex-col text-sm gap-1 lg:gap-0  flex-wrap">
         <p className="font-normal lg:hidden lg:text-xs text-gray-500">Model & Specs:</p>
-        <p className="font-normal">{container.model}</p>
-        <p className="lg:text-xs text-gray-500">{container.specifications}</p>
+        <p className="lg:font-normal">{container.model}</p>
+        <p className="lg:text-xs lg:text-gray-500">{container.specifications}</p>
       </div>
       
       {/* Qty (1 col) */}

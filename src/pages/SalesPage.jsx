@@ -39,6 +39,8 @@ function SalesPage() {
     return () => unsubscribe();
   }, []);
 
+  const isAdmin = ['admin', 'superuser'].includes(userData?.role);
+
   const availableContainers = useMemo(() => {
     const OTHER_MODELS = ['SINGLE LIGHT', 'DOUBLE LIGHT'];
     let processed = allContainers.filter(c => c.sales_status === 'Available for sale');
@@ -54,7 +56,10 @@ function SalesPage() {
       const lowercasedQuery = searchQuery.toLowerCase();
       processed = processed.filter(c => 
         String(c.container_no).toLowerCase().includes(lowercasedQuery) ||
-        String(c.model).toLowerCase().includes(lowercasedQuery)
+        String(c.model).toLowerCase().includes(lowercasedQuery) ||
+        String(c.job_no).toLowerCase().includes(lowercasedQuery) ||
+        String(c.bl_number).toLowerCase().includes(lowercasedQuery) || 
+        String(c.port).toLowerCase().includes(lowercasedQuery) 
       );
     }
 
@@ -178,7 +183,13 @@ function SalesPage() {
         <div className="bg-white p-4 border-b-gray-100">
             <Tabs tabs={TABS} activeTab={activeTab} onTabClick={setActiveTab} />
             <div className="flex flex-col lg:flex-row justify-between items-center pt-6 gap-4">
-            <SearchBar query={searchQuery} setQuery={setSearchQuery} className='rounded-xs py-2' resultCount={availableContainers.length}/>
+            <SearchBar
+            query={searchQuery} 
+            setQuery={setSearchQuery} 
+            className='rounded-xs py-2'
+            resultCount={availableContainers.length}
+            placeholder='Search by Container No, Model,Port , BL No, Job No...'
+            />
             <DropDown 
                 ref={dropdownRef}
                 options={salesSortOptions} 
@@ -193,8 +204,9 @@ function SalesPage() {
         </div>
         )}
       {/* Desktop Header for the Grid */}
-        <div className="hidden lg:grid grid-cols-10 gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg">
-            <div>Container</div>
+        <div className={`hidden lg:grid ${isAdmin ? 'grid-cols-11' : 'grid-cols-10'}  gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg`}>
+            {isAdmin ? <div className='col-span-2'>Container & Company</div> : 
+            <div>Container</div>}
             <div className="col-span-2">Model & Specs</div>
             <div>Qty</div>
             <div className="col-span-2">Colours</div>
@@ -210,6 +222,7 @@ function SalesPage() {
                 container={container}
                 onDownloadRequest={() => handleDownloadRequest(container)}
                 onBookNow={() => handleOpenBookingModal(container)}
+                isAdmin= {isAdmin}
             />
             ))}
         </div>

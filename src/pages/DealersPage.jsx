@@ -16,12 +16,13 @@ function DealersPage() {
   const [dealerToEdit, setDealerToEdit] = useState(null);
   const [activeTab, setActiveTab] = useState('All');
   const userData = useSelector(selectUser);
+  const isAdmin = ['admin', 'superuser'].includes(userData?.role);
 
   // Fetch dealers based on user role
   useEffect(() => {
     if (userData?.uid) {
       setLoading(true);
-      const fetchDealers = ['admin', 'superuser'].includes(userData.role)
+      const fetchDealers = isAdmin
         ? dealerService.getAllDealers()
         : dealerService.getDealersBySalesperson(userData.uid);
       
@@ -31,6 +32,7 @@ function DealersPage() {
         .finally(() => setLoading(false));
     }
   }, [userData]);
+
 
   const TabsOptions =  [...new Set(dealers.map(c => c.registered_by_name?.trim().toUpperCase()).filter(Boolean))].map(u => { return {name: u}})
   const SalesTabs = [{name: 'ALL'}, ...TabsOptions]
@@ -121,8 +123,8 @@ function DealersPage() {
               <StatCard title="Disabled Dealers" value={atPortCount} icon={<Anchor className="text-indigo-500" />} />
         </div> 
       <div className="bg-white p-4 border-b-gray-100">
-            <Tabs tabs={SalesTabs} activeTab={activeTab} onTabClick={setActiveTab} />
-            <div className="flex flex-col lg:flex-row justify-between items-center pt-6 gap-4">
+            {isAdmin && <Tabs tabs={SalesTabs} activeTab={activeTab} onTabClick={setActiveTab} />}
+            <div className="flex flex-col lg:flex-row justify-between items-center py-6 gap-4">
             <SearchBar
             placeholder= {'Search by Firm name, Gst no, District, State...'}
             query={searchQuery} setQuery={setSearchQuery} className='rounded-xs py-2' resultCount={processedDealers.length}/>
@@ -143,19 +145,6 @@ function DealersPage() {
         <p className="text-gray-600">No dealers found. Click "Register Dealer" to add a new dealer.</p>
       )}
       
-      {/* {!loading && (
-        <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {dealers.map(dealer => (
-            <DealerCard 
-              key={dealer.id} 
-              dealer={dealer}
-              onEdit={handleOpenForm}
-              onStatusChange={handleStatusChange}
-              userData={userData}
-            />
-          ))}
-        </div>
-      )} */}
       {!loading && <div className="space-y-4">
             {processedDealers.map(dealer => (
             <DealerCard 
