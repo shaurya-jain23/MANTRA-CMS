@@ -101,8 +101,6 @@ function SalesPage() {
 
   // --- Booking Modal Handlers ---
   const handleOpenBookingModal = (container) => {
-    console.log(container);
-    
     setSelectedContainer(container);
     setIsBookingModalOpen(true);
   };
@@ -123,7 +121,7 @@ function SalesPage() {
   const atSeaCount = availableContainers.filter(c => c.status === 'At Sea').length;
   const atPortCount = availableContainers.filter(c => c.status !== 'At Sea').length;
 
-    const paginatedContainers = availableContainers.slice((currentPage - 1) * containersPerPage, currentPage * containersPerPage);
+  const paginatedContainers = availableContainers.slice((currentPage - 1) * containersPerPage, currentPage * containersPerPage);
 
 
   if (loading) return <div className="p-8 text-center">Loading Available Containers...</div>;
@@ -134,11 +132,11 @@ function SalesPage() {
         <div className="w-full flex flex-col justify-between mb-10">
             <h1 className="text-3xl font-bold">Sales Dashboard</h1>
         </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <StatCard title="Total Available" value={availableContainers.length} icon={<ListChecks className="text-blue-500" />} />
-            <StatCard title="At Sea" value={atSeaCount} icon={<Ship className="text-teal-500" />} />
-            <StatCard title="At Port / In Transit" value={atPortCount} icon={<Anchor className="text-indigo-500" />} />
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <StatCard title="Total Available" value={availableContainers.length} icon={<ListChecks className="text-blue-500" />} />
+              <StatCard title="At Sea" value={atSeaCount} icon={<Ship className="text-teal-500" />} />
+              <StatCard title="At Port / In Transit" value={atPortCount} icon={<Anchor className="text-indigo-500" />} />
+        </div> 
 
         <div className="bg-white p-4 border-b-gray-100">
             <Tabs tabs={TABS} activeTab={activeTab} onTabClick={setActiveTab} />

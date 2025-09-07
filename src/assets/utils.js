@@ -18,7 +18,7 @@ const salesSortOptions = [
 
 ];
 const TABS = [
-    { name: 'All' },
+    { name: 'ALL' },
     { name: 'SINGLE LIGHT' },
     { name: 'DOUBLE LIGHT' },
     { name: 'OTHER MODELS' }

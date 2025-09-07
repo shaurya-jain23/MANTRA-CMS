@@ -101,7 +101,6 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
                   required
                   defaultValue="-- Select State --"
                   options={allIndianStates.map(state => ({value: state.isoCode, name: state.name}))}
-                  
               />
               )}
           />

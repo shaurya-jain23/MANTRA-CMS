@@ -2,7 +2,7 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import {Input} from './index'
 
-function SearchBar({ query, setQuery, resultCount, className }) {
+function SearchBar({ query, setQuery, resultCount, className, placeholder }) {
   return (
     <div className="flex-grow w-full md:w-3/4 lg:w-1/2">
       <div className="relative w-full">
@@ -13,7 +13,7 @@ function SearchBar({ query, setQuery, resultCount, className }) {
           type="search"
           name="search"
           className={`block pl-10 pr-3 py-2  rounded-sm leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 sm:text-sm ${className}`}
-          placeholder="Search by Container No, BL, Job No, Party Name..."
+          placeholder= {placeholder || "Search by Container No, BL, Job No, Party Name..."} 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
