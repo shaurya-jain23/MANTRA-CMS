@@ -122,7 +122,9 @@ export const scheduledSheetSync = onSchedule({
 
     rows.forEach(row => {
       const containerNo = row.get("CONTAINER NO");
-      if (containerNo) {
+      const eta = row.get("ETA");
+      const etd = row.get("ETD");
+      if (containerNo && (eta || etd)) {
         const docData = {};
         headers.forEach(header => {
           const key = header.trim().replace(/\s+/g, '_').toLowerCase();

@@ -40,7 +40,7 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [activeFilters, setActiveFilters] = useState({});
   const [sortKey, setSortKey] = useState('eta_asc');
-  const [etaKey, setEtaKey] = useState('20')
+  const [etaKey, setEtaKey] = useState('all')
   const [monthKey, setMonthKey] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(10);
@@ -73,27 +73,11 @@ const DashboardPage = () => {
   // --- MEMOIZED FILTERING & SORTING ---
   const processedContainers = useMemo(() => {
     const today = new Date();
-    // const today = new Date(today2.getTime() -30 * 24 * 60 * 60 * 1000); 
-    const lowerBoundTime = today.getTime() - 20 * 24 * 60 * 60 * 1000;
-    const upperBoundTime = today.getTime() + 20 * 24 * 60 * 60 * 1000;
-
     //Default filter
-    let processed = [...allContainers]
-                            .filter(c => {
-                              const timestamp = c.eta?.seconds ? c.eta.seconds : c.etd?.seconds;
-                              if (timestamp) {
-                                const itemDate = new Date(timestamp * 1000);
-                                return itemDate.getTime() >= lowerBoundTime && itemDate.getTime() <= upperBoundTime;
-                              }
-                              return false;
-                            });
-
+    let processed = [...allContainers].filter(c => !['Reached Destination', 'On the way', 'N/A'].includes(c.status));
     // eta wise filter
-    if (etaKey !== '20') {
+    if (etaKey !== 'all') {
       const selectedDays = parseInt(etaKey, 10);
-        if(etaKey === 'all'){
-          processed = [...allContainers];
-        } else{
           const etaUpperBound = today.getTime() + selectedDays * 24 * 60 * 60 * 1000;
           const etalowerBound = today.getTime() - 10 * 24 * 60 * 60 * 1000;
           processed = processed.filter(c => {
@@ -102,10 +86,8 @@ const DashboardPage = () => {
               const itemDate = new Date(timestamp * 1000);
               return itemDate.getTime() >= etalowerBound && itemDate.getTime() <= etaUpperBound;
             }
-            return false;});
-        }
+            return false });
     }
-
     // monthwise filter
     if (monthKey !== 'all') {
       setEtaKey('all')
@@ -145,7 +127,29 @@ const DashboardPage = () => {
     //sorting
     const [key, direction] = sortKey.split('_');
     processed.sort((a, b) => {
-      if (key === 'eta') return direction === 'asc' ? (a.eta || 0) - (b.eta || 0) : (b.eta || 0) - (a.eta || 0);
+      if (key === 'eta') {
+        const etaA = a.eta?.seconds;
+        const etaB = b.eta?.seconds;
+        const etdA = a.etd?.seconds;
+        const etdB = b.etd?.seconds;
+
+        const hasEtaA = !!etaA;
+        const hasEtaB = !!etaB;
+
+        // Rule 1: If one has an ETA and the other doesn't, the one with the ETA comes first.
+        if (hasEtaA && !hasEtaB) return -1;
+        if (!hasEtaA && hasEtaB) return 1;
+
+        // Rule 2: If both have an ETA, sort by ETA.
+        if (hasEtaA && hasEtaB) {
+          return direction === 'asc' ? etaA - etaB : etaB - etaA;
+        }
+
+        // Rule 3: If neither has an ETA, sort by ETD instead.
+        const effectiveEtdA = etdA || (direction === 'asc' ? Infinity : -Infinity);
+        const effectiveEtdB = etdB || (direction === 'asc' ? Infinity : -Infinity);
+        return direction === 'asc' ? effectiveEtdA - effectiveEtdB : effectiveEtdB - effectiveEtdA;
+      }
       if (key === 'color') return direction === 'bright' ? getColorScore(b.colours, 'bright') - getColorScore(a.colours, 'bright') : getColorScore(b.colours, 'dark') - getColorScore(a.colours, 'dark');
       const valA = a[key] || '';
       const valB = b[key] || '';
@@ -186,7 +190,7 @@ const DashboardPage = () => {
       
       // Set Header
       doc.setFontSize(18);
-      doc.text("Big Models Available Containers", 14, 22);
+      doc.text("Containers Report", 14, 22);
       doc.setFontSize(11);
       doc.setTextColor(100);
       doc.text(`Date: ${new Date().toLocaleDateString() }`, 14, 30);

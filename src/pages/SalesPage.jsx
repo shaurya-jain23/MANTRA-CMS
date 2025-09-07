@@ -8,6 +8,8 @@ import dealerService from '../firebase/dealers';
 import { Ship, Anchor, ListChecks } from 'lucide-react';
 import { TABS, salesColumns, salesSortOptions } from '../assets/utils';
 import html2canvas from 'html2canvas-pro';
+import {jsPDF} from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 
 
@@ -18,7 +20,7 @@ function SalesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortKey, setSortKey] = useState('eta_asc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState('ALL');
   const containersPerPage = 10;
     const dropdownRef = useRef();
     const salesCardRef = useRef();
@@ -98,6 +100,41 @@ function SalesPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const handleExportData = (fileType) => {
+      if (fileType === 'PDF') {
+        const doc = new jsPDF({
+          orientation: "landscape",
+        });
+        
+        // Set Header
+        doc.setFontSize(18);
+        doc.text(`${activeTab} Available Containers`, 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Date: ${new Date().toLocaleDateString() }`, 14, 30);
+  
+        // Define table columns from visibleColumns state
+        const tableColumn = salesColumns.map(c => c.header);
+        
+        // Define table rows from the processed (filtered and sorted) data
+        const tableRows = availableContainers.map(container => {
+          return salesColumns.map(c => {
+            const key = c.key;
+            const value = container[key];
+            if (key === 'eta') return (value?.seconds ? new Date(value.seconds * 1000).toLocaleDateString(): 'N/A');
+            return value || 'N/A';
+          });
+        });
+  
+        autoTable(doc, {
+          head: [tableColumn],
+          body: tableRows,
+          startY: 35,
+        });
+        doc.save(`${activeTab}_Available_Containers_${new Date().toLocaleDateString()}.pdf`);
+      }
+    };
 
   // --- Booking Modal Handlers ---
   const handleOpenBookingModal = (container) => {
@@ -183,14 +220,11 @@ function SalesPage() {
         entriesPerPage={containersPerPage}
         onPageChange={setCurrentPage}
       />
-      
-      <div className="mt-8">
-        <ExportControls 
-          data={availableContainers} 
-          columns={salesColumns} 
-          fileName="Available_Containers_Report"
-        />
-      </div>
+      {availableContainers.length > 0 && (
+          <div className="sm:mt-8">
+            <ExportControls onExport={handleExportData} />
+          </div>
+      )}
         <BookingForm
             container={selectedContainer}
             onSubmit={handleBookingSubmit}

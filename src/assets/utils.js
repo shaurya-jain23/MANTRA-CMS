@@ -25,6 +25,7 @@ const TABS = [
 ];
 
 const salesColumns = [
+    { header: 'Container No.', key: 'container_no' },
     { header: 'Model', key: 'model' },
     { header: 'Specifications', key: 'specifications' },
     { header: 'Qty', key: 'qty' },
