@@ -1,37 +1,42 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
 import { selectUser } from '../features/user/userSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectAllDealers ,selectDealersStatus, fetchDealers, setDealersStatus } from '../features/dealers/dealersSlice';
 import dealerService from '../firebase/dealers';
 import { Button, DealerCard, DealerForm, Container, StatCard, Tabs, SearchBar } from '../components';
-import { PlusCircle,Ship, Anchor, ListChecks  } from 'lucide-react';
-import { TABS } from '../assets/utils';
+
+import { PlusCircle,Store, BadgeCheck, BadgeX  } from 'lucide-react';
 import { State } from 'country-state-city';
 
 function DealersPage() {
+  const dispatch = useDispatch();
+  const dealersStatus = useSelector(selectDealersStatus);
+  const dealersData = useSelector(selectAllDealers);
   const [dealers, setDealers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [dealerToEdit, setDealerToEdit] = useState(null);
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState('ALL');
   const userData = useSelector(selectUser);
   const isAdmin = ['admin', 'superuser'].includes(userData?.role);
 
   // Fetch dealers based on user role
   useEffect(() => {
-    if (userData?.uid) {
-      setLoading(true);
-      const fetchDealers = isAdmin
-        ? dealerService.getAllDealers()
-        : dealerService.getDealersBySalesperson(userData.uid);
-      
-      fetchDealers
-        .then(setDealers)
-        .catch(() => setError('Failed to fetch dealers.'))
-        .finally(() => setLoading(false));
-    }
-  }, [userData]);
+      if (dealersStatus === 'idle') {
+        dispatch(fetchDealers({ role: userData.role, userId: userData.uid }));
+      }
+      if(dealersStatus === 'succeeded'){
+        setDealers(dealersData);
+        setLoading(false);
+      }
+      if(dealersStatus === 'failed'){
+        setError('Failed to fetch dealers.')
+        setLoading(false)
+      }
+    }, [dealersStatus, dispatch, userData]);
+
 
 
   const TabsOptions =  [...new Set(dealers.map(c => c.registered_by_name?.trim().toUpperCase()).filter(Boolean))].map(u => { return {name: u}})
@@ -55,7 +60,7 @@ function DealersPage() {
         );
       }
       return processed;
-    }, [dealers, searchQuery, ,activeTab]);
+    }, [dealers, searchQuery ,activeTab]);
 
   // Handlers for form and actions
   const handleOpenForm = (dealer = null) => {
@@ -81,17 +86,15 @@ function DealersPage() {
     data.state = State.getStateByCodeAndCountry(data.state, 'IN').name.toUpperCase();
     data.district= data.district.toUpperCase();
     data.trade_name= data.trade_name.toUpperCase();
-    console.log(data);
     
     if (dealerToEdit) { 
       await dealerService.updateDealer(dealerToEdit.id, data);
       setDealers(dealers.map(d => d.id === dealerToEdit.id ? { ...d, ...data } : d));
     } else { // Add new dealer
       const newDealer = await dealerService.addDealer(data, userData);
-      console.log(newDealer);
-      
       setDealers([newDealer, ...dealers]);
     }
+    dispatch(setDealersStatus("idle"))
     handleCloseForm();
   };
   
@@ -100,8 +103,8 @@ function DealersPage() {
       setDealers(dealers.map(d => d.id === dealerId ? { ...d, status } : d));
   };
 
-  const atSeaCount = dealers.filter(d => d.status !== 'disabled').length;
-  const atPortCount = dealers.filter(d => d.status === 'disabled').length;
+  const activeDealers = dealers.filter(d => d.status !== 'disabled').length;
+  const inactiveDealers = dealers.filter(d => d.status === 'disabled').length;
 
   return (
     <Container>
@@ -118,9 +121,9 @@ function DealersPage() {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <StatCard title="Total Dealers" value={dealers.length} icon={<ListChecks className="text-blue-500" />} />
-              <StatCard title="Active Dealers" value={atSeaCount} icon={<Ship className="text-teal-500" />} />
-              <StatCard title="Disabled Dealers" value={atPortCount} icon={<Anchor className="text-indigo-500" />} />
+              <StatCard title="Total Dealers" value={dealers.length} icon={<Store className="text-blue-500" />} />
+              <StatCard title="Active Dealers" value={activeDealers} icon={<BadgeCheck className="text-green-500" />} />
+              <StatCard title="Inactive Dealers" value={inactiveDealers} icon={<BadgeX className="text-red-500" />} />
         </div> 
       <div className="bg-white p-4 border-b-gray-100">
             {isAdmin && <Tabs tabs={SalesTabs} activeTab={activeTab} onTabClick={setActiveTab} />}
@@ -136,7 +139,8 @@ function DealersPage() {
           {/* <div className="col-span-1">PHONE NO.</div> */}
           <div>GST NO.</div>
           <div className="col-span-2">DISTRICT | STATE | PINCODE</div>
-          <div>SALES PERSON</div>
+         
+          <div>{isAdmin ? 'SALES PERSON' : 'ADDRESS'}</div>
           <div className="col-span-2">ACTIONS</div>
       </div>
       {loading && <p>Loading dealers...</p>}

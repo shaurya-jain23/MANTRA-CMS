@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import containerService from '../firebase/container';
+import { selectAllContainers ,selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
+import { useSelector, useDispatch } from 'react-redux';
 import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls, BookingForm} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 import {jsPDF} from 'jspdf';
@@ -7,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 import bookingService from '../firebase/bookings';
 import dealerService from '../firebase/dealers';
 import { useNavigate } from 'react-router-dom';
+import { Timestamp } from "firebase/firestore";
 
 const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
@@ -35,7 +37,11 @@ const getColorScore = (colorString = '', type) => {
 
 
 const DashboardPage = () => {
-  const [allContainers, setAllContainers] = useState([]); // Holds the master list of all containers from Firestore
+  const dispatch = useDispatch();
+  const containerStatus = useSelector(selectContainerStatus);
+  const containerData = useSelector(selectAllContainers);
+
+  const [allContainers, setAllContainers] = useState([]); 
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [activeFilters, setActiveFilters] = useState({});
@@ -57,25 +63,27 @@ const DashboardPage = () => {
   const [selectedContainer, setSelectedContainer] = useState(null);
 
   const dropdownRef = useRef();
-  // --- DATA FETCHING ---
+
+  
   useEffect(() => {
-    const unsubscribe = containerService.getContainers({}, (data) => {
-      setAllContainers(data);
-      setLoading(false);
-    });
-    return () => {
-      if (unsubscribe && typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (containerStatus === 'idle') {
+        dispatch(fetchContainers());
       }
-    };
-  }, []);
+      if(containerStatus === 'succeeded'){
+        setAllContainers(containerData);
+        setLoading(false);
+      }
+    }, [containerStatus, dispatch]);
 
   // --- MEMOIZED FILTERING & SORTING ---
   const processedContainers = useMemo(() => {
     const today = new Date();
-    //Default filter
+
     let processed = [...allContainers].filter(c => !['Reached Destination', 'On the way', 'N/A'].includes(c.status));
-    // eta wise filter
+    processed = processed.map(c => {const dateObject= new Date(c.eta); 
+          const firestoreTimestamp = Timestamp.fromDate(dateObject);
+          return {...c, eta: firestoreTimestamp}})
+
     if (etaKey !== 'all') {
       const selectedDays = parseInt(etaKey, 10);
           const etaUpperBound = today.getTime() + selectedDays * 24 * 60 * 60 * 1000;
@@ -231,8 +239,7 @@ const DashboardPage = () => {
   const handleBookingSubmit = async (bookingData) => {
     try {
         await bookingService.createBooking(bookingData);
-        // Also update the container's status locally to provide instant feedback
-        const dealer = await dealerService.getDealerById(bookingData.dealerId); // You'd need to add this method to your service
+        const dealer = await dealerService.getDealerById(bookingData.dealerId); 
         await bookingService.updateContainerStatus(bookingData.containerId, `Pending Apporval`, dealer.trade_name);
         handleCloseBookingModal();
         navigate('/bookings');

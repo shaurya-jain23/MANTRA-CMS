@@ -9,9 +9,8 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
     shouldUnregister: true,
     });
 
-
-
     const selectedStateCode = watch('state');
+
 
   
     useEffect(() => {

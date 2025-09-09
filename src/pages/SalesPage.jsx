@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { selectUser } from '../features/user/userSlice';
-import containerService from '../firebase/container';
+import { selectAllContainers ,selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
 import {SalesCard, BookingForm, SalesCardTemp,SearchBar, DropDown, ExportControls,StatCard, Pagination, Container, Tabs} from '../components'; 
 import bookingService from '../firebase/bookings';
 import dealerService from '../firebase/dealers';
@@ -10,11 +11,14 @@ import { TABS, salesColumns, salesSortOptions } from '../assets/utils';
 import html2canvas from 'html2canvas-pro';
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
-
+import { parseISO,format, isValid } from 'date-fns';
 
 
 function SalesPage() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const containerStatus = useSelector(selectContainerStatus);
+  const containerData = useSelector(selectAllContainers);
   const [allContainers, setAllContainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,21 +33,24 @@ function SalesPage() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedContainer, setSelectedContainer] = useState(null);
   
-  const userData = useSelector(selectUser);
-
+  
   useEffect(() => {
-    const unsubscribe = containerService.getContainers({}, (data) => {
-      setAllContainers(data);
+    if (containerStatus === 'idle') {
+      dispatch(fetchContainers());
+    }
+    if(containerStatus === 'succeeded'){
+      setAllContainers(containerData);
       setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [containerStatus, dispatch]);
+  
+  const userData = useSelector(selectUser);
 
   const isAdmin = ['admin', 'superuser'].includes(userData?.role);
 
   const availableContainers = useMemo(() => {
     const OTHER_MODELS = ['SINGLE LIGHT', 'DOUBLE LIGHT'];
-    let processed = allContainers.filter(c => c.sales_status === 'Available for sale');
+    let processed = [...allContainers].filter(c => c.sales_status === 'Available for sale');
     if (activeTab === 'SINGLE LIGHT') {
       processed = processed.filter(c => c.model === 'SINGLE LIGHT');
     } else if (activeTab === 'DOUBLE LIGHT') {
@@ -63,11 +70,21 @@ function SalesPage() {
       );
     }
 
+    processed = processed.map(c => {
+      let dateObject;
+      if (c.eta === 'N/A' || !c.eta) dateObject= c.eta
+      else dateObject= parseISO(c.eta)
+
+      if (!isValid(dateObject)) dateObject= 'N/A';
+      // const formattedDate = format(dateObject, "dd/MM/yyyy"); 
+      return {...c, eta: dateObject}})
+    
+
     const [key, direction] = sortKey.split('_');
     processed.sort((a, b) => {
       if (key === 'eta') {
-        const timeA = a.eta?.seconds || 0;
-        const timeB = b.eta?.seconds || 0;
+        const timeA = a.eta || 0;
+        const timeB = b.eta || 0;
         return direction === 'asc' ? timeA - timeB : timeB - timeA;
       }
       const valA = a[key] || '';
@@ -120,14 +137,15 @@ function SalesPage() {
         doc.text(`Date: ${new Date().toLocaleDateString() }`, 14, 30);
   
         // Define table columns from visibleColumns state
-        const tableColumn = salesColumns.map(c => c.header);
+        const exportColumns = isAdmin ? [{ header: 'Company Name', key: 'company_name' }, ...salesColumns, { header: 'Port', key: 'port' }] : salesColumns;
+        const tableColumn = exportColumns.map(c => c.header);
         
         // Define table rows from the processed (filtered and sorted) data
         const tableRows = availableContainers.map(container => {
-          return salesColumns.map(c => {
+          return exportColumns.map(c => {
             const key = c.key;
             const value = container[key];
-            if (key === 'eta') return (value?.seconds ? new Date(value.seconds * 1000).toLocaleDateString(): 'N/A');
+            if (key === 'eta') return ((container.eta instanceof Date) ? format(container[key], 'dd-MMM'): 'N/A');
             return value || 'N/A';
           });
         });
@@ -153,8 +171,8 @@ function SalesPage() {
       await bookingService.createBooking(bookingData);
       const dealer = await dealerService.getDealerById(bookingData.dealerId);
       await bookingService.updateContainerStatus(bookingData.containerId, 'Pending Booking', dealer.trade_name);
-      alert('Booking request submitted!');
       handleCloseBookingModal();
+      navigate('/bookings');
     } catch (error) {
       alert(error.message);
     }
