@@ -16,8 +16,6 @@ export const onDealerWriteSyncToSheet = firestore.onDocumentWritten({
         return;
     }
     
-    console.log(event.params);
-    
     const dealerId = event.params.dealerId;
     const dealerData = event.data.after.data(); // The new data of the document
     

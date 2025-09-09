@@ -7,11 +7,11 @@ import * as sync from './src/containers.js';
 
 export const {
     approveAndSyncBooking,
+    deleteAndSyncBooking
 } = bookings;
 
 export const {
     onDealerWriteSyncToSheet,
-    deleteAndSyncBooking,
 } = dealers;
 
 export const {
