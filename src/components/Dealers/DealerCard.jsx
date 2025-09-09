@@ -6,16 +6,17 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
   const userRole = userData?.role;
   const isAuthor = dealer?.registered_by_id === userData?.uid;
   
-  // const isAuthor = dealer && userData ? dealer.registered_by_id === userData.uid : false;
-
   const showEditButton = isAuthor || userRole === 'superuser';
   const showRegisteredBy = userRole === 'admin' || userRole === 'superuser';
+  const modifedDistrict = dealer['district'].toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  console.log(modifedDistrict);
+  
   
   return (
     <>
     <div className="bg-white p-4 hidden border-gray-200 lg:border-0 lg:border-b-1 lg:grid lg:grid-cols-9 lg:gap-3 lg:items-center lg:text-center">
       <div className="mb-4 lg:mb-0 text-md pb-2 lg:pb-0 lg:col-span-1 flex text-start">
-        <p className="font-semibold text-indigo-700">{dealer.trade_name}</p>
+        <p className="font-semibold text-blue-700">{dealer.trade_name}</p>
       </div>
 
       <div className="lg:col-span-2 mb-2 lg:mb-0 flex lg:flex-col text-sm gap-1 lg:gap-0  flex-wrap">
@@ -61,7 +62,7 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
               bgColor= 'bg-white'
               textColor='text-black'
               className="hover:bg-gray-100 border border-gray-100 text-gray-500 flex justify-center !w-fit !p-2" 
-              onClick={() =>{onEdit({...dealer})}}>
+              onClick={() =>{onEdit({...dealer, district: modifedDistrict})}}>
             <SquarePen size={18}/>
           </Button>
           }

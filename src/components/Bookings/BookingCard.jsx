@@ -3,6 +3,7 @@ import { CheckCircle, XCircle, SquarePen, Trash } from 'lucide-react';
 import { Button, Select } from '../index';
 
 function BookingCard({ booking, userRole, onEdit, onAction }) {
+  
   const getStatusColor = (status) => {
     if (status === 'Approved') return 'bg-green-100 text-green-800';
     if (status === 'Rejected') return 'bg-red-100 text-red-800';
@@ -19,10 +20,10 @@ function BookingCard({ booking, userRole, onEdit, onAction }) {
           <div className="flex items-center space-x-2 gap-2 w-auto">
             {(userRole === 'superuser') && booking.status === 'Pending' && (
             <>
-                <Button onClick={() => onAction('reject', booking.id)} className="hover:bg-red-700 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" bgColor="bg-red-600">
+                <Button onClick={() => onAction('reject', booking)} className="hover:bg-red-700 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" bgColor="bg-red-600">
                     <XCircle size={18}/>
                 </Button>
-                <Button onClick={() => onAction('approve', booking.id)} className="hover:bg-green-700 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" bgColor="bg-green-600">
+                <Button onClick={() => onAction('approve', booking)} className="hover:bg-green-700 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" bgColor="bg-green-600">
                     <CheckCircle size={18} />
                 </Button>
             </>
@@ -30,7 +31,7 @@ function BookingCard({ booking, userRole, onEdit, onAction }) {
             <Button type="submit" className="hover:bg-blue-600 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" onClick={() => onEdit({...booking})}>
                 <SquarePen size={18}/>
             </Button>
-            <Button type="submit" className="hover:bg-stone-600 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" bgColor="bg-stone-600" onClick={() => onAction('delete', booking.id)}>
+            <Button type="submit" className="hover:bg-stone-600 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" bgColor="bg-stone-600" onClick={() => onAction('delete', booking)}>
                 <Trash size={18} />
             </Button>
             <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(booking.status)}`}>

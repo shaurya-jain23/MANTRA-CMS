@@ -1,10 +1,11 @@
 import React from 'react';
 import {ColorBar} from '../index';
+import { format } from 'date-fns';
 
 // This component is designed to be rendered off-screen for image capture.
 const SalesCardTemp = React.forwardRef(({ container }, ref) => {
   const today = new Date().toLocaleDateString();
-  const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() : null;
+  const eta = container.eta ? format(container.eta, 'dd-MMM') : 'N/A';
 
   return (
     <div ref={ref} className="w-[600px] bg-white p-6 border-2 border-gray-800 font-sans">

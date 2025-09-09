@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '../';
 import { Download } from 'lucide-react';
 import { ColorBar } from '../index';
+import { format } from 'date-fns';
 
 function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
 
@@ -16,10 +17,14 @@ function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
     onBookNow(container);
   };
 
-
-  const etaDate = container.eta?.seconds
-    ? new Date(container.eta.seconds * 1000).toLocaleDateString()
-    : 'N/A';
+  let etaDate;
+  if (container.eta && container.eta !== 'N/A') {
+    etaDate = format(container.eta, 'dd-MMM');
+  } else {
+    etaDate = 'N/A';
+  }
+  console.log(container.eta);
+  
 
   return (
     <>
@@ -66,7 +71,7 @@ function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
         <p className="text-sm text-gray-500">{container.port}</p>
       </div>
 
-      <div className="lg:hidden mb-4">
+      <div className="lg:hidden xs:block hidden mb-4">
         <ColorBar colorString={container.colours} />
       </div>
       {/* Actions (1 col on desktop) */}

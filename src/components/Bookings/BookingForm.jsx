@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectUser } from '../../features/user/userSlice';
 import dealerService from '../../firebase/dealers';
 import containerService from '../../firebase/container';
 import { Input, Button, ModalContainer,Select, CheckBox } from '../index';
+import { setBookingsStatus } from "../../features/bookings/bookingsSlice";
 
 function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit }) {
+    const dispatch = useDispatch();
   const [dealers, setDealers] = useState([]);
   const userData = useSelector(selectUser);
   const userRole = userData?.role;
@@ -48,18 +50,22 @@ function BookingFormModal({ container, onSubmit, onCancel, isOpen, bookingToEdit
 
     useEffect(() => {
         if (userData?.uid) {
-            isAdmin ? dealerService.getAllDealers().then(setDealers) : 
-            dealerService.getDealersBySalesperson(userData.uid).then(setDealers);
+            dealerService.getDealers(userData.uid, userData.role).then(setDealers);
         }
     }, [userData]);
 
     const handleFormSubmit = () => {
+        dispatch(setBookingsStatus("idle"))
+        if(bookingToEdit) onSubmit(formData);
+        else{
         const bookingData = {
-        ...formData,
-        containerId: container.id,
-        registeredBy: userData.uid,
+            ...formData,
+            containerId: container.id,
+            registeredBy: userData.uid,
+            requested_by_name: userData.displayName
         };
         onSubmit(bookingData);
+        }
     };
 
   return (
