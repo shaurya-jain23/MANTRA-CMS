@@ -23,7 +23,6 @@ function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
   } else {
     etaDate = 'N/A';
   }
-  console.log(container.eta);
   
 
   return (

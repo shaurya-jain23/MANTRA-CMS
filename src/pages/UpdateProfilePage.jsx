@@ -1,10 +1,10 @@
-import {UpdateProfile} from '../components'
+import {UpdateProfile, Container} from '../components'
 
 function UpdateProfilePage() {
   return (
-    <div className="py-8">
+    <Container>
       <UpdateProfile/>
-    </div>
+    </Container>
   )
 }
 

@@ -34,7 +34,6 @@ const Signup = () => {
 
 
   return (
-    <div className="flex flex-grow items-center justify-center bg-gray-50">
       <div className="w-19/20 max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h2 className="text-xl sm:text-2xl font-bold text-center text-gray-800">MANTRA-CMS <br />Create an Account</h2>
         
@@ -109,7 +108,6 @@ const Signup = () => {
           </Link>
         </p>
       </div>
-    </div>
   );
 };
 

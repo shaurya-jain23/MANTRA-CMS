@@ -1,9 +1,11 @@
 import { useSelector } from 'react-redux';
 import { selectUser } from '../features/user/userSlice';
+import {Container} from '../components'
 
 const PendingApprovalPage = () => {
   const user = useSelector(selectUser);
   return (
+    <Container>
     <div className="flex flex-col items-center justify-center text-center p-4">
       <h1 className="text-3xl font-bold text-gray-800">Account Pending Approval</h1>
       <p className="mt-4 text-lg text-gray-600">
@@ -13,6 +15,7 @@ const PendingApprovalPage = () => {
         Your account is currently awaiting approval from an administrator. Please check back later.
       </p>
     </div>
+    </Container>
   );
 };
 

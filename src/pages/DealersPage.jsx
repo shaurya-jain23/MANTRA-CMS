@@ -4,9 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { selectAllDealers ,selectDealersStatus, fetchDealers, setDealersStatus } from '../features/dealers/dealersSlice';
 import dealerService from '../firebase/dealers';
 import { Button, DealerCard, DealerForm, Container, StatCard, Tabs, SearchBar } from '../components';
-
 import { PlusCircle,Store, BadgeCheck, BadgeX  } from 'lucide-react';
-import { State } from 'country-state-city';
 
 function DealersPage() {
   const dispatch = useDispatch();
@@ -62,10 +60,17 @@ function DealersPage() {
       return processed;
     }, [dealers, searchQuery ,activeTab]);
 
-  // Handlers for form and actions
+  const loadStates = async (countryCode) => {
+      const { State } = await import("country-state-city");
+      return State.getStatesOfCountry(countryCode);
+    };
+  const [allIndianStates, setAllIndianStates] = useState([])
+  useEffect(() => {
+    loadStates("IN").then(setAllIndianStates);
+  }, [isFormOpen]);
   const handleOpenForm = (dealer = null) => {
     if(dealer){
-        dealer.state = State.getStatesOfCountry('IN').find(s => {
+        dealer.state = allIndianStates.find(s => {
           if(s.name.toUpperCase() == dealer.state.toUpperCase()) return s.name})?.isoCode;
         setDealerToEdit(dealer);
     }

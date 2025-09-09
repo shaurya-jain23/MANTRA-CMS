@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Input, Button, Select,ModalContainer } from '../index'; 
-import { State, City } from 'country-state-city';
 
 function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
     const { register, handleSubmit, control,reset, watch, setValue, formState: { errors } } = useForm({
@@ -10,19 +9,30 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
     });
 
     const selectedStateCode = watch('state');
+    const [allIndianStates, setAllIndianStates] = useState([])
+    const [districts, setDistricts] = useState([])
 
+    const loadStates = async (countryCode) => {
+      const { State } = await import("country-state-city");
+      return State.getStatesOfCountry(countryCode);
+    };
+    const loadCities = async (countryCode,stateCode) => {
+      const { City } = await import("country-state-city");
+      return City.getCitiesOfState(countryCode, stateCode);
+    };
 
   
     useEffect(() => {
     if (isOpen){
+      loadStates("IN").then(setAllIndianStates)
       if (dealerToEdit) {
         reset(dealerToEdit);
         const countryCode = 'IN'; // Assuming a fixed country code for now
-        const stateData = State.getStatesOfCountry(countryCode).find(
+        const stateData = allIndianStates.find(
           (s) => s.isoCode === dealerToEdit.state
         );
         if (stateData) {
-          const districts = City.getCitiesOfState(countryCode, stateData.isoCode);
+          loadCities(countryCode, stateData.isoCode).then(setDistricts);
           setValue('district', dealerToEdit.district, { shouldValidate: true });
         }
       } 
@@ -32,8 +42,9 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
       }
   }, [isOpen, dealerToEdit, reset, setValue]);
 
-    const allIndianStates = State.getStatesOfCountry('IN');
-    const districts = selectedStateCode ? City.getCitiesOfState('IN', selectedStateCode) : [];
+    selectedStateCode ? loadCities('IN', selectedStateCode).then(setDistricts) : [];
+    // const allIndianStates = loadStates('IN');
+    
 
     useEffect(() => {
       if (dealerToEdit && districts.length > 0) {

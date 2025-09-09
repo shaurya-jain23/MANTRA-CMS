@@ -1,11 +1,11 @@
 import React from 'react'
-import {Login} from '../components'
+import {Login, Container} from '../components'
 
 function LoginPage() {
   return (
-    <div className="py-8">
-      <Login/>
-    </div>
+    <Container>
+       <Login/>
+    </Container>
   )
 }
 

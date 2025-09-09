@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { analyzer } from 'vite-bundle-analyzer'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
@@ -18,8 +19,9 @@ export default defineConfig({
         future: {
           hoverOnlyWhenSupported: true,
         },
-        plugins: [],}
-  })],
+        plugins: []},}),
+      analyzer(),
+      ],
   server: {
         port: 3000, // Unique port for the first app
         host: 'localhost', // Or '127.0.0.1'

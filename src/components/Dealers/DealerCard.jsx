@@ -9,7 +9,6 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
   const showEditButton = isAuthor || userRole === 'superuser';
   const showRegisteredBy = userRole === 'admin' || userRole === 'superuser';
   const modifedDistrict = dealer['district'].toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  console.log(modifedDistrict);
   
   
   return (
