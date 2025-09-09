@@ -1,9 +1,26 @@
 // src/services/containerService.js
 import { db } from '../config/firebase.js';
 import app from "../config/firebase.js";
-import { collection, query, where, onSnapshot, getFirestore } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getFirestore, getDocs } from 'firebase/firestore';
+import {convertTimestamps} from '../assets/helperFunctions.js'
+
+
 
 export class ContainerService {
+
+  async getAllContainers() {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'containers'));
+      const containers = [];
+      querySnapshot.forEach((doc) => {
+        containers.push({ id: doc.id, ...convertTimestamps(doc.data()) });
+      });
+      return containers;
+    } catch (error) {
+      console.error("Error fetching all containers:", error);
+      throw error;
+    }
+  }
 
   getContainers(filters, callback) {
     try {

@@ -10,6 +10,7 @@ import {
   where, 
   serverTimestamp 
 } from 'firebase/firestore';
+import {convertTimestamps} from '../assets/helperFunctions.js'
 
 class DealerService {
   // Add a new dealer, linking them to the user who registered them
@@ -19,7 +20,7 @@ class DealerService {
         ...dealerData,
         registered_by_id: user.uid,
         registered_by_name: user.displayName,
-        status: 'Active', // Default status
+        status: 'Active', 
         created_at: serverTimestamp(),
       });
       return { id: docRef.id, ...dealerData };
@@ -40,13 +41,17 @@ class DealerService {
     }
   }
 
-  // Fetch all dealers (for Admin/Superuser)
-  async getAllDealers() {
+  
+  async getDealers(userId, role) {
+    const isAdminUser = role === 'superuser' || role === 'admin';
+        const q = isAdminUser
+        ? query(collection(db, 'dealers')) 
+        : query(collection(db, 'dealers'), where('registered_by_id', '==', userId));
     try {
-      const querySnapshot = await getDocs(collection(db, 'dealers'));
+      const querySnapshot = await getDocs(q);
       const dealers = [];
       querySnapshot.forEach((doc) => {
-        dealers.push({ id: doc.id, ...doc.data() });
+        dealers.push({ id: doc.id, ...convertTimestamps(doc.data()) });
       });
       return dealers;
     } catch (error) {
@@ -55,21 +60,6 @@ class DealerService {
     }
   }
 
-  // Fetch only the dealers registered by a specific salesperson
-  async getDealersBySalesperson(userId) {
-    try {
-      const q = query(collection(db, 'dealers'), where('registered_by_id', '==', userId));
-      const querySnapshot = await getDocs(q);
-      const dealers = [];
-      querySnapshot.forEach((doc) => {
-        dealers.push({ id: doc.id, ...doc.data() });
-      });
-      return dealers;
-    } catch (error) {
-      console.error("Error fetching salesperson's dealers:", error);
-      throw new Error("Could not fetch dealers.");
-    }
-  }
   async getDealerById(dealerId) {
     try {
       const docRef = doc(db, "dealers", dealerId);

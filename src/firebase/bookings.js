@@ -11,6 +11,7 @@ import {
   where, 
   serverTimestamp 
 } from 'firebase/firestore';
+import {convertTimestamps} from '../assets/helperFunctions.js'
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
 const functions = getFunctions();
@@ -26,7 +27,6 @@ class BookingService {
             ...bookingData,
             containerRef: doc(db, 'containers', bookingData.containerId),
             dealerRef: doc(db, 'dealers', bookingData.dealerId),
-            userRef: doc(db, 'users', bookingData.registeredBy),
             status: 'Pending', // Default status for all new requests
             rejectionReason: '',
             createdAt: serverTimestamp(),
@@ -41,30 +41,20 @@ class BookingService {
     }
 
   // Fetch all bookings made by a specific salesperson
-    async getBookings(user) {
-        const isAdminUser = user.role === 'superuser' || user.role === 'admin';
+    async getBookings(userId, role) {
+        const isAdminUser = role === 'superuser' || role === 'admin';
         const q = isAdminUser
         ? query(collection(db, 'bookings')) // Superuser gets all bookings
-        : query(collection(db, 'bookings'), where('registeredBy', '==', user.uid));
+        : query(collection(db, 'bookings'), where('registeredBy', '==', userId));
         try {
             const querySnapshot = await getDocs(q);
-            const bookings = [];
-            for (const doc of querySnapshot.docs) {
-                const bookingData = doc.data();
-                
-                // Fetch related container and dealer data for display
-                const containerSnap = await getDoc(bookingData.containerRef);
-                const dealerSnap = await getDoc(bookingData.dealerRef);
-                const userSnap = await getDoc(bookingData.userRef);
-                
-                bookings.push({ 
-                id: doc.id, 
-                ...bookingData,
-                container: containerSnap.exists() ? {id: bookingData.containerId , ...containerSnap.data()} : null,
-                dealer: dealerSnap.exists() ? dealerSnap.data() : null,
-                requested_by_name: userSnap.exists() ? userSnap.data().displayName : 'Unknown',
-                });
-            }
+            const bookings = querySnapshot.docs.map(doc => {
+              const data = convertTimestamps(doc.data());
+              const { containerRef, dealerRef, ...rest } = data; 
+               return {
+                id: doc.id,
+                 ...rest,
+               } });
             return bookings;
         } catch (error) {
         console.error("Error fetching bookings:", error);
@@ -107,9 +97,13 @@ class BookingService {
     }
     }
 
-    async deleteBooking(bookingId) {
+    async deleteBooking(booking) {
     try {
-      const result = await deleteAndSyncBookingCallable({ bookingId });
+      const {id, containerId, container, dealerId, registeredBy, status} = booking
+      const bookingData = {id, container_no: container.container_no, dealerId, containerId,registeredBy, status}
+      console.log(bookingData);
+      
+      const result = await deleteAndSyncBookingCallable({ bookingData });
       return result.data;
     } catch (error) {
       console.error("deleteBooking service error:", error);
@@ -118,9 +112,11 @@ class BookingService {
   }
   
 
-    async approveAndSyncBooking(bookingId) {
+    async approveAndSyncBooking(bookingData) {
         try {
-            const result = await approveAndSyncBookingCallable({ bookingId });
+          const {id, placeOfDelivery, container, dealer,dealerId, registeredBy} = bookingData
+          const booking = {id, placeOfDelivery, container_no: container.container_no, dealerId, registeredBy, trade_name: dealer.trade_name, district: dealer.district}
+            const result = await approveAndSyncBookingCallable({ booking });
             return result.data;
         } catch (error) {
             console.error("Error calling approveAndSyncBooking function:", error);
@@ -128,13 +124,11 @@ class BookingService {
         }
     }
 
-    async rejectBooking(bookingId, reason) {
+    async rejectBooking(booking, reason) {
         try {
-        const bookingRef = doc(db, 'bookings', bookingId);
-        const bookingSnap = await getDoc(bookingRef);
-        if (!bookingSnap.exists()) throw new Error("Booking not found!");
-        const bookingData = bookingSnap.data();
-        const containerRef = bookingData.containerRef;
+        const bookingRef = doc(db, 'bookings', booking.id);
+        const containerRef = booking.containerRef;
+        
         await updateDoc(bookingRef, { status: 'Rejected', rejectionReason: reason });
         await updateDoc(containerRef, { 
           sales_status: 'Available for sale',
