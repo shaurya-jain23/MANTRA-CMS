@@ -11,3 +11,22 @@ export const convertTimestamps = (docData) => {
   }
   return data;
 };
+
+
+export const getDefaultRouteForRole =  function (role) {
+  switch (role) {
+    case "sales":
+      return "/sales";
+    case "admin":
+    case "superuser":
+      return "/dashboard";
+    case "manager":
+      return "/manager";
+    case "dispatch":
+      return "/dispatch";
+    case "accounts":
+      return "/accounts";
+    default:
+      return "/unauthorized";
+  }
+}

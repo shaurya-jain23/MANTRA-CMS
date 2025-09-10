@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
-import {Link, useNavigate} from 'react-router-dom'
+import {Link, useNavigate, useLocation} from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import {useForm} from 'react-hook-form'
+import {getDefaultRouteForRole} from '../../assets/helperFunctions'
 
 import { Button, Input } from '../index';
 import { login as storeLogin } from '../../features/user/userSlice';
@@ -9,6 +10,7 @@ import authService from '../../firebase/auth';
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
     const dispatch = useDispatch();
     const { register, handleSubmit, formState: { errors } } = useForm();
     const [error, setError] = useState('');
@@ -19,6 +21,8 @@ function Login() {
         const userData = await authService.login(data);
         if (userData) {
             dispatch(storeLogin(userData));
+            const from = location.state?.from?.pathname || getDefaultRouteForRole(userData.role);
+            navigate(from, { replace: true });
         }
     } catch (err) {
         setError(err.message);
@@ -32,6 +36,8 @@ function Login() {
         const userData = await authService.loginWithGoogle();
         if (userData) {
             dispatch(storeLogin(userData));
+            const from = location.state?.from?.pathname || getDefaultRouteForRole(userData.role);
+            navigate(from, { replace: true });
         }
     } catch (err) {
         setError(err.message);

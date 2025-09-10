@@ -1,8 +1,8 @@
-// src/pages/SignupPage.jsx
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useForm } from 'react-hook-form';
+import {getDefaultRouteForRole} from '../../assets/helperFunctions'
 
 // Imports for our services, components, and state management
 import authService from '../../firebase/auth'; 
@@ -12,6 +12,7 @@ import { Button, Input, Select } from '../index';
 const Signup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [error, setError] = useState('');
 
@@ -24,7 +25,8 @@ const Signup = () => {
       const userData = await authService.createAccount(data);
       if (userData) {
         dispatch(storeLogin(userData));
-        // navigate('/dashboard');
+        const from = location.state?.from?.pathname || getDefaultRouteForRole(userData.role);
+        navigate(from, { replace: true });
       }
     } catch (err) {
       setError(err.message);
