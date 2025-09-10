@@ -1,8 +1,8 @@
-import React from 'react';
 import { Button } from '../';
-import { Download } from 'lucide-react';
+import { Download, Dot } from 'lucide-react';
 import { ColorBar } from '../index';
 import { format } from 'date-fns';
+import {containerStatusMap} from '../../assets/utils';
 
 function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
 
@@ -29,7 +29,16 @@ function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
     <>
     <div className={`bg-white p-4 flex flex-col justify-start border border-gray-200 lg:border-0 lg:border-b-1 lg:grid ${isAdmin? 'lg:grid-cols-11' : 'lg:grid-cols-10'} lg:gap-3 lg:items-center lg:text-center`}>
       {/* Container No (1 cols) */}
-      <div className={`mb-4 lg:mb-0 text-md pb-2 lg:pb-0 border-b-1 lg:border-b-0 border-gray-200 ${isAdmin ? 'lg:col-span-2' : 'lg:col-span-1'}`} >
+      <div className={`mb-4 lg:mb-0 text-md flex flex-col gap-3/2 pb-2 lg:pb-0 border-b-1 lg:border-b-0 border-gray-200 ${isAdmin ? 'lg:col-span-2' : 'lg:col-span-1'}`} >
+         {isAdmin && <div className='flex items-center gap-1 lg:justify-center mb-1'>
+          <div
+            className={`py-1/2 px-2 flex lg:flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full outline ${
+              containerStatusMap.find((doc) => (doc.status === container.status ? true : null))
+                ?.colour
+            }`}>
+            <div className='h-2 w-2 rounded-full bg-white outline'></div>{container.status.toUpperCase()}
+          </div>
+        </div>}
         <p className="font-semibold text-blue-700">{container.container_no}</p>
         {isAdmin && <div className='flex items-center gap-1 lg:justify-center text-sm '>
         <p className="font-normal lg:hidden lg:text-xs text-gray-500">Company:</p>
