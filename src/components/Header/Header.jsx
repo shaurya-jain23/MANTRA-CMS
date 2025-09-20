@@ -1,8 +1,8 @@
 // src/components/Header/Header.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { HeaderContainer, Logo, LogoutBtn } from '../index.js';
+import { HeaderContainer, Logo, LogoutBtn, ProfileDropdown } from '../index.js';
 import { Menu, X } from 'lucide-react'; 
 import { selectUser, selectIsLoggedIn } from '../../features/user/userSlice.js';
 
@@ -10,10 +10,22 @@ function Header() {
   const authStatus = useSelector(selectIsLoggedIn);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const userData = useSelector(selectUser);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if(profileDropdownOpen){
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside)
+  }, [profileDropdownOpen])
+  
 
   const navItems = [
     { name: 'Home', slug: "/", active: true },
@@ -50,21 +62,21 @@ function Header() {
       <HeaderContainer>
         <nav className="flex items-center justify-between px-4 py-2 sm:px-6 lg:px-8">
           {/* Logo */}
-          <div className="mr-4 flex items-center">
+          <div className="mr-4 gap-2 flex items-center">
             <Link to="/">
               <Logo/>
             </Link>
-            <span className="font-bold text-md lg:text-xl text-gray-800">MANTRA-CMS</span>
+            <span className="font-bold text-md lg:text-xl text-gray-900 tracking-wide">MANTRA-CMS</span>
           </div>
-          <ul className="hidden md:flex items-center ml-auto space-x-4">
+          <ul className="hidden md:flex items-center ml-auto space-x-4 text-md">
             {navItems.map((item) =>
               item.active? (
                 <li key={item.name}>
                   <NavLink
                     to={item.slug}
                     className={({ isActive }) =>
-                      `inline-block px-4 py-2 duration-200 rounded-full font-medium
-                      ${isActive ? "text-blue-700 bg-blue-50" : "text-gray-700 hover:text-blue-700"}`
+                      `inline-block px-4 py-2 duration-300 rounded-full font-medium transition-all 
+                      ${isActive ? "text-blue-700 bg-blue-50" : "text-gray-600 hover:text-blue-800 hover:bg-gray-50"}`
                     }
                   >
                     {item.name}
@@ -74,13 +86,29 @@ function Header() {
             )}
             {authStatus && (
               <li>
-                <LogoutBtn />
+                <ProfileDropdown
+                    isOpen={profileDropdownOpen}
+                    onToggle={(e)=>{
+                      e.stopPropagation();
+                      setProfileDropdownOpen(!profileDropdownOpen)
+                    }}
+                    user={userData}
+                  />
+                {/* <LogoutBtn /> */}
               </li>
             )}
           </ul>
 
           {/* Hamburger Menu Button (Visible on mobile) */}
-          <div className="md:hidden">
+          <div className="md:hidden flex">
+             {authStatus && (<ProfileDropdown
+                    isOpen={profileDropdownOpen}
+                    onToggle={(e)=>{
+                      e.stopPropagation();
+                      setProfileDropdownOpen(!profileDropdownOpen)
+                    }}
+                    user={userData}
+                  />)}
             <button onClick={toggleMenu}>
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -96,7 +124,7 @@ function Header() {
                   <li className='m-0' key={item.name}>
                     <NavLink
                       to={item.slug}
-                      onClick={toggleMenu} // Close menu on click
+                      onClick={toggleMenu} 
                       className={({ isActive }) =>
                         `inline-block px-4 py-2 duration-200 rounded-full font-medium w-full text-center
                         ${isActive ? "text-blue-700 bg-blue-50" : "text-gray-700 bg-gray-100 hover:text-blue-700"}`
@@ -109,7 +137,7 @@ function Header() {
               )}
               {authStatus && (
                 <li>
-                  <LogoutBtn />
+                  <LogoutBtn className='px-4 py-2 duration-200 rounded-full font-medium w-full text-center text-white bg-red-500' />
                 </li>
               )}
             </ul>
