@@ -13,54 +13,40 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage} from './pages';
 
 // Create the router
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route path="/" element={<HomePage />}/>
-      <Route path="/login" element={
-          <Protected authentication={false}>
-            <LoginPage />
-          </Protected>} />
-      <Route path="/signup" element={
-        <Protected authentication={false}>
-            <SignupPage />
-          </Protected>} /> 
-      <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      <Route path="/pending-approval" element={
-        <Protected authentication>
-            <PendingApprovalPage />
-          </Protected>} /> 
-      <Route path="/update-profile" element={
-        <Protected authentication>
-            <UpdateProfilePage />
-          </Protected>} /> 
-      <Route path="/profile" element={
-        <Protected authentication>
-            <ProfilePage />
-          </Protected>} /> 
-      <Route path="/dashboard" element={
-        <Protected authentication allowedRoles={['admin', 'superuser', 'manager']}>
-            <DashboardPage />
-        </Protected>} />
-      <Route path="/sales" element={
-        <Protected authentication allowedRoles={['admin', 'superuser', 'sales']}>
-            <SalesPage />
-        </Protected>} />
-      <Route path="/dealers" element={
-        <Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']}>
-            <DealersPage />
-        </Protected>} />
-      <Route path="/bookings" element={
-        <Protected authentication allowedRoles={['admin', 'superuser', 'sales']}>
-            <BookingsPage />
-        </Protected>} />
-      <Route path="/users" element={
-        <Protected authentication allowedRoles={['superuser']}>
-            <UsersPage />
-        </Protected>} />
+      <Route element={<Protected authentication={false} />}>
+          <Route path="/" element={<HomePage />}/>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      </Route>
+      <Route element={<Protected authentication />}>
+        <Route path="/pending-approval" element={<PendingApprovalPage />} />
+        <Route path="/update-profile" element={<UpdateProfilePage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+      </Route>
+      <Route element={<Protected authentication allowedRoles={['admin', 'superuser', 'manager']} />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Route>
+      <Route element={<Protected authentication allowedRoles={['sales', 'admin', 'superuser']} />}>
+        <Route path="/sales" element={<SalesPage />} />
+        <Route path="/bookings" element={<BookingsPage />} />
+        <Route path="/all-pis" element={<PerformaInvoicesPage />} />
+        <Route path="/generate-pi" element={<PIFormPage />} />
+        <Route path="/edit-pi/:piId" element={<PIFormPage />} />
+        {/* <Route path="/pi/:piId" element={<PIShowPage />} /> */}
+      </Route>
+      <Route element={<Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']} />}>
+        <Route path="/dealers" element={<DealersPage />} />
+      </Route>
+      <Route element={<Protected authentication allowedRoles={['superuser']} />}>
+        <Route path="/users" element={<UsersPage />} />
+      </Route>
       <Route path="*" element={<NotFoundPage/>} />
     </Route>
   )

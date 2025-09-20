@@ -24,6 +24,13 @@ const TABS = [
     { name: 'OTHER MODELS' }
 ];
 
+const bookingTabs = [
+  { name: 'ALL' },
+  { name: 'APPROVAL PENDING' },
+  { name: 'APPROVED AND ACTIVE' },
+  { name: 'COMPLETED' },
+]
+
 const salesColumns = [
     { header: 'Container No.', key: 'container_no' },
     { header: 'Model', key: 'model' },
@@ -94,6 +101,70 @@ const containerStatusMap = [
   {status: 'Reached Destination', colour: 'bg-neutral-300 text-neutral-800'},
 ]
 
+const modelOptions = {
+    "single_light": [
+          "BOTH 10 INCH 48/60V",
+          "BOTH 10 INCH 48/60/72V",
+          "FRONT 12 INCH 48/60V",
+          "FRONT 12 INCH 60/72V",
+          "FRONT 12 INCH 48/60/72V",
+      ],
+    "double_light": [
+        "BOTH 10 INCH 48/60V",
+        "BOTH 10 INCH 48/60/72V",
+        "FRONT 12 INCH 48/60V",
+        "FRONT 12 INCH 60/72V",
+        "FRONT 12 INCH 48/60/72V",
+        "BOTH 12 INCH DOUBLE DISC 60/72V",
+    ],
+    "activa": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+      ],
+    "round_light": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+      ],
+    "jali_vespa": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+    ],
+    "cs2": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+    ],
+    "cutie_super": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+    ],
+    "monarch_super": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+    ],
+    "bmw": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+    ],
+    "monarch_supreme": [
+        "BOTH 12 INCH DOUBLE DISC 60/72",
+    ],
+    "jaguar_(jh)": [
+        "BOTH 12 INCH DOUBLE DISC 60/72"
+    ],
+    "cutie_plus": [
+        "BOTH 12 INCH DOUBLE DISC 60/72"
+    ],
+    "v8": [
+        "BOTH 12 INCH DOUBLE DISC 60/72"
+    ],
+    "loader": [
+        "2 WHEELER, BOTH 12 INCH DOUBLE DISC 60/72",
+        "3 WHEELER, All 12 INCH DOUBLE DISC 60/72"
+    ],
+    "handicaped": [
+        "BOTH 12 INCH DOUBLE DISC 60/72"
+    ],
+    "battery": [
+        "TAINNENG LEAD ACID 7KG 12V32AH/20HR",
+        "CHILWEE LEAD ACID 7KG 12V32AH/20HR",
+        "CHILWEE LEAD ACID 6.6KG 12V32AH/20HR",
+    ],
+
+}
+
 const containerDetailsOrder = {
   job_no: 1,
   company_name: 2,
@@ -118,4 +189,4 @@ const containerDetailsOrder = {
   shipping_rent: 21,
 }
 
-export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder, salesColumns, TABS, salesSortOptions}
+export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder, salesColumns, TABS, salesSortOptions, bookingTabs, modelOptions}
