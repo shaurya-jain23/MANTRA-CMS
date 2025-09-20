@@ -5,6 +5,7 @@ import authService from './firebase/auth'
 import {login, logout} from "./features/user/userSlice"
 import {Footer, Header, Loading} from './components'
 import { Outlet } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
    const [loading, setLoading] = useState(true)
@@ -32,6 +33,14 @@ function App() {
          <Outlet /> 
       </main>
       <Footer/>
+      <Toaster
+        toastOptions={{
+          className: "",
+          style: {
+            fontSize: "13px"
+          }
+        }}
+      />
     </div>
   );
 }
