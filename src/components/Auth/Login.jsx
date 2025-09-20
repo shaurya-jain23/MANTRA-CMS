@@ -50,7 +50,7 @@ function Login() {
     
         {error && <p className="text-sm text-center text-red-500">{error}</p>}
     
-        <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
+        <form onSubmit={handleSubmit(handleLogin)} className="space-y-2">
             <Input
             label="Email: "
             placeholder="Enter your email"
@@ -73,7 +73,7 @@ function Login() {
             />
         {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
 
-        <Button type="submit" className="hover:bg-blue-700">
+        <Button type="submit" className="hover:bg-blue-700 !mt-6">
             Sign In
         </Button>
         </form>

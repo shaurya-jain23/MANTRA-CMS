@@ -20,7 +20,7 @@ const Input = function Input({
             id={id}
             placeholder={placeholder}
             required={required}
-            className={`w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm outline-none duration-200 focus:ring-indigo-500 focus:border-indigo-500 ${className}`}
+            className={`w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm outline-none duration-200 focus:ring-indigo-500 focus:border-indigo-500 ${className}  ${props.disabled ? 'bg-gray-100' : 'bg-white'}`}
             ref={ref}
             {...props}
           />
@@ -30,7 +30,7 @@ const Input = function Input({
             placeholder={placeholder}
             type={type}
             required={required}
-            className={`w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm outline-none duration-200 focus:ring-indigo-500 focus:border-indigo-500 ${className}`}
+            className={`w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm outline-none duration-200 focus:ring-indigo-500 focus:border-indigo-500 ${className} ${props.disabled ? 'bg-gray-100' : 'bg-white'}`}
             ref={ref}
             {...props}
         />

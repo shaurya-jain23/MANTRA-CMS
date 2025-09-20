@@ -41,7 +41,7 @@ const Signup = () => {
         
         {error && <p className="text-sm text-center text-red-500">{error}</p>}
         
-        <form onSubmit={handleSubmit(handleSignup)} className="space-y-4">
+        <form onSubmit={handleSubmit(handleSignup)} className="space-y-2">
           <Input
             label="Full Name"
             type="text"
