@@ -8,7 +8,7 @@ import { clearBookings } from '../../features/bookings/bookingsSlice';
 
 import authService from '../../firebase/auth';
 
-function LogoutBtn() {
+function LogoutBtn({className}) {
     const dispath = useDispatch();
     const navigate = useNavigate();
     const logoutHandler = () => {
@@ -21,8 +21,9 @@ function LogoutBtn() {
           navigate("/login");
     }
   return (
-    <button className='inline-block px-6 py-2 duration-200 font-semibold text-white bg-red-600 rounded-full hover:bg-red-700' onClick={logoutHandler}>Logout</button>
+    <button className={`inline-block w-full text-start ${className}`} onClick={logoutHandler}>Logout</button>
   )
 }
 
 export default LogoutBtn
+
