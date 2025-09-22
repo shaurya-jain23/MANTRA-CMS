@@ -14,11 +14,9 @@ function Protected({ children, authentication = true, allowedRoles = [] }) {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const userData = useSelector(selectUser);
 
-  // Remember last path we navigated to to avoid repeating navigation
   const lastNavRef = useRef(null);
 
   useEffect(() => {
-    // Determine single target path (or null if no navigation needed)
     let target = null;
     let navState = undefined; // optional state for navigate
 
@@ -53,7 +51,6 @@ function Protected({ children, authentication = true, allowedRoles = [] }) {
       else navigate(target, { replace: true });
     }
 
-    // allow UI to render after we've evaluated navigation
     setLoadingLocal(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [

@@ -5,6 +5,7 @@ import { logout } from '../../features/user/userSlice';
 import { clearDealers } from '../../features/dealers/dealersSlice';
 import { clearContainers } from '../../features/containers/containersSlice';
 import { clearBookings } from '../../features/bookings/bookingsSlice';
+import { clearPIs } from '../../features/performa-invoices/PISlice';
 
 import authService from '../../firebase/auth';
 
@@ -17,6 +18,7 @@ function LogoutBtn({className}) {
                 .then(()=> dispath(clearDealers()))
                 .then(()=> dispath(clearContainers()))
                 .then(()=> dispath(clearBookings()))
+                .then(()=> dispath(clearPIs()))
                 .catch((error) => console.error("Logout failed:", error));
           navigate("/login");
     }

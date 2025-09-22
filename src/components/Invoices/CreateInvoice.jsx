@@ -1,8 +1,5 @@
 import React , {useState, useEffect} from 'react'
-import {useNavigate} from "react-router-dom";
 import {Plus, Trash2} from 'lucide-react';
-import {toast} from 'react-hot-toast';
-import { parseISO,format, isValid } from 'date-fns';
 import { useSelector, useDispatch } from 'react-redux';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { selectUser } from '../../features/user/userSlice';
@@ -14,7 +11,7 @@ function CreateInvoice({piNumber, onSubmit, piToEdit = null }) {
     const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         defaultValues: piToEdit || {
             items: [{}],
-            transport: {included: true, charges: 0},
+            transport: {included: 'true', charges: 0},
             same_as_billing: true,
             extras: { battery: false, charger: false, tyre: false },
         },
@@ -25,10 +22,7 @@ function CreateInvoice({piNumber, onSubmit, piToEdit = null }) {
         name: "items",
     });
 
-    
-
     const dispatch = useDispatch();
-    const navigate = useNavigate();
     const [dealers, setDealers] = useState([]);
     const dealersStatus = useSelector(selectDealersStatus);
     const dealersData = useSelector(selectAllDealers);
@@ -98,9 +92,18 @@ function CreateInvoice({piNumber, onSubmit, piToEdit = null }) {
 
     const handleOnSubmit = (data) =>{
         // dispatch(setDealersStatus("idle"))
-                if(piToEdit) onSubmit(data);
+            const dealer = dealers.find(d => d.id === selectedDealerId);
+                if(piToEdit) {
+                    const piData = {
+                        ...data, 
+                        billing: {...data.billing, firm: dealer.trade_name},
+                        shipping: data.same_as_billing 
+                            ? 'same_as_billing' 
+                            : {...data.shipping},
+                        totals: { subTotal, taxAmount, grandTotal },
+                    }
+                    onSubmit(piData)}
                 else{
-                const dealer = dealers.find(d => d.id === selectedDealerId);
                 const piData = {
                     ...data,
                     billing: {...data.billing, firm: dealer.trade_name},

@@ -40,9 +40,11 @@ function Header() {
     const allowedRoles = ['admin', 'superuser', 'sales'];
     const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
     const salesText = (userData.role === 'sales') ? 'Available Containers' : 'Sales Panel';
+    const invoiceText = (userData.role === 'sales') ? 'My PIs' : 'All PIs'
     if(allowedRoles.includes(userData.role)){
       navItems.push({ name: salesText, slug: '/sales', active: authStatus });
       navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
+      navItems.push({ name: invoiceText, slug: '/performa-invoices', active: authStatus });
     }
   }
   if (authStatus) {

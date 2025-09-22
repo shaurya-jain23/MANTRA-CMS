@@ -13,7 +13,7 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage} from './pages';
 
 // Create the router
 const router = createBrowserRouter(
@@ -36,10 +36,10 @@ const router = createBrowserRouter(
       <Route element={<Protected authentication allowedRoles={['sales', 'admin', 'superuser']} />}>
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/bookings" element={<BookingsPage />} />
-        <Route path="/all-pis" element={<PerformaInvoicesPage />} />
-        <Route path="/generate-pi" element={<PIFormPage />} />
-        <Route path="/edit-pi/:piId" element={<PIFormPage />} />
-        {/* <Route path="/pi/:piId" element={<PIShowPage />} /> */}
+        <Route path="/performa-invoices" element={<PerformaInvoicesPage />} />
+        <Route path="/performa-invoices/new" element={<PIFormPage />} />
+        <Route path="/performa-invoices/:piId/edit" element={<PIFormPage />} />
+        <Route path="/performa-invoices/:piId" element={<PIShowPage />} />
       </Route>
       <Route element={<Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']} />}>
         <Route path="/dealers" element={<DealersPage />} />

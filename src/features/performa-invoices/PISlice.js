@@ -2,14 +2,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import piService from "../../firebase/piService";
 
 export const fetchPis = createAsyncThunk(
-  "pi/fetchPis",
+  "performa_invoices/fetchPis",
   async ({ role, userId }, { rejectWithValue }) => {
     try {
-      console.log('hele', role, userId);
-      
         const pidata =  await piService.getPIs(userId, role);
-        console.log(pidata);
-        
         return pidata;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -55,6 +51,8 @@ const PISlice = createSlice({
 export const { clearPIs, setPIStatus } = PISlice.actions;
 
 export const selectAllPIs = (state) => state.performa_invoices.data;
+export const selectPIById = (state, piId) => 
+  state.performa_invoices.data.find(pi => pi.id === piId);
 export const selectPIStatus = (state) => state.performa_invoices.status;
 
 export default PISlice.reducer;
