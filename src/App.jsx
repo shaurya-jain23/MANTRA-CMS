@@ -37,9 +37,17 @@ function App() {
         toastOptions={{
           className: "",
           style: {
-            fontSize: "13px"
-          }
+            fontSize: "15px",
+            fontWeight: "500",
+            minWidth: '200px',
+          },
         }}
+        containerStyle={{
+            top: 100,
+            left: 20,
+            bottom: 20,
+            right: 20,
+          }}
       />
     </div>
   );
