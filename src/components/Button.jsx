@@ -1,35 +1,45 @@
-// src/components/Button.jsx
-import React from 'react';
+import { twMerge } from 'tailwind-merge';
+import clsx from 'clsx';
 
 function Button({
   children,
   variant = 'primary',
+  size = 'medium',
   type = 'button',
-  bgColor,
-  textColor = 'text-white',
+  bgColor = '',
+  textColor = '',
   className = '',
   ...props
 }) {
 
-  const baseClasses = `inline-flex items-center justify-center font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed`;
+  const baseClasses = `inline-flex items-center justify-center font-medium rounded-md cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200`;
 
   const variantClasses = {
-    primary: 'bg-blue-900 hover: bg-blue-800 text-white',
-    secondary: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-200", 
-    ghost: 'bg-transparent hover: bg-slate-100 text-slate-700',
+    primary: 'w-full bg-gradient-to-br from-blue-800 to-blue-600 hover:to-blue-900 text-white focus:ring-blue-500',
+    secondary: 'w-fit bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 focus:ring-slate-200',
+    ghost: 'w-fit bg-transparent hover:bg-slate-100 text-slate-700 focus:ring-slate-200',
   };
 
   const sizeClasses = {
-    small: 'px-3 py-1 h-8 text-sm', 
+    small: 'p-2 h-8 text-sm', 
     medium: 'px-4 py-2 h-10 text-sm',
     large: 'px-6 py-3 h-12 text-base'
   }
 
+  const allClasses = twMerge(
+    clsx(
+      baseClasses,
+      variantClasses[variant],
+      sizeClasses[size],
+      bgColor && `!${bgColor}`,
+      textColor && `!${textColor}`,
+      className,
+    ),
+  );
+
   return (
     <button
-      className={`w-full px-4 py-2 font-semibold rounded-md shadow-sm focus:outline-none focus:ring-offset-2 ${bgColor ? bgColor : 'bg-gradient-to-br from-blue-800 to-blue-600'}  ${textColor} ${className}`}
-      type={type}
-      {...props}
+      className={allClasses} type={type} {...props}
     >
       {children}
     </button>
