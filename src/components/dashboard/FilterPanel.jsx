@@ -68,6 +68,20 @@ function FilterPanel({ allContainers, onFilterApply, activeFilters}) {
     port: [...new Set(allContainers.map(c => c.port?.trim().toUpperCase()).filter(Boolean))],
   }), [allContainers]);
 
+  // const modelDescriptionMap = React.useMemo(() => {
+  //   let modelMap = {};
+  //   const uniqueModels = [...new Set(allContainers.map(c => c.model?.trim().toUpperCase()).filter(Boolean))]
+
+  //   uniqueModels.forEach(model => {
+  //     const filteredContainers = allContainers.filter(c => c.model?.trim().toUpperCase() === model);
+  //     const modelSpecs = [...new Set(filteredContainers.map(c => c.specifications?.trim().toUpperCase()).filter(Boolean))]
+  //     const modelKey = model.trim().replace(/\s+/g, '_').toLowerCase();
+  //     modelMap = {...modelMap, [modelKey]: [...modelSpecs]}
+  //   })
+  //   return modelMap;
+  // }, [allContainers]);
+
+
   const handleLocalChange = (filterName, value) => {
     setLocalFilters(prev => ({ ...prev, [filterName]: value }));
   };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import {Button} from '../index'
 
 function ExportControls({ onExport }) {
   const [fileType, setFileType] = useState('PDF');
@@ -18,12 +19,12 @@ function ExportControls({ onExport }) {
         <option value="PDF">PDF File</option>
         {/* <option value="XLSX">Excel File</option> */}
       </select>
-      <button 
+      <Button 
         onClick={handleExportClick}
-        className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        className="px-6 py-2 !w-fit text-sm font-medium"
       >
         OK
-      </button>
+      </Button>
     </div>
   );
 }
