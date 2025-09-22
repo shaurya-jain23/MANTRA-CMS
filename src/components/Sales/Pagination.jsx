@@ -15,19 +15,17 @@ function Pagination({ currentPage, totalEntries, entriesPerPage, onPageChange })
       <div className="flex items-center space-x-1">
         <Button
           onClick={() => onPageChange(currentPage - 1)}
-          bgColor= 'bg-white'
-          textColor='text-black'
+          variant='secondary'
           disabled={currentPage === 1}
-          className="hover:bg-gray-100 border border-gray-100 disabled:opacity-50 disabled:text-gray !w-fit ">
+          >
                     Previous
         </Button>
         <span className="px-3 py-1 text-base">Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong></span>
         <Button
           onClick={() => onPageChange(currentPage + 1)}
-          bgColor= 'bg-white'
-          textColor='text-black'
+          variant='secondary'
           disabled={currentPage === totalPages}
-          className="hover:bg-gray-100 border border-gray-100 disabled:opacity-50 disabled:text-gray !w-fit">
+          >
                     Next
         </Button>
       </div>

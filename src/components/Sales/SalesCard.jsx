@@ -4,11 +4,11 @@ import { ColorBar } from '../index';
 import { format } from 'date-fns';
 import {containerStatusMap} from '../../assets/utils';
 
-function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
+function SalesCard({ container, onBookNow, onDownloadRequest, isAdmin }) {
 
   // Dummy download handler
   const handleDownloadCard = (e) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation(); 
     onDownloadRequest();
   };
 
@@ -86,16 +86,14 @@ function SalesCard({ container, onBookNow,onDownloadRequest, isAdmin }) {
       <div className="flex flex-row-reverse justify-between lg:flex-col lg:pt-0 lg:items-center gap-2 lg:mt-0 pt-4">
         <Button
           onClick={handleBookClick}
-          bgColor= 'bg-blue-700'
-          textColor='text-white'
-          className="hover:border-blue-700 !shadow-none border border-gray-100 !w-fit !p-2 text-xs !font-normal transition-all duration-300">
+          variant='primary'
+          className="!w-fit !p-2 text-xs">
                 BOOK NOW
         </Button>
         <Button
           onClick={handleDownloadCard}
-          bgColor= 'bg-white'
-          textColor='text-black'
-          className="hover:bg-gray-100 border border-gray-100 !w-fit !p-2">
+          variant='secondary'
+          className="!p-2">
                 <Download size={16} />
         </Button>
       </div>

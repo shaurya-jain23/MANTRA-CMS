@@ -2,7 +2,7 @@ import { SquarePen } from 'lucide-react';
 import { Button, Select } from '../index';
 
 
-function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
+function DealerCard({ key, dealer, onEdit, onStatusChange, userData }) {
   const userRole = userData?.role;
   const isAuthor = dealer?.registered_by_id === userData?.uid;
   
@@ -13,7 +13,7 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
   
   return (
     <>
-    <div className="bg-white p-4 hidden border-gray-200 lg:border-0 lg:border-b-1 lg:grid lg:grid-cols-9 lg:gap-3 lg:items-center lg:text-center">
+    <div className="bg-white p-4 hidden border-gray-200 lg:border-0 lg:border-b-1 lg:grid lg:grid-cols-9 lg:gap-3 lg:items-center lg:text-center" key={key}>
       <div className="mb-4 lg:mb-0 text-md pb-2 lg:pb-0 lg:col-span-1 flex text-start">
         <p className="font-semibold text-blue-700">{dealer.trade_name}</p>
       </div>
@@ -51,16 +51,15 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
             placeholder="Select status"
             defaultValue={dealer.status}
             onChange={(e) => onStatusChange(dealer.id, e.target.value)}
-            className="text-xs lg:!w-1/2"
+            className="text-sm lg:!w-fit !py-1"
             options={['Active', 'Disabled']}
           />
         
         {showEditButton &&
             <Button
               type="submit" 
-              bgColor= 'bg-white'
-              textColor='text-black'
-              className="hover:bg-gray-100 border border-gray-100 text-gray-500 flex justify-center !w-fit !p-2" 
+              variant='secondary'
+              size='small'
               onClick={() =>{onEdit({...dealer, district: modifedDistrict})}}>
             <SquarePen size={18}/>
           </Button>
@@ -76,11 +75,11 @@ function DealerCard({ dealer, onEdit, onStatusChange, userData }) {
             placeholder="Select status"
             defaultValue={dealer.status}
             onChange={(e) => onStatusChange(dealer.id, e.target.value)}
-            className="text-xs "
+            className="text-sm !w-fit !py-1"
             options={['Active', 'Disabled']}
           />
           {showEditButton &&
-            <Button type="submit" className="hover:bg-blue-600 text-gray-500 flex justify-center rounded-sm !w-fit !p-2" onClick={() => onEdit({...dealer})}>
+            <Button type="submit" variant='secondary' size='small' onClick={() => onEdit({...dealer})}>
             <SquarePen size={18}/>
           </Button>
           }
