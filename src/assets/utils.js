@@ -165,6 +165,20 @@ const modelOptions = {
 
 }
 
+const getRoleBadgeColor = (role) => {
+    const colors = {
+      admin: 'bg-red-100 text-red-800',
+      sales: 'bg-blue-100 text-blue-800',
+      manager: 'bg-green-100 text-green-800',
+      accounts: 'bg-purple-100 text-purple-800',
+      store: 'bg-orange-100 text-orange-800',
+      transporter: 'bg-indigo-100 text-indigo-800'
+    };
+    return colors[role] || 'bg-gray-100 text-gray-800';
+  };
+
+const piStatusOptions = [{name: 'Mark Paid', value: 'paid'},{ name: 'Mark Token paid', value: 'token'}, {name: 'Mark Unpaid', value: 'unpaid'}]
+
 const containerDetailsOrder = {
   job_no: 1,
   company_name: 2,
@@ -189,4 +203,4 @@ const containerDetailsOrder = {
   shipping_rent: 21,
 }
 
-export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder, salesColumns, TABS, salesSortOptions, bookingTabs, modelOptions}
+export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder, salesColumns, TABS, salesSortOptions, bookingTabs, modelOptions, piStatusOptions, getRoleBadgeColor}

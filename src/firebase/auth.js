@@ -7,9 +7,15 @@ import {
   onAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  updatePassword,
+  EmailAuthProvider, 
+  reauthenticateWithCredential,
+  reauthenticateWithPopup
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {toast} from 'react-hot-toast';
+import {getErrorMessage, checkNetworkConnection, customInfoToast} from '../assets/helperFunctions'
 
 
 
@@ -28,21 +34,36 @@ export class AuthService{
     }
 
     async getUserProfile(uid) {
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-            const userProfileData=  userSnap.data();
-            if (userProfileData.created_at && typeof userProfileData.created_at.toDate === 'function') {
-                userProfileData.created_at = userProfileData.created_at.toDate().toISOString();
-            }
-            if (userProfileData.updated_at && typeof userProfileData.updated_at.toDate === 'function') {
-                userProfileData.updated_at = userProfileData.updated_at.toDate().toISOString();
-            }
-            return userProfileData;
+        if (!checkNetworkConnection()) {
+            throw new Error('Please check your internet connection.');
         }
-        return null;
+        try {
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                const userProfileData=  userSnap.data();
+                if (userProfileData.created_at && typeof userProfileData.created_at.toDate === 'function') {
+                    userProfileData.created_at = userProfileData.created_at.toDate().toISOString();
+                }
+                if (userProfileData.updated_at && typeof userProfileData.updated_at.toDate === 'function') {
+                    userProfileData.updated_at = userProfileData.updated_at.toDate().toISOString();
+                }
+                return userProfileData;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            const errorInfo = getErrorMessage(error);
+            toast.error(`Failed to fetch user info`)
+            toast.error(errorInfo.message)
+            throw new Error(errorInfo.message);
+        }
     }
     async createAccount(userData){
+        if (!checkNetworkConnection()) {
+            toast.error('Please check your internet connection.');
+            throw new Error('Network connection required.');
+        }
         try {
             const userCredential = await createUserWithEmailAndPassword(this.auth, userData.email, userData.password, userData.fullname);
             const user = userCredential.user;
@@ -62,27 +83,44 @@ export class AuthService{
                 }
                 await setDoc(doc(db, "users", user.uid), userProfile);
                 const loginData = {email: userData.email, password: userData.password};
+                toast.success(`Account created successfully`);
                 return this.login(loginData);
             }
             return userProfile;
         } catch (error) {
-            throw error;
-        }
+            const errorInfo = getErrorMessage(error);
+            toast.error(`Failed to create your account`)
+            toast.error(errorInfo.message);
+            throw new Error(errorInfo.message);
+            
+        } 
     }
     async login({ email, password }) {
+        if (!checkNetworkConnection()) {
+            toast.error('Please check your internet connection.');
+            throw new Error('Network connection required.');
+        }
         try {
             const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
             const user = userCredential.user;
             if (user) {
                 const profile = await this.getUserProfile(userCredential.user.uid);
                 const userData  = {email: user.email, uid: user.uid, displayName: user.displayName, ...profile}
+                toast.success(`Login successful`)
                 return userData; // Combine auth data with profile data
             }
         } catch (error) {
-            throw error;
-        }
+            const errorInfo = getErrorMessage(error);
+            toast.error(`Failed to login`)
+            toast.error(errorInfo.message);
+            throw new Error(errorInfo.message);
+        } 
     }
     async loginWithGoogle() {
+        if (!checkNetworkConnection()) {
+            toast.error('Please check your internet connection.');
+            throw new Error('Network connection required.');
+        }
         try {
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(this.auth, provider);
@@ -102,19 +140,33 @@ export class AuthService{
                     }
                     await setDoc(doc(db, "users", user.uid), profile);
                 }
+                toast.success(`Logged in with Google Auth successfully`)
             return profile;
             }
         } catch (error) {
-            throw error;
-        }
+            const errorInfo = getErrorMessage(error);
+             toast.error(`Google authentication failed`)
+            toast.error(errorInfo.message);
+            throw new Error(errorInfo.message);
+        } 
     }
     async getCurrentUser() {
-        const result =  new Promise((resolve) => {
+        if (!checkNetworkConnection()) {
+            console.warn('Network offline: Cannot fetch current user');
+            return null;
+        }
+        const result = new Promise((resolve) => {
             onAuthStateChanged(this.auth, async (user) => {
                 if (!user) return resolve(null);
-                const profile = await this.getUserProfile(user.uid);
-                const userData  = {email: user.email, uid: user.uid, displayName: user.displayName, ...profile}
-                resolve(userData || null);
+                
+                try {
+                    const profile = await this.getUserProfile(user.uid);
+                    const userData = {email: user.email, uid: user.uid, displayName: user.displayName, ...profile};
+                    resolve(userData || null);
+                } catch (error) {
+                    console.error('Error getting current user profile:', error);
+                    resolve(null);
+                }
             });
         });
         return result;
@@ -122,8 +174,89 @@ export class AuthService{
     async logout() {
         try {
             await signOut(this.auth);
+            toast.success(`Logged out successfully`)
         } catch (error) {
+            const errorInfo = getErrorMessage(error);
+            toast.error(`Failed to logout`)
+            toast.error(errorInfo.message);
             console.log("Firebase service :: logout :: error", error);
+        }
+    }
+    async changePassword(currentPassword, newPassword) {
+        const toastId = toast.loading('Changing the password...');
+        try {
+            const {isGoogleUser} = await this.reauthenticate(currentPassword);
+            if (isGoogleUser) {
+                customInfoToast("Your password is managed by your Google Account. Please change it there.", '6000')
+                return; 
+            }
+        } catch (error) {
+            const errorInfo = getErrorMessage(error);
+            throw new Error(errorInfo.message);
+        } finally{
+            toast.dismiss(toastId);
+        }
+        try {
+            await updatePassword(this.auth.currentUser, newPassword);
+            toast.success('Password changed successfully!');
+        } catch (error) {
+            const errorInfo = getErrorMessage(error);
+            console.error("Password change error:", errorInfo.message);
+            toast.error(errorInfo.message || 'Failed to change password. Please try again.');
+            throw new Error(errorInfo.message);
+        } finally {
+            toast.dismiss(toastId);
+        }
+    }
+    async deleteAccount(credential, uid) {
+        const toastId = toast.loading('Deleting the Account...');
+        try {
+            if(credential){
+                await this.reauthenticate(credential);
+            }
+            const userRef = doc(db, 'users', uid);
+            await deleteDoc(userRef);
+            await authService.deleteUser(this.auth.currentUser);
+            toast.success('Account deleted successfully');
+        } catch (error) {
+            const errorInfo = getErrorMessage(error);
+            console.error("Account deletion error:", errorInfo.message);
+            toast.error(errorInfo.message || 'Failed to delete account. Please try again.');
+            throw new Error(errorInfo.message);
+        } finally {
+            toast.dismiss(toastId);
+        }
+    }
+    async reauthenticate(currentPassword){
+        const toastId = toast.loading('Reauthenticating...');
+        try {
+            const user = this.auth.currentUser;
+            if (!user || !user.email) {
+                throw new Error("No authenticated user found.");
+            }
+            const isGoogleUser = user.providerData.some(
+                provider => provider.providerId === GoogleAuthProvider.PROVIDER_ID
+            );
+            if (isGoogleUser) {
+                customInfoToast("Please re-authenticate by signing in with Google again.", '2000')
+                const provider = new GoogleAuthProvider();
+                const result  = await reauthenticateWithPopup(user, provider);
+                console.log(result);
+                toast.success('Google re-authentication successful', { removeDelay: 3000 });
+                return {...result.user, isGoogleUser}
+            } else {
+                const credential = EmailAuthProvider.credential(user.email, currentPassword);
+                const result = await reauthenticateWithCredential(user, credential);
+                toast.success('re-authentication successful');
+                return {...result.user, isGoogleUser}
+            }
+        } catch (error) {
+            const errorInfo = getErrorMessage(error);
+            console.error("Re-authentication error:", errorInfo.message);
+            toast.error(errorInfo.message || 'Failed to authenticate account. Please try again.');
+            throw new Error(errorInfo.message);
+        } finally {
+            toast.dismiss(toastId);
         }
     }
 }

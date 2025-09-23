@@ -8,21 +8,24 @@ import Button from "./Button";
 import Input from "./Input";
 import Logo from "./Logo";
 import ToggleBtn from "./ToggleBtn";
-import Login from "./Auth/Login";
-import Signup from "./Auth/Signup";
 import ColorBar from "./ColorBar";
 import DropDown from "./DropDown";
 import SearchBar from "./SearchBar";
 import ShowMoreButton from "./ShowMoreButton";
 import Errors from "./Errors";
 import Select from "./Select"
-import UpdateProfile from "./Auth/UpdateProfile";
 import ModalContainer from "./container/ModalContainer";
 import CheckBox from "./CheckBox";
 import HeaderContainer from "./container/HeaderContainer";
 import ConfirmationAlert from "./ConfirmationAlert";
 import Loading from "./Loading";
 
+import Login from "./Auth/Login";
+import Signup from "./Auth/Signup";
+import Profile from "./Auth/Profile";   
+import ReAuthModal from "./Auth/ReAuthModel";
+import UpdateProfile from "./Auth/UpdateProfile";
+import ChangePasswordModal from "./Auth/ChangePasswordModal";
 
 import FilterOptionGroup from "./dashboard/FilterOptionGroup";
 import FilterPanel from "./dashboard/FilterPanel";
@@ -47,4 +50,4 @@ import PICard from "./Invoices/PICard";
 import CreateInvoice from "./Invoices/CreateInvoice";
 import InvoiceDetail from "./Invoices/InvoiceDetail";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs, Loading, ProfileDropdown, PICard, CreateInvoice, InvoiceDetail};
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs, Loading, ProfileDropdown, PICard, CreateInvoice, InvoiceDetail, ReAuthModal, ChangePasswordModal, Profile};
