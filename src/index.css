@@ -24,3 +24,49 @@
     margin: 0;
   }
 }
+
+
+.toast-custom-style {
+  background: #ffffff;
+  color: #222222;
+  font-size: 15px;
+  font-weight: 500;
+  min-width: 200px;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease-in-out;
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes leave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+.animate-enter {
+  animation: enter 0.3s ease-in-out forwards;
+}
+
+.animate-leave {
+  animation: leave 0.3s ease-in-out forwards;
+}
