@@ -5,7 +5,9 @@ import authService from './firebase/auth'
 import {login, logout} from "./features/user/userSlice"
 import {Footer, Header, Loading} from './components'
 import { Outlet } from 'react-router-dom';
+import {Info} from 'lucide-react'
 import { Toaster } from 'react-hot-toast';
+import { ModalProvider } from './contexts/ModalContext';
 
 function App() {
    const [loading, setLoading] = useState(true)
@@ -27,6 +29,7 @@ function App() {
     return (<Loading isOpen={loading} message="Loading the Page..." />)
   }
   return (
+    <ModalProvider>
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header/>
       <main className="flex-grow flex flex-col justify-center items-center">
@@ -41,6 +44,14 @@ function App() {
             fontWeight: "500",
             minWidth: '200px',
           },
+          // Customizing styling for specific toast types
+          custom: {
+            icon: <Info style={{ color: '#007BFF' }} />,
+            style: {
+              background: '#E0F2FF', // Lighter blue background
+              color: '#007BFF',      // Darker blue text
+            },
+          },
         }}
         containerStyle={{
             top: 100,
@@ -50,6 +61,7 @@ function App() {
           }}
       />
     </div>
+    </ModalProvider>
   );
 }
 
