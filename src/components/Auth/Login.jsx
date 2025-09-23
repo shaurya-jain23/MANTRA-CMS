@@ -24,6 +24,7 @@ function Login() {
         if (userData) {
             dispatch(storeLogin(userData));
             const from = location.state?.from?.pathname || getDefaultRouteForRole(userData.role);
+            
             navigate(from, { replace: true });
         }
     } catch (err) {

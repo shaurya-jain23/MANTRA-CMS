@@ -6,8 +6,10 @@ import { selectAllDealers, selectDealersStatus, fetchDealers } from "../features
 import { selectAllBookings, selectBookingsStatus, fetchBookings, setBookingsStatus } from "../features/bookings/bookingsSlice";
 // import { selectAllUsers, selectUsersStatus, fetchUsers } from "../slices/userSlice";
 import bookingService from '../firebase/bookings';
-import {BookingForm as BookingFormModal, BookingCard, Container, ConfirmationAlert,Loading} from '../components';
+import {BookingForm as BookingFormModal, BookingCard, Container, StatCard,ConfirmationAlert,Loading, Tabs, SearchBar} from '../components';
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Ship, Anchor, ListChecks } from 'lucide-react';
+import {bookingTabs , salesColumns } from '../assets/utils';
 
 
 function BookingsPage() {
@@ -18,6 +20,9 @@ function BookingsPage() {
   const [bookingToEdit, setBookingToEdit] = useState(null);
   const userData = useSelector(selectUser);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [activeTab, setActiveTab] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const isAdmin = ['admin', 'superuser'].includes(userData?.role);
 
   // Redux state
   const containers = useSelector(selectAllContainers);
@@ -131,18 +136,53 @@ function BookingsPage() {
     }
   };
 
+  const pendingBookings = bookings.filter(b => b.status === 'Pending').length;
+  const activeBookings = bookings.filter(b => b.status === 'Approved' && b.container.status !== 'Reached Destination').length;
+
   return (
    <Container>
-    <div className="w-full flex flex-col justify-between">
+     <div className="w-full bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-md">
+       <div className="w-full flex flex-col justify-between mb-10">
         <h1 className="text-3xl font-bold text-gray-800">Booking Requests</h1>
+        {/* <div className="mt-6 flex justify-end">
+            <Button
+                onClick={() => handleOpenForm()}
+                className="bg-blue-600 hover:bg-blue-700 !rounded-4xl transition md:w-auto flex items-center"
+                >
+                <PlusCircle size={20} className="mr-2"/> Register Dealer
+            </Button>
+        </div> */}
       </div>
       <Loading isOpen={isUpdating} message="Syncing with server..." />
-      {loading && <p>Loading bookings...</p>}
+      {loading && <Loading isOpen={isUpdating} message="Loading the bookings..." />}
       {!loading && bookings.length === 0 && (
         <p className="text-gray-600">No bookings found. Go to dashboard and submit new booking requests</p>
       )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <StatCard title="Total Bookings" value={bookings.length} icon={<ListChecks className="text-blue-500" />} />
+              <StatCard title="Pending Bookings" value={pendingBookings} icon={<Ship className="text-teal-500" />} />
+              <StatCard title="Active Bookings" value={activeBookings} icon={<Anchor className="text-indigo-500" />} />
+        </div> 
+      <div className="bg-white p-4 border-b-gray-100">
+            {isAdmin && <Tabs tabs={bookingTabs} activeTab={activeTab} onTabClick={setActiveTab} />}
+            <div className="flex flex-col lg:flex-row justify-between items-center py-6 gap-4">
+            <SearchBar
+            placeholder= {'Search by Firm name, Gst no, District, State...'}
+            query={searchQuery} setQuery={setSearchQuery} className='rounded-xs py-2' resultCount={bookings.length}/>
+            </div>
+      </div>
+       <div className={`hidden lg:grid ${isAdmin ? 'grid-cols-11' : 'grid-cols-10'}  gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg`}>
+          {isAdmin ? <div className='col-span-2'>Container & Company</div> : 
+            <div>Container</div>}
+            <div className="col-span-2">Model & Specs</div>
+            <div>Qty</div>
+            <div className="col-span-2">Colours</div>
+            <div className="col-span-2">Battery & Chargers</div>
+            <div>ETA / Port</div>
+            <div>Actions</div>
+        </div>
       {!loading && (
-        <div className="w-full grid grid-cols-1 gap-6">
+        <div className="space-y-4">
           {bookings.map(booking => (
             <BookingCard
               key={booking.id}
@@ -167,6 +207,7 @@ function BookingsPage() {
       onConfirm={handleConfirmAction}
       {...getModalConfig()}
     />
+     </div>
    </Container>
   );
 }

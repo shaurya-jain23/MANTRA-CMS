@@ -134,7 +134,7 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
           {errors.district && <p className="text-sm text-red-500">{errors.district.message}</p>}
         <Input as="textarea" label="Full Address" {...register('address')} />
         <div className="flex justify-end space-x-4 pt-4">
-          <Button type="button" onClick={onCancel} bgColor="bg-gray-500">Cancel</Button>
+          <Button type="button" variant='secondary' className='!w-full' onClick={onCancel} bgColor="bg-gray-500">Cancel</Button>
           <Button type="submit">{dealerToEdit ? 'Update Dealer' : 'Register Dealer'}</Button>
         </div>
       </form>

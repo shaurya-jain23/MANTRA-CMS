@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { selectAllContainers ,selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
 import { useSelector, useDispatch } from 'react-redux';
-import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls, BookingForm} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls, BookingForm, Loading} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -79,10 +79,11 @@ const DashboardPage = () => {
   const processedContainers = useMemo(() => {
     const today = new Date();
 
-    let processed = [...allContainers].filter(c => !['Reached Destination', 'On the way', 'N/A'].includes(c.status));
-    processed = processed.map(c => {const dateObject= new Date(c.eta); 
+    const etaProcessed = [...allContainers].map(c => {const dateObject= new Date(c.eta); 
           const firestoreTimestamp = Timestamp.fromDate(dateObject);
           return {...c, eta: firestoreTimestamp}})
+    let processed = [...etaProcessed].filter(c => !['Reached Destination', 'On the way', 'N/A'].includes(c.status));
+    
 
     if (etaKey !== 'all') {
       const selectedDays = parseInt(etaKey, 10);
@@ -112,7 +113,7 @@ const DashboardPage = () => {
 
     if (searchQuery) {
       const lowercasedQuery = searchQuery.toLowerCase();
-      processed = [...allContainers].filter(c => 
+      processed = [...etaProcessed].filter(c => 
         (String(c.container_no).toLowerCase().includes(lowercasedQuery)) ||
         (String(c.bl_number).toLowerCase().includes(lowercasedQuery)) ||
         (String(c.job_no).toLowerCase().includes(lowercasedQuery)) ||
@@ -250,7 +251,7 @@ const DashboardPage = () => {
 
   // --- RENDER LOGIC ---
   if (loading) {
-    return <div className="p-8 text-center text-lg font-medium">Loading Dashboard...</div>;
+    return <Loading isOpen={true} message="Loading Dashboard..." />
   }
   const containersToShow = processedContainers.slice(0, visibleCount);
   return (
