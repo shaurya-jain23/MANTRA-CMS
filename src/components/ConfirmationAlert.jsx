@@ -41,7 +41,7 @@ function ConfirmationAlert({
           </div>
         </div>
         <div className="mt-6 flex justify-end space-x-3">
-          <Button onClick={onClose} bgColor="bg-gray-200" textColor="text-gray-800">Cancel</Button>
+          <Button onClick={onClose} variant='secondary' className='!w-full'>Cancel</Button>
           <Button onClick={handleConfirm} bgColor={confirmColor}>{confirmText}</Button>
         </div>
     </ModalContainer>
