@@ -3,14 +3,15 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectUser } from '../features/user/userSlice';
 import { selectAllContainers ,selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
-import {SalesCard, BookingForm, SalesCardTemp,SearchBar, DropDown, ExportControls,StatCard, Pagination, Container, Tabs} from '../components'; 
+import {SalesCard, BookingForm, SalesCardTemp,SearchBar, DropDown, ExportControls,StatCard, Pagination, Container, Tabs, Loading} from '../components'; 
 import bookingService from '../firebase/bookings';
 import dealerService from '../firebase/dealers';
-import { Ship, Anchor, ListChecks } from 'lucide-react';
+import { Ship, Anchor, ListChecks, FileText, AlertCircle } from 'lucide-react';
 import { TABS, salesColumns, salesSortOptions } from '../assets/utils';
 import html2canvas from 'html2canvas-pro';
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {toast} from 'react-hot-toast';
 import { parseISO,format, isValid } from 'date-fns';
 
 
@@ -25,6 +26,8 @@ function SalesPage() {
   const [sortKey, setSortKey] = useState('eta_asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('ALL');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState('')
   const containersPerPage = 10;
     const dropdownRef = useRef();
     const salesCardRef = useRef();
@@ -32,6 +35,7 @@ function SalesPage() {
   // State for the booking modal
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedContainer, setSelectedContainer] = useState(null);
+  const [bookedContainer, setBookedContainer] = useState(null);
   
   
   useEffect(() => {
@@ -42,6 +46,11 @@ function SalesPage() {
       setAllContainers(containerData);
       setLoading(false);
     }
+    if(containerStatus === 'failed'){
+        setError('Failed to fetch containers data.')
+        toast.error(`Failed to fetch containers data`)
+        setLoading(false)
+      }
   }, [containerStatus, dispatch]);
   
   const userData = useSelector(selectUser);
@@ -76,7 +85,7 @@ function SalesPage() {
       else dateObject= parseISO(c.eta)
 
       if (!isValid(dateObject)) dateObject= 'N/A';
-      // const formattedDate = format(dateObject, "dd/MM/yyyy"); 
+      
       return {...c, eta: dateObject}})
     
 
@@ -102,45 +111,62 @@ function SalesPage() {
   }, [availableContainers]);
 
   const handleDownloadRequest = (container) => {
-    setSelectedContainer(container);
-    setTimeout(() => {
+      if (isDownloading) return; // Prevent new downloads while one is in progress
+      setSelectedContainer(container);
+      setIsDownloading(true);
+      toast.loading('Preparing container card...');
+    };
+
+  useEffect(() => {
+    if (selectedContainer && salesCardRef.current) {
+      const triggerDownload = async () => {
+        const cardElement = salesCardRef.current;
+        if (!cardElement) return;
+
+        try {
+          const canvas = await html2canvas(cardElement, { scale: 2 });
+          const dataUrl = canvas.toDataURL('image/png');
+          
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = `MANTRA_Container_${selectedContainer.container_no}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast.dismiss();
+          toast.success('Container card downloaded');
+
+        } catch (error) {
+          toast.dismiss();
+          toast.error('Failed to download card.');
+        } finally {
+          // Reset the state so another download can be triggered
+          setSelectedContainer(null);
+          setIsDownloading(false);
+        }
+      };
+
       triggerDownload();
-    }, 100);
-  };
-
-  const triggerDownload = async () => {
-    const cardElement = salesCardRef.current;
-    if (!cardElement || !selectedContainer) return;
-
-    const canvas = await html2canvas(cardElement, { scale: 2 });
-    const dataUrl = canvas.toDataURL('image/png');
-    
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = `MANTRA_Container_${selectedContainer.container_no}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    }
+  }, [selectedContainer, isDownloading]); 
 
   const handleExportData = (fileType) => {
+    const toastId = toast.loading('Exporting containers data...');
       if (fileType === 'PDF') {
         const doc = new jsPDF({
           orientation: "landscape",
         });
         
-        // Set Header
         doc.setFontSize(18);
         doc.text(`${activeTab} Available Containers`, 14, 22);
         doc.setFontSize(11);
         doc.setTextColor(100);
         doc.text(`Date: ${new Date().toLocaleDateString() }`, 14, 30);
   
-        // Define table columns from visibleColumns state
         const exportColumns = isAdmin ? [{ header: 'Company Name', key: 'company_name' }, ...salesColumns, { header: 'Port', key: 'port' }] : salesColumns;
         const tableColumn = exportColumns.map(c => c.header);
         
-        // Define table rows from the processed (filtered and sorted) data
         const tableRows = availableContainers.map(container => {
           return exportColumns.map(c => {
             const key = c.key;
@@ -155,18 +181,21 @@ function SalesPage() {
           body: tableRows,
           startY: 35,
         });
+        toast.success('Containers data exported');
         doc.save(`${activeTab}_Available_Containers_${new Date().toLocaleDateString()}.pdf`);
+        toast.dismiss(toastId);
       }
     };
 
   // --- Booking Modal Handlers ---
   const handleOpenBookingModal = (container) => {
-    setSelectedContainer(container);
+    setBookedContainer(container);
     setIsBookingModalOpen(true);
   };
   const handleCloseBookingModal = () => setIsBookingModalOpen(false);
 
   const handleBookingSubmit = async (bookingData) => {
+    const toastId = toast.loading('Creating the Booking...');
     try {
       await bookingService.createBooking(bookingData);
       const dealer = await dealerService.getDealerById(bookingData.dealerId);
@@ -174,8 +203,11 @@ function SalesPage() {
       handleCloseBookingModal();
       navigate('/bookings');
     } catch (error) {
-      alert(error.message);
+      toast.error(error.message)
     }
+     finally{
+      toast.dismiss(toastId);
+     }
   };
 
   const atSeaCount = availableContainers.filter(c => c.status === 'At Sea').length;
@@ -183,8 +215,9 @@ function SalesPage() {
 
   const paginatedContainers = availableContainers.slice((currentPage - 1) * containersPerPage, currentPage * containersPerPage);
 
-
-  if (loading) return <div className="p-8 text-center">Loading Available Containers...</div>;
+  if (loading) {
+    return <Loading isOpen={true} message="Loading Available Containers..." />
+  }
 
   return (
     <Container>
@@ -221,8 +254,25 @@ function SalesPage() {
           <SalesCardTemp ref={salesCardRef} container={selectedContainer} />
         </div>
         )}
-      {/* Desktop Header for the Grid */}
-        <div className={`hidden lg:grid ${isAdmin ? 'grid-cols-11' : 'grid-cols-10'}  gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg`}>
+      
+      {error && 
+        <div className='flex flex-col items-center py-12 text-center'>
+        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle className='w-8 h-8 text-red-600'/>
+        </div>
+        <h3 className='text-lg font-medium text-slate-900 mb-2'>Error Occured</h3>
+        <p className="text-red-500  mb-6 max-w-md">Error: {error}</p>
+      </div>      
+      }
+
+      {!error && (availableContainers.length === 0 ? <div className='flex flex-col items-center py-12 text-center'>
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <FileText className='w-8 h-8 text-slate-400'/>
+        </div>
+        <h3 className='text-lg font-medium text-slate-900 mb-2'>No containers found</h3>
+        <p className="text-slate-500 mb-6 max-w-md">Your search or filter criteria did not match any of the containers. <br /> Try adjusting search.</p>
+      </div> : <>
+      <div className={`hidden lg:grid ${isAdmin ? 'grid-cols-11' : 'grid-cols-10'}  gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg`}>
             {isAdmin ? <div className='col-span-2'>Container & Company</div> : 
             <div>Container</div>}
             <div className="col-span-2">Model & Specs</div>
@@ -244,20 +294,21 @@ function SalesPage() {
             />
             ))}
         </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalEntries={availableContainers.length}
-        entriesPerPage={containersPerPage}
-        onPageChange={setCurrentPage}
-      />
-      {availableContainers.length > 0 && (
-          <div className="sm:mt-8">
-            <ExportControls onExport={handleExportData} />
-          </div>
-      )}
+        <Pagination
+          currentPage={currentPage}
+          totalEntries={availableContainers.length}
+          entriesPerPage={containersPerPage}
+          onPageChange={setCurrentPage}
+        />
+        {availableContainers.length > 0 && (
+            <div className="sm:mt-8">
+              <ExportControls onExport={handleExportData} />
+            </div>
+        )}
+      </>)}
+      
         <BookingForm
-            container={selectedContainer}
+            container={bookedContainer}
             onSubmit={handleBookingSubmit}
             onCancel={handleCloseBookingModal}
             isOpen= {isBookingModalOpen}

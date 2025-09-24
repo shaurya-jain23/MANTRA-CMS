@@ -14,7 +14,7 @@ function Select({
     <>
         {label && <label className=' pl-1 text-sm font-medium text-gray-700' htmlFor={id}>
             {label}{required && <span className='text-red-500'> *</span>}</label>}
-        <select name="" {...props} id={id} ref={ref} required className={`px-3 py-2 mt-1 rounded-md shadow-sm text-black outline-none focus:bg-gray-100 duration-200 w-full ${className} ${props.disabled ? 'bg-gray-100' : 'bg-white'}`}>
+        <select name="" {...props} id={id} ref={ref} required className={`h-10 px-3 py-2 mt-1 border border-slate-200 rounded-md text-slate-900  focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-transparent duration-200 w-full ${className} ${props.disabled ? 'bg-gray-100' : 'bg-white'}`}>
             <option key={placeholder} value={placeholder} disabled>{placeholder || 'Please select an option'}</option>
             {options?.map((option)=>{
                 const value = typeof option === 'object' ? option.value : option.trim().toLowerCase().replace(/\s+/g, '_')

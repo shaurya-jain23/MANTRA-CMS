@@ -39,23 +39,6 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
       alert('Tracking link not available for this container.');
     }
   }
-
-  // const handleDownloadSalesCard = async (e) => {
-  //   e.stopPropagation(); // Prevent card from toggling
-  //   const cardElement = salesCardRef.current;
-  //   if (!cardElement) return;
-
-  //   const canvas = await html2canvas(cardElement, { scale: 2 });
-  //   const dataUrl = canvas.toDataURL('image/png');
-
-  //   const link = document.createElement('a');
-  //   link.href = dataUrl;
-  //   link.download = `MANTRA_Container_${container.container_no}.png`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // };
-
   // Dynamically create a list of key details to show in the collapsed view
   const keyDetails = visibleColumns
     .map((key) =>
@@ -118,7 +101,7 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
           
             <div className="flex flex-row sm:flex-col justify-end sm:items-end gap-1.5 min-w-50">
               <span
-                className={`px-3 py-1 flex text-xs leading-5 font-semibold ${container.sales_status? '': 'hidden'} rounded-full ${
+                className={`px-3 py-1 flex text-xs leading-5 font-semibold ${(!container.sales_status || container.sales_status== 'N/A' )? 'hidden': ''} rounded-full ${
                   salesStatusMap.find((doc) =>
                     doc.status === container.sales_status ? true : null
                   )?.colour

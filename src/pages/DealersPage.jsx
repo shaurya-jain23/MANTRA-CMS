@@ -3,8 +3,9 @@ import { selectUser } from '../features/user/userSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAllDealers ,selectDealersStatus, fetchDealers, setDealersStatus } from '../features/dealers/dealersSlice';
 import dealerService from '../firebase/dealers';
-import { Button, DealerCard, DealerForm, Container, StatCard, Tabs, SearchBar } from '../components';
-import { PlusCircle,Store, BadgeCheck, BadgeX  } from 'lucide-react';
+import { Button, DealerCard, DealerForm, Container, StatCard, Tabs, SearchBar, Loading } from '../components';
+import {toast} from 'react-hot-toast';
+import { PlusCircle,Store, BadgeCheck, BadgeX, AlertCircle, FileText  } from 'lucide-react';
 
 function DealersPage() {
   const dispatch = useDispatch();
@@ -31,6 +32,7 @@ function DealersPage() {
       }
       if(dealersStatus === 'failed'){
         setError('Failed to fetch dealers.')
+        toast.error('Failed to load dealers.')
         setLoading(false)
       }
     }, [dealersStatus, dispatch, userData]);
@@ -86,31 +88,35 @@ function DealersPage() {
   };
 
   const handleFormSubmit = async (data) => {
-    console.log(data);
-    
-    data.state = State.getStateByCodeAndCountry(data.state, 'IN').name.toUpperCase();
+    const toastId = toast.loading('Submitting the Form...');
+    data.state = allIndianStates.find(s => s.isoCode === data.state).name.toUpperCase();
     data.district= data.district.toUpperCase();
     data.trade_name= data.trade_name.toUpperCase();
-    
     if (dealerToEdit) { 
       await dealerService.updateDealer(dealerToEdit.id, data);
       setDealers(dealers.map(d => d.id === dealerToEdit.id ? { ...d, ...data } : d));
-    } else { // Add new dealer
+    } else { 
       const newDealer = await dealerService.addDealer(data, userData);
       setDealers([newDealer, ...dealers]);
     }
+    toast.dismiss(toastId);
     dispatch(setDealersStatus("idle"))
     handleCloseForm();
   };
   
   const handleStatusChange = async (dealerId, status) => {
+      const toastId = toast.loading('Chnaging dealer status...');
       await dealerService.updateDealer(dealerId, { status });
       setDealers(dealers.map(d => d.id === dealerId ? { ...d, status } : d));
+      toast.dismiss(toastId);
+      dispatch(setDealersStatus("idle"))
   };
 
   const activeDealers = dealers.filter(d => d.status !== 'disabled').length;
   const inactiveDealers = dealers.filter(d => d.status === 'disabled').length;
-
+  if (loading) {
+    return <Loading isOpen={true} message="Loading Dealers Data..." />
+  }
   return (
     <Container>
       <div className="w-full bg-white rounded-2xl p-4 sm:p-6 lg:p-8 shadow-md">
@@ -137,8 +143,34 @@ function DealersPage() {
             placeholder= {'Search by Firm name, Gst no, District, State...'}
             query={searchQuery} setQuery={setSearchQuery} className='rounded-xs py-2' resultCount={processedDealers.length}/>
             </div>
+      </div>
+      {error && 
+        <div className='flex flex-col items-center py-12 text-center'>
+        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle className='w-8 h-8 text-red-600'/>
         </div>
-        <div className="hidden lg:grid grid-cols-9 gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg">
+        <h3 className='text-lg font-medium text-slate-900 mb-2'>Error Occured</h3>
+        <p className="text-red-500  mb-6 max-w-md">Error: {error}</p>
+      </div>      
+      }
+
+      {!error && (processedDealers.length === 0 ? <div className='flex flex-col items-center py-12 text-center'>
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <FileText className='w-8 h-8 text-slate-400'/>
+        </div>
+        <h3 className='text-lg font-medium text-slate-900 mb-2'>No dealers found</h3>
+        <p className="text-slate-500 mb-6 max-w-md">Your search or filter criteria did not match any of the dealers. <br /> Try adjusting search.</p>
+        {dealers.length === 0 && (
+          <Button
+                onClick={() => handleOpenForm()}
+                variant='primary'
+                className="!rounded-4xl transition md:w-auto flex items-center"
+                >
+                <PlusCircle size={20} className="mr-2"/>Register First Dealer
+            </Button>
+        )}
+      </div> : <>
+       <div className="hidden lg:grid grid-cols-9 gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg">
           <div>DEALER FIRM TRADENAME</div>
           <div className="col-span-2">CONTACT PERSON | PHONE NO.</div>
           {/* <div className="col-span-1">PHONE NO.</div> */}
@@ -147,14 +179,9 @@ function DealersPage() {
          
           <div>{isAdmin ? 'SALES PERSON' : 'ADDRESS'}</div>
           <div className="col-span-2">ACTIONS</div>
-      </div>
-      {loading && <p>Loading dealers...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-      {!loading && dealers.length === 0 && (
-        <p className="text-gray-600">No dealers found. Click "Register Dealer" to add a new dealer.</p>
-      )}
+        </div>
       
-      {!loading && <div className="space-y-4">
+      <div className="space-y-4">
             {processedDealers.map(dealer => (
             <DealerCard 
                 key={dealer.id} 
@@ -164,8 +191,8 @@ function DealersPage() {
                 userData={userData}
             />
             ))}
-        </div>}
-
+        </div>
+      </>)}
       <DealerForm
         key={dealerToEdit ? dealerToEdit.id : "new"}
         dealerToEdit={dealerToEdit}
