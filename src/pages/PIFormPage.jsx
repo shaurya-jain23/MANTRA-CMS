@@ -3,57 +3,76 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser } from '../features/user/userSlice';
 import piService from '../firebase/piService';
-import generatePIPDF from '../assets/generatePI';
+import {toast} from 'react-hot-toast';
 import { CreateInvoice, Container, Loading } from '../components';
+import { fetchPis, selectPIStatus, setPIStatus, selectPIById } from '../features/performa-invoices/PISlice';
 
 function PIFormPage() {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { piId } = useParams(); // For editing
     const [piNumber, setPiNumber] = useState('');
-    const [piToEdit, setPiToEdit] = useState(null);
+    // const [piToEdit, setPiToEdit] = useState(null);
+    const piToEdit = useSelector((state) => selectPIById(state, piId)) || null;
     const [loading, setLoading] = useState(true);
     const userData = useSelector(selectUser);
 
+    const PIStatus = useSelector(selectPIStatus);
+    
+    // Fetch PIs based on user role
     useEffect(() => {
-        if (piId) { // Editing mode
-        piService.getPINumber(piId).then(data => {
-            setPiToEdit(data);
-            setPiNumber(data.pi_number);
-            setLoading(false);
-        });
-        } else { // Creating mode
-        piService.getPINumber().then(setPiNumber).finally(() => setLoading(false));
+      if(piId){
+        if (PIStatus === 'idle' && userData) {
+          dispatch(fetchPis({ role: userData.role, userId: userData.uid }));
         }
-    }, [piId]);
+        if(PIStatus === 'succeeded' && piToEdit){
+          setPiNumber(piToEdit?.pi_number)
+          setLoading(false);
+        }
+        if(PIStatus === 'failed'){
+          setError('Failed to fetch PIs.')
+          setLoading(false)
+        }
+      }
+      else{
+        piService.getPINumber().then(setPiNumber).finally(() => setLoading(false));
+      }
+      }, [PIStatus, dispatch, userData, piId]);
+
 
     const handleFormSubmit = async (piData) => {
+      const toastId = toast.loading('Submitting the Performa Invoice...');
       if (piId) { 
         await piService.updatePI(piId, piData);
-        navigate(`/pi/${piId}`);
+        dispatch(setPIStatus("idle"))
+        // navigate(`/performa-invoices/${piId}`);
+        navigate(`/performa-invoices`);
       } else { // Create new PI
         const newPiId = await piService.addPI(piData);
-        // navigate(`/pi/${newPiId}`);
-        navigate(`/all-pis`);
+        dispatch(setPIStatus("idle"))
+        // navigate(`/performa-invoices/${newPiId}`);
+        navigate(`/performa-invoices`);
       }
+      toast.dismiss(toastId);
     };
   
   
-  const handleDownload = async (data) => {
-    const selectedDealer = dealers.find(d => d.id === data.dealerId);
-    const piData = {
-      ...data,
-      pi_number: piNumber,
-      pi_date: new Date().toLocaleDateString(),
-      sales_person_name: userData.displayName,
-      sales_person_contact: userData.phone,
-      dealer: selectedDealer,
-      // You would need to add logic to calculate totals
-      grand_total: (data.products[0].qty * data.products[0].unit_price) // Simplified total
-    };
+  // const handleDownload = async (data) => {
+  //   const selectedDealer = dealers.find(d => d.id === data.dealerId);
+  //   const piData = {
+  //     ...data,
+  //     pi_number: piNumber,
+  //     pi_date: new Date().toLocaleDateString(),
+  //     sales_person_name: userData.displayName,
+  //     sales_person_contact: userData.phone,
+  //     dealer: selectedDealer,
+  //     // You would need to add logic to calculate totals
+  //     grand_total: (data.products[0].qty * data.products[0].unit_price) // Simplified total
+  //   };
 
-    generatePIPDF(piData);
-    await piService.savePIData(piData);
-  };
+  //   generatePIPDF(piData);
+  //   await piService.savePIData(piData);
+  // };
   
   // A simplified structure for the form
   // --- RENDER LOGIC ---

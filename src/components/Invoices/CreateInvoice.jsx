@@ -116,8 +116,6 @@ function CreateInvoice({piNumber, onSubmit, piToEdit = null }) {
                     generated_by_name: userData.displayName,
                     totals: { subTotal, taxAmount, grandTotal },
                 };
-                console.log(piData);
-                
                 onSubmit(piData);
                 }
     }
@@ -259,7 +257,7 @@ function CreateInvoice({piNumber, onSubmit, piToEdit = null }) {
                                         </td>
                                         <td className="px-2 sm:px-6 py-4 w-3xs" colSpan={2}>₹{itemTotal.toFixed(2)}</td>
                                         <td className="px-2 sm:px-6 py-4">
-                                            <Button type="button" bgColor='bg-white' onClick={() => remove(index)} className="!w-fit !p-0"><Trash2 className='w-4 h-4 text-red-500'/></Button>
+                                            <Button type="button" variant='ghost' bgColor='bg-white' onClick={() => remove(index)} className="!w-fit !p-0"><Trash2 className='w-4 h-4 text-red-500'/></Button>
                                         </td>
                                     </tr>)
                                 })}
@@ -267,7 +265,7 @@ function CreateInvoice({piNumber, onSubmit, piToEdit = null }) {
                         </table>
                     </div>
                     <div className="p-4 sm:p-6 border-t border-slate-200 flex flex-col md:flex-row gap-6 justify-between">
-                        <Button type="button" bgColor='bg-white' textColor='text-slate-600' onClick={() => append({})} className=" md:w-auto flex items-center border border-slate-200 hover:bg-gray-100 transition-all duration-200"><Plus size={20} className="mr-2"/> Add Item</Button>
+                        <Button type="button" variant='secondary' onClick={() => append({})} className=" md:w-fit"><Plus size={20} className="mr-2"/> Add Item</Button>
                        {/* Freight */}
                         <div className='flex items-center gap-6'><legend className="font-semibold">Freight: </legend>
                             <div className="flex space-x-4"><input type="radio" id="transportYes" value={true} {...register('transport.included')} /><label>Included in Price</label></div>

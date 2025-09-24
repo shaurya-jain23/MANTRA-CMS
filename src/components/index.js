@@ -49,5 +49,6 @@ import Tabs from "./Sales/Tabs";
 import PICard from "./Invoices/PICard";
 import CreateInvoice from "./Invoices/CreateInvoice";
 import InvoiceDetail from "./Invoices/InvoiceDetail";
+import PIPDFDocument from "./Invoices/PIPDFDocument";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs, Loading, ProfileDropdown, PICard, CreateInvoice, InvoiceDetail, ReAuthModal, ChangePasswordModal, Profile};
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs, Loading, ProfileDropdown, PICard, CreateInvoice, InvoiceDetail, ReAuthModal, ChangePasswordModal, Profile, PIPDFDocument};
