@@ -2,7 +2,7 @@
 import { db } from '../config/firebase.js';
 import app from "../config/firebase.js";
 import { collection, query, where, onSnapshot, getFirestore, getDocs } from 'firebase/firestore';
-import {convertTimestamps} from '../assets/helperFunctions.js'
+import {convertTimestamps} from '../assets/helperFunctions'
 
 
 

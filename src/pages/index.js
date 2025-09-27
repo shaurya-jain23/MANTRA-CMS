@@ -11,8 +11,9 @@ import UpdateProfilePage from "./UpdateProfilePage";
 import DealersPage from "./DealersPage";
 import BookingsPage from "./BookingPage";
 import SalesPage from "./SalesPage";
-import PIFormPage from "./PIFormPage";
-import PerformaInvoicesPage from "./PerformaInvoicesPage";
-import PIShowPage from "./PIShowPage";
+
+import PIFormPage from "./Invoices/PIFormPage";
+import PerformaInvoicesPage from "./Invoices/PerformaInvoicesPage";
+import PIShowPage from "./Invoices/PIShowPage";
 
 export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage};
