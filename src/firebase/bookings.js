@@ -11,36 +11,36 @@ import {
   where, 
   serverTimestamp 
 } from 'firebase/firestore';
-import {convertTimestamps} from '../assets/helperFunctions.js'
+import {convertTimestamps} from '../assets/helperFunctions'
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import {toast} from 'react-hot-toast';
 const functions = getFunctions();
 const approveAndSyncBookingCallable = httpsCallable(functions, 'approveAndSyncBooking');
 const deleteAndSyncBookingCallable = httpsCallable(functions, 'deleteAndSyncBooking');
 
 class BookingService {
-  // Create a new booking request in the 'bookings' collection
     async createBooking(bookingData) {
         try {
-        // Add references to the user, container, and dealer
         const bookingPayload = {
             ...bookingData,
             containerRef: doc(db, 'containers', bookingData.containerId),
             dealerRef: doc(db, 'dealers', bookingData.dealerId),
-            status: 'Pending', // Default status for all new requests
+            status: 'Pending', 
             rejectionReason: '',
             createdAt: serverTimestamp(),
         };
-        
         const docRef = await addDoc(collection(db, 'bookings'), bookingPayload);
         return { id: docRef.id, ...bookingPayload };
         } catch (error) {
         console.error("Error creating booking:", error);
+        toast.error(`Error creating booking: ${error.message}`)
         throw new Error("Could not create booking request.");
+        } finally{
+          toast.success('New booking created successfully')
         }
     }
 
-  // Fetch all bookings made by a specific salesperson
     async getBookings(userId, role) {
         const isAdminUser = role === 'superuser' || role === 'admin';
         const q = isAdminUser
@@ -58,6 +58,8 @@ class BookingService {
             return bookings;
         } catch (error) {
         console.error("Error fetching bookings:", error);
+        toast.error(`Failed to load the bookings`)
+        toast.error(`Error: ${error.message}`)
         throw new Error("Could not fetch bookings.");
         }
     }
@@ -93,8 +95,12 @@ class BookingService {
       await updateDoc(bookingRef, updatePayload);
     } catch (error) {
       console.error("Error updating booking:", error);
+      toast.error(`Failed to update the booking`)
+      toast.error(`Error: ${error.message}`)
       throw new Error("Could not update booking.");
-    }
+      } finally{
+          toast.success(`Booking of #${bookingData.containerId || ''} updated successfully`)
+        }
     }
 
     async deleteBooking(booking) {
@@ -107,8 +113,13 @@ class BookingService {
       return result.data;
     } catch (error) {
       console.error("deleteBooking service error:", error);
+      toast.error(`Failed to delete the booking`)
+      toast.error(`Error: ${error.message}`)
       throw new Error(error.message || "Failed to delete booking.");
     }
+    finally{
+          toast.success(`Booking for #${booking.containerId || ''} deleted successfully`)
+        }
   }
   
 
@@ -120,7 +131,12 @@ class BookingService {
             return result.data;
         } catch (error) {
             console.error("Error calling approveAndSyncBooking function:", error);
+            toast.error(`Failed to approve and sync the booking`)
+            toast.error(`Error: ${error.message}`)
             throw new Error("Failed to approve and sync booking.");
+        }
+        finally{
+          toast.success(`Booking #${bookingData.containerId || ''} approved successfully`)
         }
     }
 
@@ -136,7 +152,12 @@ class BookingService {
           destination: ''
         });
         } catch (error) {
-        throw error;
+          toast.error(`Failed to reject booking request.`)
+          toast.error(`Error: ${error.message}`)
+          throw new Error("Failed not reject booking");
+        }
+        finally{
+          toast.success(`Successfully rejected the booking.`)
         }
     }
     async updateContainerStatus(containerId, newStatus, partyName) {
@@ -148,6 +169,8 @@ class BookingService {
       });
     } catch (error) {
       console.error("Error updating container status:", error);
+      toast.error(`Failed to update container sales status`)
+      toast.error(`Error: ${error.message}`)
       throw new Error("Could not update container status.");
     }
   }
