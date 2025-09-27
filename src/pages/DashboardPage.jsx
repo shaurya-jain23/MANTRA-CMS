@@ -9,6 +9,7 @@ import bookingService from '../firebase/bookings';
 import dealerService from '../firebase/dealers';
 import { useNavigate } from 'react-router-dom';
 import { Timestamp } from "firebase/firestore";
+import toast from 'react-hot-toast';
 
 const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
@@ -192,6 +193,7 @@ const DashboardPage = () => {
   };
 
   const handleExportData = (fileType) => {
+    const toastId = toast.loading('Exporting containers data...');
     if (fileType === 'PDF') {
       const doc = new jsPDF({
         orientation: "landscape",
@@ -221,8 +223,10 @@ const DashboardPage = () => {
         body: tableRows,
         startY: 35,
       });
-
+      
+      toast.success('Containers data exported');
       doc.save(`ContainerReport_${new Date().toLocaleDateString()}.pdf`);
+      toast.dismiss(toastId);
     }
     // Add logic for XLSX later if needed
   };

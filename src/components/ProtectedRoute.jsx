@@ -6,7 +6,7 @@ import { getDefaultRouteForRole } from "../assets/helperFunctions";
 import { Loading } from "./index";
 import { toast } from "react-hot-toast";
 
-function Protected({ children, authentication = true, allowedRoles = [] }) {
+function Protected({ authentication = true, allowedRoles = [] }) {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
