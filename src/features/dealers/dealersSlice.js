@@ -51,5 +51,7 @@ export const { clearDealers, setDealersStatus } = dealersSlice.actions;
 
 export const selectAllDealers = (state) => state.dealers.data;
 export const selectDealersStatus = (state) => state.dealers.status;
+export const selectDealerById = (state, dId) => 
+  state.dealers.data.find(d => d.id === dId);
 
 export default dealersSlice.reducer;
