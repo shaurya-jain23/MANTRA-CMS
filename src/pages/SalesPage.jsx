@@ -306,13 +306,13 @@ function SalesPage() {
             </div>
         )}
       </>)}
-      
+{/*       
         <BookingForm
             container={bookedContainer}
             onSubmit={handleBookingSubmit}
             onCancel={handleCloseBookingModal}
             isOpen= {isBookingModalOpen}
-          />
+          /> */}
       </div>
     </Container>
     
