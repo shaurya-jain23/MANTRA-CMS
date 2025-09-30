@@ -125,7 +125,8 @@ function DealersPage() {
         <div className="mt-6 flex justify-end">
             <Button
                 onClick={() => handleOpenForm()}
-                className="bg-blue-600 hover:bg-blue-700 !rounded-4xl transition md:w-auto flex items-center"
+                variant='primary'
+                className="!rounded-4xl !w-fit"
                 >
                 <PlusCircle size={20} className="mr-2"/> Register Dealer
             </Button>
@@ -170,7 +171,7 @@ function DealersPage() {
             </Button>
         )}
       </div> : <>
-       <div className="hidden lg:grid grid-cols-9 gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg">
+       <div className="hidden lg:grid grid-cols-9 items-center gap-4 px-4 py-2 font-normal text-md text-gray-600 text-center bg-gray-50 rounded-lg">
           <div>DEALER FIRM TRADENAME</div>
           <div className="col-span-2">CONTACT PERSON | PHONE NO.</div>
           {/* <div className="col-span-1">PHONE NO.</div> */}

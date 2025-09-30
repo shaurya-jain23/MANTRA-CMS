@@ -59,25 +59,13 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
       
     }, [selectedStateCode, dealerToEdit, setValue]);
 
-//   useEffect(() => {
-//     const pincode = watch('pincode');
-//     if (pincode && /^[1-9][0-9]{5}$/.test(pincode)) {
-//       fetch(`https://api.postalpincode.in/pincode/${pincode}`)
-//         .then(res => res.json())
-//         .then(data => {
-//           if (data && data[0].Status === 'Success') {
-//             const postOffice = data[0].PostOffice[0];
-//             setValue('state', postOffice.State);
-//             setValue('district', postOffice.District);
-//           }
-//         });
-//     }
-//   }, [watch('pincode'), setValue]);
-
   return (
-    <ModalContainer isOpen={isOpen} className='max-w-2xl'>
-      <h2 className="text-2xl font-bold mb-6">{dealerToEdit ? 'Edit Dealer' : 'Register New Dealer'}</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <ModalContainer isOpen={isOpen} className='max-w-2xl !p-0'>
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
+        <h2 className="text-2xl font-bold mb-2">{dealerToEdit ? 'Edit Dealer' : 'Register New Dealer'}</h2>
+        <p className="text-green-100">{dealerToEdit ? 'Edit Dealer' : 'Register New Dealer'} for creating performa invoices, post booking requests, etc</p>
+      </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
               <Input label="Dealer Trade Name" required {...register('trade_name', { required: 'Trade/Firm name is required' })} />

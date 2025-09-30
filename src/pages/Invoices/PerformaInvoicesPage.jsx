@@ -128,7 +128,7 @@ function PerformaInvoicesPage() {
             <Button
               variant='primary'
                 onClick={() => navigate('/performa-invoices/new')}
-                className=" hover:bg-blue-700 !rounded-4xl transition md:w-auto flex items-center"
+                className=" !rounded-4xl !w-fit"
                 >
                 <PlusCircle size={20} className="mr-2"/> Generate New PI
             </Button>
