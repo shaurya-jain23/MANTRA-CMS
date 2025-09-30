@@ -4,11 +4,11 @@ import {Button} from '../index'
 
 const PersistentSaveButton = ({ 
   currentSection, 
-  onNext, 
-  onSave, 
+  onNext,
+  onBack, 
   onConfirm, 
-  isFormComplete, 
-  isSummaryVisible 
+  isSummaryVisible,
+  isSubmitting 
 }) => {
   const getButtonConfig = () => {
     if (isSummaryVisible) {
@@ -69,23 +69,25 @@ const PersistentSaveButton = ({
               type="button"
               variant='secondary'
               className="gap-2"
+              onClick={onBack}
             >
               <ChevronLeft size={18} className="mr-2"/>
-              Cancel
-            </Button>
-            
+              Back
+            </Button>  
             <Button
               type="button"
               variant='primary'
+              disabled={isSubmitting}
               onClick={buttonConfig.onClick}
               className={`${
                 buttonConfig.variant === 'success' 
                   ? 'bg-green-600 hover:bg-green-700' 
                   : ''
               } w-fit gap-2`}
-            >
-              <span>{buttonConfig.text}</span>
+            > {isSubmitting ? 'Submitting...' :<>
+            <span>{buttonConfig.text}</span>
               <IconComponent size={18} />
+              </> }
             </Button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AlertCircle, Plus } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
@@ -12,7 +12,7 @@ import ProgressBar from './ProgressBar';
 import toast from 'react-hot-toast';
 
 function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
-  const { register, control, handleSubmit, watch, setValue, trigger,formState: { errors } } = useForm({
+  const { register, control, handleSubmit, watch, setValue, trigger, getValues,formState: { errors } } = useForm({
     defaultValues: piToEdit || {
       items: [{ qty: 0, unit_price: 0 }],
       transport: { included: 'true', charges: 0 },
@@ -31,7 +31,73 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
   const dealersData = useSelector(selectAllDealers);
   const userData = useSelector(selectUser);
 
-  // Fetch dealers - fixed useEffect
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dealers, setDealers] = useState([]);
+  const [formData, setFormData] = useState({});
+  const [currentSection, setCurrentSection] = useState("invoice");
+  const sections = ['invoice', 'shipping', 'items', 'summary'];
+  const [completedSections, setCompletedSections] = useState({
+    invoice: false,
+    shipping: false,
+    items: false,
+    summary: false
+  });
+
+  // const sections = [
+  //   { number: 1, title: 'Invoice Details'},
+  //   { number: 2, title: 'Billing & Shipping'},
+  //   { number: 3, title: 'Item Details' },
+  //   { number: 4, title: 'Summary & Terms'}
+  // ];
+
+  // Use useWatch only for UI-related values that need re-renders
+  const sameAsBilling = useWatch({ control, name: 'same_as_billing' });
+  const freightIncluded = useWatch({ control, name: 'transport.included' });
+  const freightCharges = useWatch({ control, name: 'transport.charges' });
+
+
+  const checkSectionCompletion = useCallback((section = null) => {
+    const formValues = getValues();
+    const items = formValues.items || [];
+
+    const completion = {
+      invoice: !!(piNumber && userData?.displayName),
+      shipping: !!(formValues.dealerId && 
+        formValues.billing?.district && 
+        formValues.billing?.state && 
+        formValues.billing?.address &&
+        formValues.billing?.gst_no &&
+        (formValues.same_as_billing || (
+          formValues.shipping?.firm &&
+          formValues.shipping?.district && 
+          formValues.shipping?.state &&
+          formValues.shipping?.address
+        ))
+      ),
+      items: !!(items.length > 0 && 
+        items.every(item => 
+          item.model && 
+          item.description && 
+          item.qty > 0 && 
+          item.unit_price > 0
+        )
+      ),
+      summary: !!(formValues.delivery_terms && (formValues.delivery_terms !== '-- Delivery Days --'))
+    };
+
+    if (section) {
+      return completion[section];
+    } else {
+      console.log(completion);
+      
+      setCompletedSections(completion);
+      return completion;
+    }
+  }, [piNumber, userData, getValues]);
+  
+    // Fetch dealers - fixed useEffect
   useEffect(() => {
     if (dealersStatus === 'idle') {
       dispatch(fetchDealers({ role: userData?.role, userId: userData?.uid }));
@@ -42,50 +108,13 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     if (dealersStatus === 'succeeded') {
       setDealers(dealersData);
       setLoading(false);
+      checkSectionCompletion('invoice');
     }
     if (dealersStatus === 'failed') {
       setError('Failed to fetch dealers.');
       setLoading(false);
     }
   }, [dealersStatus, dealersData]);
-
-const [error, setError] = useState('')
-const [loading, setLoading] = useState(true);
-const [isSubmitting, setIsSubmitting] = useState(false);
-const [dealers, setDealers] = useState([]);
-
-const [currentSection, setCurrentSection] = useState("invoice");
-const sections = ['invoice', 'shipping', 'items', 'summary'];
-const nextSection = sections[sections.indexOf(currentSection) +1];
-  // Use useWatch only for UI-related values that need re-renders
-  const watchedItems = useWatch({ control, name: 'items' });
-  const sameAsBilling = useWatch({ control, name: 'same_as_billing' });
-  const freightIncluded = useWatch({ control, name: 'transport.included' });
-  const freightCharges = useWatch({ control, name: 'transport.charges' });
-
-  // Watchers
-  // const selectedDealerId = watch('dealerId');
-
-
-  // Memoized calculations based on watched items
-  const { subTotal, taxAmount, grandTotal } = useMemo(() => {
-    const calculatedSubTotal = (watchedItems || []).reduce((acc, item) => {
-      const qty = Number(item?.qty) || 0;
-      const price = Number(item?.unit_price) || 0;
-      return acc + (qty * price);
-    }, 0) * (100 / 105); // Exclude GST
-
-    const freight = freightIncluded === "false" ? (Number(freightCharges) || 0) : 0;
-    const tax = calculatedSubTotal * 0.05;
-    const total = calculatedSubTotal + tax + freight;
-
-    return {
-      subTotal: calculatedSubTotal,
-      taxAmount: tax,
-      grandTotal: total
-    };
-  }, [watchedItems, freightIncluded, freightCharges]);
-
 
    // Side effects using subscription pattern (no re-renders)
   useEffect(() => {
@@ -107,65 +136,93 @@ const nextSection = sections[sections.indexOf(currentSection) +1];
             setValue('shipping.address', `${dealer.address}, ${dealer.pincode}`);
           }
         }
+        setTimeout(() => checkSectionCompletion(), 100);
       }
       if (name === 'same_as_billing' && value.same_as_billing && value.dealerId) {
-      setValue('shipping.firm', dealer.trade_name);
-      setValue('shipping.district', dealer.district);
-      setValue('shipping.state', dealer.state);
-      setValue('shipping.address', `${dealer.address}, ${dealer.pincode}`);
-    }
+        setValue('shipping.firm', dealer.trade_name);
+        setValue('shipping.district', dealer.district);
+        setValue('shipping.state', dealer.state);
+        setValue('shipping.address', `${dealer.address}, ${dealer.pincode}`);
+        setTimeout(() => checkSectionCompletion(), 100);
+      }
+      // Check items section completion when items change
+      if (name?.startsWith('items')) {
+        setTimeout(() => checkSectionCompletion('items'), 100);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, [watch, setValue, dealers, sameAsBilling]);
+  }, [watch, setValue, dealers, sameAsBilling, checkSectionCompletion]);
 
 
   // Section completion status - optimized with selective watching
-  const sectionFields = useWatch({
-    control,
-    name: ['dealerId', 'billing.district', 'billing.state', 'billing.address', 'billing.gst_no', 'delivery_terms']
-  });
+  // const sectionFields = useWatch({
+  //   control,
+  //   name: ['dealerId', 'billing.district', 'billing.state', 'billing.address', 'billing.gst_no', 'delivery_terms']
+  // });
 
-  const completedSections = useMemo(() => {
-    const [dealerId, billingDistrict, billingState, billingAddress, billingGstNo, deliveryTerms] = sectionFields;
+  // const completedSections = useMemo(() => {
+  //   const [dealerId, billingDistrict, billingState, billingAddress, billingGstNo, deliveryTerms] = sectionFields;
 
-    return {
-      invoice: !!(piNumber && userData?.displayName),
+  //   return {
+  //     invoice: !!(piNumber && userData?.displayName),
+  //     shipping: !!(dealerId && 
+  //       billingDistrict && 
+  //       billingState && 
+  //       billingAddress &&
+  //       billingGstNo  &&
+  //       (sameAsBilling || (
+  //         formValues.shipping?.firm &&
+  //         formValues.shipping?.district && 
+  //         formValues.shipping?.state &&
+  //         formValues.shipping?.address
+  //       ))
+  //     ),
       
-      shipping: !!(dealerId && 
-        billingDistrict && 
-        billingState && 
-        billingAddress &&
-        billingGstNo  &&
-        (sameAsBilling || (
-          formValues.shipping?.firm &&
-          formValues.shipping?.district && 
-          formValues.shipping?.state &&
-          formValues.shipping?.address
-        ))
-      ),
+  //     items: !!(watchedItems && watchedItems.length > 0 && 
+  //       watchedItems.every(item => 
+  //         item.model && 
+  //         item.description && 
+  //         item.qty > 0 && 
+  //         item.unit_price > 0
+  //       )
+  //     ),
       
-      items: !!(watchedItems && watchedItems.length > 0 && 
-        watchedItems.every(item => 
-          item.model && 
-          item.description && 
-          item.qty > 0 && 
-          item.unit_price > 0
-        )
-      ),
-      
-      summary: !!(deliveryTerms) && (deliveryTerms !== '-- Delivery Days --')
-    };
-  }, [sectionFields, watchedItems, piNumber, userData]);
+  //     summary: !!(deliveryTerms) && (deliveryTerms !== '-- Delivery Days --')
+  //   };
+  // }, [sectionFields, watchedItems, piNumber, userData]);
 
   const isFormComplete = useMemo(() => 
     Object.values(completedSections).every(Boolean), 
     [completedSections]
   );
 
+  // Memoized calculations based on watched items
+  const { subTotal, taxAmount, grandTotal } = useMemo(() => {
+    const formValues = getValues();
+    const items = formValues.items || [];
+    const freightCharges = Number(formValues.transport?.charges) || 0;
+    const calculatedSubTotal = items.reduce((acc, item) => {
+      const qty = Number(item?.qty) || 0;
+      const price = Number(item?.unit_price) || 0;
+      return acc + (qty * price);
+    }, 0) * (100 / 105); // Exclude GST
+
+    const freight = freightIncluded === "false" ? freightCharges : 0;
+    const tax = calculatedSubTotal * 0.05;
+    const total = calculatedSubTotal + tax + freight;
+
+    return {
+      subTotal: calculatedSubTotal,
+      taxAmount: tax,
+      grandTotal: total
+    };
+  }, [getValues, freightIncluded]);
+
 
     // Section validation
   const validateCurrentSection = async (section = null) => {
+    const targetSection = section || currentSection;
     const sectionValidations = {
       invoice: async () => true, // Read-only section
       shipping: async () => {
@@ -175,22 +232,21 @@ const nextSection = sections[sections.indexOf(currentSection) +1];
         }
         return await trigger(fields);
       },
-      items: async () => (completedSections.items),
+      items: async () => {await trigger('items'); return checkSectionCompletion('items')},
       summary: async () => await trigger(['delivery_terms'])
     };
     let isValid = false;
     if(section && section !== currentSection){
-      const sections = ['invoice', 'shipping', 'items', 'summary'];
       const sectionIndex = sections.indexOf(section);
       let count = 0;
       if (sectionIndex === 0) isValid=true;
       while (count<sectionIndex) {
         isValid= await sectionValidations[sections[count]]()
-        console.log(isValid);
+        if (!isValid) break;
         count++;
       }
     } else{
-      isValid= await sectionValidations[currentSection]()
+      isValid= await sectionValidations[targetSection]()
     }
     // const isValid = await sectionValidations[currentSection]();
     
@@ -202,7 +258,8 @@ const nextSection = sections[sections.indexOf(currentSection) +1];
         errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-
+    // Update completion status after validation
+      checkSectionCompletion();
     return isValid;
   };
 
@@ -210,11 +267,9 @@ const nextSection = sections[sections.indexOf(currentSection) +1];
   const handleNextSection = async () => {
     const isValid = await validateCurrentSection();
     if (isValid) {
-     
       const currentIndex = sections.indexOf(currentSection);
       if (currentIndex < sections.length - 1) {
         setCurrentSection(sections[currentIndex + 1]);
-        
         // Auto-scroll to the new section
         setTimeout(() => {
           document.getElementById(sections[currentIndex + 1])?.scrollIntoView({ 
@@ -226,12 +281,27 @@ const nextSection = sections[sections.indexOf(currentSection) +1];
     }
   };
 
+  const hanlePrevSection = async ()=>{
+    // Auto-scroll to the prev section
+    const currentIndex = sections.indexOf(currentSection);
+      if(currentIndex > 0){
+        setCurrentSection(sections[currentIndex - 1]);
+        setTimeout(() => {
+          document.getElementById(sections[currentIndex - 1])?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }, 100);
+      }
+        
+    };
+    
+
   const handleSectionToggle = async (section) => {
     if (section !== currentSection) {
       const isValid = await validateCurrentSection(section);
-      if (isValid) { // Invoice is always valid
+      if (isValid) { 
         setCurrentSection(section);
-        // Scroll to the section
         setTimeout(() => {
           document.getElementById(section)?.scrollIntoView({ 
             behavior: 'smooth', 
@@ -588,9 +658,8 @@ const nextSection = sections[sections.indexOf(currentSection) +1];
       <PersistentSaveButton
         currentSection={currentSection}
         onNext={handleNextSection}
-        onSave={handleSubmit(handleFormSubmit)}
+        onBack= {hanlePrevSection}
         onConfirm={handleSubmit(handleFormSubmit)}
-        isFormComplete={isFormComplete}
         isSummaryVisible={isFormComplete}
         isSubmitting={isSubmitting}
       />

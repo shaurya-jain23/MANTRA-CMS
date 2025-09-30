@@ -13,10 +13,9 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
 
   return (
     <div className="flex items-start gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-      <button type="button" className="handle text-slate-400 mt-8 cursor-move">
+      <button type="button" className="handle text-slate-400 mt-8 cursor-move hidden md:block">
         <GripVertical size={20} />
       </button>
-      
       <div className="flex-grow">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
           {/* Product Name */}
@@ -98,8 +97,8 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
         </div>
 
         {/* Options and Total */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-          <div className="flex items-center gap-6">
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-6 md:col-span-2">
             <span className="text-sm font-medium text-slate-600">Options:</span>
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm">
@@ -114,6 +113,10 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
                 <input type="checkbox" {...register(`items.${index}.with_tyre`)} />
                 With Tyre
               </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" {...register(`items.${index}.with_assembling`)} />
+                With Assembling
+              </label>
             </div>
           </div>
           
@@ -124,6 +127,7 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
             <Button 
               type="button" 
               variant='ghost'
+              size='small'
               onClick={() => remove(index)}
               className="text-red-500 hover:text-red-700 p-1"
             >
