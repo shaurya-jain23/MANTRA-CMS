@@ -32,7 +32,7 @@ function Select({
     );
     
   return (
-    <div className='flex flex-col'>
+    <div className={`flex flex-col ${props?.outerClasses? props.outerClasses : ''}`}>
         {label && (
                 <label className='pl-1 text-sm font-medium text-gray-700' htmlFor={id}>
                     {label}

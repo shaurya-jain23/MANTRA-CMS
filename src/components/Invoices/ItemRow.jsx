@@ -2,7 +2,8 @@ import React from 'react';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { Controller } from 'react-hook-form';
 import { Select, Input, Button } from '../index';
-import { modelOptions } from '../../assets/utils';
+import { modelOptions, accessoryOptions } from '../../assets/utils';
+
 
 const ItemRow = ({ index, control, register, errors, watch, remove }) => {
   const selectedModel = watch(`items.${index}.model`);
@@ -11,24 +12,36 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
   const unitPrice = watch(`items.${index}.unit_price`) || 0;
   const itemTotal = qty * unitPrice;
 
+  // Watch accessory checkboxes
+  const withBattery = watch(`items.${index}.with_battery`);
+  const withCharger = watch(`items.${index}.with_charger`);
+
+  const getGridClass = () => {
+  if (withBattery && withCharger) {
+    return 'lg:grid-cols-10 md:grid-cols-3';
+  }
+  else if ((withBattery || withCharger) && !(withBattery && withCharger)) {
+    return 'lg:grid-cols-8 md:grid-cols-3';
+  }
+  return 'lg:grid-cols-6 md:grid-cols-2';
+};
+
   return (
     <div className="flex items-start gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
       <button type="button" className="handle text-slate-400 mt-8 cursor-move hidden md:block">
         <GripVertical size={20} />
       </button>
       <div className="flex-grow">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
+        <div className={`grid grid-cols-1 ${getGridClass()} gap-4 items-start`}>
           {/* Product Name */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-slate-600 mb-1">
-              Product Name
-            </label>
             <Controller
               name={`items.${index}.model`}
               control={control}
               rules={{ required: 'Please select a model', validate: value => value !== '-- Select Model --' || 'Please select model' }}
               render={({ field }) => (
                 <Select
+                  label='Product Name'
+                  outerClasses='lg:col-span-2'
                   placeholder="-- Select Model --"
                   {...field}
                   required
@@ -38,33 +51,64 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
                 />
               )}
             />
-          </div>
 
           {/* Description */}
-          <div className="w-full">
-            <label className="block text-sm font-medium text-slate-600 mb-1">
-              Description
-            </label>
             <Controller
-              name={`items.${index}.description`}
+              name={`items.${index}.description.model`}
               control={control}
               rules={{ required: 'Please select product description',validate: value => value !== '-- Product Description --' || 'Please select product description' }}
               render={({ field }) => (
                 <Select
+                  label='Description'
+                  outerClasses='lg:col-span-2'
                   placeholder="-- Product Description --"
                   {...field}
                   required
                   disabled={!selectedModel}
                   defaultValue="-- Product Description --"
                   options={descriptionOptions}
-                  error={errors.items?.[index]?.description?.message}
+                  error={errors.items?.[index]?.description?.model?.message}
                 />
               )}
             />
-          </div>
-
+          {withBattery && (
+                <Controller
+                  name={`items.${index}.description.battery`}
+                  control={control}
+                  rules={{ required: 'Please select battery description',validate: value => value !== '-- Select Battery --' || 'Please select battery description' }}
+                  render={({ field }) => (
+                    <Select
+                      label='Battery Type'
+                      outerClasses='lg:col-span-2'
+                      placeholder="-- Select Battery --"
+                      defaultValue="-- Select Battery --"
+                      {...field}
+                      options={accessoryOptions.battery.options}
+                      error={errors.items?.[index]?.description?.battery.message}
+                    />
+                  )}
+                />
+            )}
+          {withCharger && (
+                <Controller
+                  name={`items.${index}.description.charger`}
+                  control={control}
+                  rules={{ required: 'Please select charger description',validate: value => value !== "-- Select Charger --" || 'Please select charger description' }}
+                  render={({ field }) => (
+                    <Select
+                      label='Charger Type'
+                      outerClasses='lg:col-span-2'
+                      placeholder="-- Select Charger --"
+                      defaultValue="-- Select Charger --"
+                      {...field}
+                      options={accessoryOptions.charger.options}
+                      error={errors.items?.[index]?.description?.charger.message}
+                    />
+                  )}
+                />
+            )}
           {/* Quantity */}
-          <div className="w-full">
+          <div className="w-full col-span-1">
             <Input
               type="number"
               label="Qty."
@@ -80,10 +124,10 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
           </div>
 
           {/* Unit Price */}
-          <div className="w-full">
+          <div className="w-full col-span-1">
             <Input
               type="number"
-              label="Unit Price (with GST)"
+              label="Unit Price (Inc. GST)"
               placeholder="Unit Price"
               required
               {...register(`items.${index}.unit_price`, { 

@@ -12,14 +12,32 @@ import ProgressBar from './ProgressBar';
 import toast from 'react-hot-toast';
 
 function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
-  const { register, control, handleSubmit, watch, setValue, trigger, getValues,formState: { errors } } = useForm({
-    defaultValues: piToEdit || {
-      items: [{ qty: 0, unit_price: 0 }],
-      transport: { included: 'true', charges: 0 },
-      same_as_billing: true,
-    },
-  });
+  const { register, control, handleSubmit, watch, setValue, trigger, getValues,formState: { errors, dirtyFields } } = useForm({
+    defaultValues: (() => {
+      if (piToEdit) {
+        const defaultShipping = piToEdit?.shipping === "same_as_billing"
+          ? {
+              firm: piToEdit?.billing?.firm,
+              district: piToEdit.billing?.district,
+              state: piToEdit.billing?.state,
+              address: piToEdit.billing?.address,
+            }
+          : { ...piToEdit?.shipping };
 
+        return {
+          ...piToEdit,
+          shipping: defaultShipping,
+        };
+      } else {
+        return {
+          items: [{ qty: 0, unit_price: 0 }],
+          transport: { included: 'true', charges: 0 },
+          same_as_billing: true,
+        };
+      }
+    })(),
+  });
+  
    const { fields, append, remove } = useFieldArray({
     control,
     name: "items",
@@ -57,6 +75,33 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
   const freightIncluded = useWatch({ control, name: 'transport.included' });
   const freightCharges = useWatch({ control, name: 'transport.charges' });
 
+  const hasFormChanges = useMemo(() => {
+    if (!piToEdit) return true; 
+    const isDirty = Object.keys(dirtyFields).length > 0;
+    if (piToEdit.items) {
+      const currentItems = getValues('items') || [];
+      if (currentItems.length !== piToEdit.items.length) {
+        return true;
+      }
+      // Check if any item has changes
+      for (let i = 0; i < currentItems.length; i++) {
+        const currentItem = currentItems[i];
+        const originalItem = piToEdit.items[i];
+        if (!originalItem || 
+            currentItem.model !== originalItem.model ||
+            currentItem.qty !== originalItem.qty ||
+            currentItem.unit_price !== originalItem.unit_price ||
+            currentItem.with_battery !== originalItem.with_battery ||
+            currentItem.with_charger !== originalItem.with_charger ||
+            currentItem.with_tyre !== originalItem.with_tyre ||
+            currentItem.with_assembling !== originalItem.with_assembling) {
+          return true;
+        }
+      }
+    }
+    return isDirty;
+  }, [piToEdit, Object.keys(dirtyFields).length, getValues]);
+
 
   const checkSectionCompletion = useCallback((section = null) => {
     const formValues = getValues();
@@ -90,8 +135,6 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     if (section) {
       return completion[section];
     } else {
-      console.log(completion);
-      
       setCompletedSections(completion);
       return completion;
     }
@@ -154,43 +197,6 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     return () => subscription.unsubscribe();
   }, [watch, setValue, dealers, sameAsBilling, checkSectionCompletion]);
 
-
-  // Section completion status - optimized with selective watching
-  // const sectionFields = useWatch({
-  //   control,
-  //   name: ['dealerId', 'billing.district', 'billing.state', 'billing.address', 'billing.gst_no', 'delivery_terms']
-  // });
-
-  // const completedSections = useMemo(() => {
-  //   const [dealerId, billingDistrict, billingState, billingAddress, billingGstNo, deliveryTerms] = sectionFields;
-
-  //   return {
-  //     invoice: !!(piNumber && userData?.displayName),
-  //     shipping: !!(dealerId && 
-  //       billingDistrict && 
-  //       billingState && 
-  //       billingAddress &&
-  //       billingGstNo  &&
-  //       (sameAsBilling || (
-  //         formValues.shipping?.firm &&
-  //         formValues.shipping?.district && 
-  //         formValues.shipping?.state &&
-  //         formValues.shipping?.address
-  //       ))
-  //     ),
-      
-  //     items: !!(watchedItems && watchedItems.length > 0 && 
-  //       watchedItems.every(item => 
-  //         item.model && 
-  //         item.description && 
-  //         item.qty > 0 && 
-  //         item.unit_price > 0
-  //       )
-  //     ),
-      
-  //     summary: !!(deliveryTerms) && (deliveryTerms !== '-- Delivery Days --')
-  //   };
-  // }, [sectionFields, watchedItems, piNumber, userData]);
 
   const isFormComplete = useMemo(() => 
     Object.values(completedSections).every(Boolean), 
@@ -316,6 +322,10 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
 
 
   const handleFormSubmit = async (data) => {
+    if (piToEdit && !hasFormChanges) {
+      toast.success('No changes detected.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       const dealer = dealers.find(d => d.id === data.dealerId);
@@ -363,6 +373,12 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
             <div className="p-3 bg-red-50 border border-red-200 rounded-md mb-3 w-fit flex items-center text-red-600 gap-2">
                 <AlertCircle size={20}/> <p className="text-sm text-center ">{error}</p>
             </div>
+        )}
+        {piToEdit && !hasFormChanges && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md mb-3 w-fit flex items-center text-blue-600 gap-2">
+            <AlertCircle size={20}/> 
+            <p className="text-sm text-center">No changes made to the form.</p>
+          </div>
         )}
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
           <div className="space-y-6">
@@ -662,6 +678,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
         onConfirm={handleSubmit(handleFormSubmit)}
         isSummaryVisible={isFormComplete}
         isSubmitting={isSubmitting}
+        isDisabled={piToEdit && !hasFormChanges}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import {CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 import {Button} from '../index'
+import { useNavigate } from 'react-router-dom';
 
 const PersistentSaveButton = ({ 
   currentSection, 
@@ -8,12 +9,14 @@ const PersistentSaveButton = ({
   onBack, 
   onConfirm, 
   isSummaryVisible,
-  isSubmitting 
+  isSubmitting,
+  isDisabled = false
 }) => {
+  const navigate = useNavigate();
   const getButtonConfig = () => {
     if (isSummaryVisible) {
       return {
-        text: 'Confirm & Create PI',
+        text: isDisabled ? 'No Changes Made' : 'Confirm & Update PI',
         icon: CheckCircle,
         onClick: onConfirm,
         variant: 'success'
@@ -69,15 +72,15 @@ const PersistentSaveButton = ({
               type="button"
               variant='secondary'
               className="gap-2"
-              onClick={onBack}
+              onClick={isDisabled ? ()=> {navigate('/performa-invoices')} : onBack}
             >
-              <ChevronLeft size={18} className="mr-2"/>
-              Back
+              {!isDisabled &&<ChevronLeft size={18} className="mr-2"/>}
+              {isDisabled? 'Cancel' : 'Back'}
             </Button>  
             <Button
               type="button"
               variant='primary'
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDisabled}
               onClick={buttonConfig.onClick}
               className={`${
                 buttonConfig.variant === 'success' 
@@ -86,7 +89,7 @@ const PersistentSaveButton = ({
               } w-fit gap-2`}
             > {isSubmitting ? 'Submitting...' :<>
             <span>{buttonConfig.text}</span>
-              <IconComponent size={18} />
+              {buttonConfig.variant !== 'disabled' && <IconComponent size={18} />}
               </> }
             </Button>
           </div>

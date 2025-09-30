@@ -26,7 +26,7 @@ const PICard = ({invoice, onDelete,onStatusChange, userData }) => {
       
       <div className="mb-2 lg:mb-0 flex lg:flex-col text-sm gap-1 lg:gap-0  flex-wrap" onClick={() => navigate(`/performa-invoices/${invoice.id}`)} >
         <p className="font-normal lg:hidden lg:text-xs text-gray-500">Amount:</p>
-        <p className="text-sm">₹{invoice.totals.grandTotal}</p>
+        <p className="text-sm">₹{invoice.totals.grandTotal.toFixed(2)}</p>
       </div>
 
       <div className="mb-2 lg:mb-0 flex lg:flex-col text-sm gap-1 lg:gap-0 flex-wrap" onClick={() => navigate(`/performa-invoices/${invoice.id}`)} >
@@ -48,7 +48,7 @@ const PICard = ({invoice, onDelete,onStatusChange, userData }) => {
           </div>
       </div>
 
-      <div className="lg:col-span-2 flex flex-row lg:justify-around justify-between lg:pt-0 lg:items-center gap-2 lg:mt-0 pt-4">
+      <div className="lg:col-span-2 flex flex-row lg:justify-around justify-between lg:pt-0 lg:items-center cursor-default gap-2 lg:mt-0 pt-4">
         <Select
             placeholder="Select status"
             defaultValue={invoice.status}
@@ -59,14 +59,14 @@ const PICard = ({invoice, onDelete,onStatusChange, userData }) => {
         {showEditButton &&
             <>
               <Button
-                variant='secondary'
+                variant='ghost'
                 size='small'
                 onClick={() => navigate(`/performa-invoices/${invoice.id}/edit`)}>
                 <SquarePen className='w-4 h-4'/>
               </Button>
               <Button
                 textColor='text-red-700'
-                variant='secondary'
+                variant='ghost'
                 size='small'
                 onClick={() => onDelete(invoice.id, invoice.pi_number)}>
                 <Trash2 className='w-4 h-4 text-red-500'/>

@@ -3,9 +3,10 @@ import { selectUser } from '../../features/user/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectAllPIs , fetchPis, selectPIStatus, setPIStatus } from '../../features/performa-invoices/PISlice';
-import { Button, PICard, Container, StatCard, Tabs, SearchBar, Loading, ConfirmationAlert } from '../../components';
-import { PlusCircle, FileText, IndianRupee, ShieldAlert, AlertTriangle, AlertCircle } from 'lucide-react';
+import { Button, PICard, Container, StatCard, Tabs, SearchBar, Loading } from '../../components';
+import { PlusCircle, FileText, IndianRupee, AlertTriangle, AlertCircle } from 'lucide-react';
 import {toast} from 'react-hot-toast';
+import { useModal } from '../../contexts/ModalContext';
 import piService from '../../firebase/piService';
 
 function PerformaInvoicesPage() {
@@ -20,6 +21,7 @@ function PerformaInvoicesPage() {
   const [activeTab, setActiveTab] = useState('ALL');
   const userData = useSelector(selectUser);
   const isAdmin = ['admin', 'superuser'].includes(userData?.role);
+  const { showModal } = useModal();
 
 
   const [alertState, setAlertState] = useState({
@@ -56,13 +58,17 @@ function PerformaInvoicesPage() {
       }
     };
 
-    const openConfirmationModal = (pi_id, pi_number) => {
-    setAlertState({ isOpen: true, action: 'delete', pi_id, pi_number });
-  };
-
-    const closeConfirmationModal = () => {
-      setAlertState({ isOpen: false, action: null, pi_id: null, pi_number: null });
-    };
+    useEffect(() => {
+      if (alertState.isOpen && alertState.action) {
+        const modalConfig = getModalConfig();
+        if (modalConfig) {
+          showModal({
+            ...modalConfig,
+            onConfirm: handleDelete,
+          });
+        }
+      }
+    }, [alertState]); 
 
     const handleDelete = async () => {
       const { pi_id, pi_number } = alertState;
@@ -176,19 +182,13 @@ function PerformaInvoicesPage() {
               <PICard 
                   key={invoice.id}
                   invoice={invoice}
-                  onDelete={openConfirmationModal}
+                  onDelete={(pi_id, pi_number)=> setAlertState({ isOpen: true, action: 'delete', pi_id, pi_number })}
                   onStatusChange={handleStatusChange}
                   userData={userData}
               />
               ))}
           </div>
       </>)}
-        <ConfirmationAlert
-          isOpen={alertState.isOpen}
-          onClose={closeConfirmationModal}
-          onConfirm={handleDelete}
-          {...getModalConfig()}
-        />
       </div>
     </Container>
   );
