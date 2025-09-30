@@ -101,6 +101,24 @@ const containerStatusMap = [
   {status: 'Reached Destination', colour: 'bg-neutral-300 text-neutral-800'},
 ]
 
+export const calculatePaymentStatus = (amountPaid, grandTotal) => {
+  if (amountPaid === 0) return 'Not Received';
+  if (amountPaid >= grandTotal) return 'Full Payment Received';
+  if (amountPaid >= grandTotal * 0.3 && amountPaid < grandTotal) return 'Partial Received';
+  if (amountPaid === grandTotal * 0.3) return 'Full Token Received';
+  return 'Partial Token Received';
+};
+
+export const getPaymentStatusColor = (status) => {
+  switch(status) {
+    case 'Full Payment Received': return 'bg-emerald-100 text-emerald-800';
+    case 'Partial Received': return 'bg-blue-100 text-blue-800';
+    case 'Full Token Received': return 'bg-yellow-100 text-yello-800';
+    case 'Partial Token Received': return 'bg-orange-100 text-orange-800';
+    default: return 'bg-red-100 text-red-800';
+  }
+};
+
 const modelOptions = {
     "single_light": [
           "BOTH 10 INCH 48/60V",
@@ -158,10 +176,21 @@ const modelOptions = {
         "BOTH 12 INCH DOUBLE DISC 60/72"
     ],
     "battery": [
-        "TAINNENG LEAD ACID 7KG 12V32AH/20HR",
-        "CHILWEE LEAD ACID 7KG 12V32AH/20HR",
-        "CHILWEE LEAD ACID 6.6KG 12V32AH/20HR",
+        "TAINNENG LEAD ACID 7KG",
+        "TAINNENG LEAD ACID 7.2KG",
+        "TAINNENG LEAD ACID 6KG",
+        "CHILWEE LEAD ACID 7KG",
+        "CHILWEE LEAD ACID 7.2KG",
+        "CHILWEE LEAD ACID 6.6KG",
     ],
+    'charger':[ 
+      "KY 72V",
+      "KY 60V",
+      "KY 48V",
+      "Solar Power 48V",
+      "Solar Power 60V",
+      "Solar Power 72V",
+    ]
 
 }
 
@@ -176,6 +205,30 @@ const getRoleBadgeColor = (role) => {
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
+
+  // accessoryOptions.js
+export const accessoryOptions = {
+  battery: {
+    options: [
+      "TAINNENG LEAD ACID 7KG",
+        "TAINNENG LEAD ACID 7.2KG",
+        "TAINNENG LEAD ACID 6KG",
+        "CHILWEE LEAD ACID 7KG",
+        "CHILWEE LEAD ACID 7.2KG",
+        "CHILWEE LEAD ACID 6.6KG",
+    ]
+  },
+  charger: {
+    options: [
+      "KY 72V",
+      "KY 60V",
+      "KY 48V",
+      "Solar Power 48V",
+      "Solar Power 60V",
+      "Solar Power 72V",
+    ]
+  },
+};
 
 const piStatusOptions = [{name: 'Mark Paid', value: 'paid'},{ name: 'Mark Token paid', value: 'token'}, {name: 'Mark Unpaid', value: 'unpaid'}]
 

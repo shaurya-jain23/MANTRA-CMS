@@ -70,3 +70,15 @@
 .animate-leave {
   animation: leave 0.3s ease-in-out forwards;
 }
+
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.collapsible-content.open {
+  max-height: 1000px;
+  transition: max-height 0.5s ease-in;
+}
