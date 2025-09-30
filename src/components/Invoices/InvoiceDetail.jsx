@@ -27,7 +27,6 @@ function InvoiceDetail({ piData }, ref) {
     shipping,
     delivery_terms,
     items = [],
-    extras = {},
     transport = {},
     billing_remarks,
     totals = {}
@@ -109,13 +108,16 @@ function InvoiceDetail({ piData }, ref) {
             {items.map((item, index) => {
               const amount = (item.qty || 0) * ((item.unit_price)*(100/105) || 0);
               const model = (item.model).replace(/_/g, ' ').toUpperCase();
-              const description = (item.description).replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+              const descriptionModel = (item.description?.model)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+              const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+              const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+              const fullDescription= `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}`
               return (
                 <tr key={index} className="border-b-2 border-gray-300 align-top">
                   <td className="p-2 border-r-2 border-gray-300 text-center">{index + 1}</td>
                   <td className="p-2 border-r-2 border-gray-300">
                     <p className="font-semibold">{model}</p>
-                    <p className="sm:text-base text-gray-500">{description}</p>
+                    <p className="sm:text-base text-gray-500">{fullDescription}</p>
                   </td>
                   <td className="p-2 border-r-2 border-gray-300 text-center">{item.qty}</td>
                   <td className="p-2 border-r-2 border-gray-300 text-right">{formatCurrency(item.unit_price)}</td>
@@ -146,6 +148,7 @@ function InvoiceDetail({ piData }, ref) {
         <div className="pt-4 pb-0.5 px-2 flex flex-col gap-1 col-span-1">
           <p className="text-md flex flex-grow justify-between"><span className='font-semibold'>Taxable Amount:</span> <span>{formatCurrency(totals.subTotal)}</span></p>
           <p className="text-md flex flex-grow justify-between"><span className='font-semibold'>Tax Amount:</span> <span>{formatCurrency(totals.subTotal * 5/100)}</span></p>
+          {(transport.included === 'false') && <p className="text-md flex flex-grow justify-between"><span className='font-semibold'>Freight Charges:</span> <span>{formatCurrency(transport.charges)}</span></p>}
           <p className="sm:text-lg flex flex-grow font-bold justify-between"><span>Grand Total:</span> <span>{formatCurrency(totals.grandTotal)}</span></p>
         </div>
       </div>
@@ -158,7 +161,6 @@ function InvoiceDetail({ piData }, ref) {
         </div>
         <div className="py-0.5 px-2 h-full flex flex-col justify-start gap-2">
           <p className="text-md"><strong>Remarks:</strong> {billing_remarks || 'N/A'}</p>
-          <p className="text-md"><strong>Extras:</strong> <span className='italic'>{Object.entries(extras).filter(([, value]) => value).map(([key]) => key.charAt(0).toUpperCase() + key.slice(1)).join(', ') || 'None'}</span> </p>
         </div>
         
       </div>

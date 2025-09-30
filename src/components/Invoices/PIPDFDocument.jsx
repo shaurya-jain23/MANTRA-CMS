@@ -221,6 +221,7 @@ const styles = StyleSheet.create({
   // Table Styles
   tableContainer: {
     borderBottom: '1pt solid #6b7280',
+
   },
   table: {
     width: '100%',
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   textLeft: { textAlign: 'left' },
   
   tBody: {
-    minHeight: '100'
+    minHeight: '120'
   },
   // Product Styles
   productName: {
@@ -319,8 +320,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 4,
     flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignContent: 'space-between'
+    justifyContent: 'space-between',
+    alignItems: 'flex-start'
   },
   summaryRight: {
     width: '40%',
@@ -329,7 +330,8 @@ const styles = StyleSheet.create({
   },
   summaryItem: {
     flexDirection: 'row',
-    alignContent: 'center'
+    gap: 4,
+    alignContent: 'center',
   },
   summaryLabel: {
     fontWeight: 600,
@@ -399,10 +401,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   bankTitle: {
-    fontWeight: 700,
+    fontWeight: 600,
     marginBottom: 4,
     color: '#111827',
-    fontSize: 10,
+    fontSize: 9,
   },
   bankText: {
     marginBottom: 1,
@@ -470,7 +472,6 @@ const PIPDFDocument = ({ piData }) => {
     shipping,
     delivery_terms,
     items = [],
-    extras = {},
     transport = {},
     billing_remarks,
     totals = {}
@@ -567,16 +568,17 @@ const PIPDFDocument = ({ piData }) => {
                     {items.map((item, index) => {
                 const amount = (item.qty || 0) * ((item.unit_price) * (100/105) || 0);
                 const model = (item.model || '').replace(/_/g, ' ').toUpperCase();
-                const description = (item.description || '').replace(/_/g, ' ').split(' ')
-                  .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-
+                const descriptionModel = (item.description?.model)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const fullDescription= `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}`
                 return (
                   <View style={styles.tableRow} key={index}>
                     <Text style={[styles.tableCol, styles.colIndex, styles.textCenter]}>{index + 1}</Text>
                     <Text style={[styles.tableCol, styles.colDescription, styles.textLeft]}>
                       <Text style={styles.productName}>{model}</Text>
                       {'\n'}
-                      <Text style={styles.productDescription}>{description}</Text>
+                      <Text style={styles.productDescription}>{fullDescription}</Text>
                     </Text>
                     <Text style={[styles.tableCol, styles.colQty, styles.textCenter]}>{item.qty}</Text>
                     <Text style={[styles.tableCol, styles.colUnitWithGst, styles.textRight]}>{formatCurrency(item.unit_price)}</Text>
@@ -631,6 +633,10 @@ const PIPDFDocument = ({ piData }) => {
                   <Text style={styles.totalLabel}>Tax Amount:</Text>
                   <Text style={styles.totalValue}>{formatCurrency((totals.subTotal || 0) * 5/100)}</Text>
                 </View>
+                 {(transport.included === 'false') &&  <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Freight Charges:</Text>
+                  <Text style={styles.totalValue}>{formatCurrency(transport.charges)}</Text>
+                </View> }
                 <View style={[styles.totalRow, styles.grandTotalRow]}>
                   <Text style={styles.grandTotalLabel}>Grand Total:</Text>
                   <Text style={styles.grandTotalValue}>{formatCurrency(totals.grandTotal)}</Text>
@@ -649,12 +655,8 @@ const PIPDFDocument = ({ piData }) => {
               <Text style={styles.bankText}>IFSC Code: PUNB0014610</Text>
             </View>
             <View style={styles.bankRight}>
-              <Text style={styles.bankTitle}>Remarks: {billing_remarks || 'N/A'}</Text>
-              <Text style={[styles.bankText, {marginTop: 4}]}>
-                Extras: {Object.entries(extras).filter(([, value]) => value).map(([key]) => 
-                  key.charAt(0).toUpperCase() + key.slice(1)).join(', ') || 'None'
-                }
-              </Text>
+              <Text style={styles.bankTitle}>Remarks:</Text>
+              <Text style={styles.bankText}>{billing_remarks || 'N/A'}</Text>
             </View>
           </View>
 
