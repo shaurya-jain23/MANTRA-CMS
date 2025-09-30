@@ -17,11 +17,13 @@ export const onDealerWriteSyncToSheet = firestore.onDocumentWritten({
     }
     
     const dealerId = event.params.dealerId;
+    // const beforeData = event.data.before?.data();
     const dealerData = event.data.after.data(); // The new data of the document
     
     // If the document was deleted, do nothing for now (can add deletion logic later)
     if (!dealerData) {
         console.log(`Dealer ${dealerId} was deleted. No action taken in sheet.`);
+        await deleteDealerFromSheet(sheet, dealerId);
         return;
     }
 
@@ -63,3 +65,22 @@ export const onDealerWriteSyncToSheet = firestore.onDocumentWritten({
         console.error(`Failed to sync dealer ${dealerId} to sheet:`, error);
     }
 });
+
+
+async function deleteDealerFromSheet(sheet, dealerId) {
+    try {
+        const rows = await sheet.getRows();
+        const rowIndex = rows.findIndex(row => row.get("DEALER ID") === dealerId);
+        
+        if (rowIndex > -1) {
+            console.log(`Deleting dealer ${dealerId} from sheet at row ${rowIndex + 2}`); 
+            await rows[rowIndex].delete();
+            console.log(`Successfully deleted dealer ${dealerId} from sheet`);
+        } else {
+            console.log(`Dealer ${dealerId} not found in sheet, no deletion needed`);
+        }
+    } catch (error) {
+        console.error(`Failed to delete dealer ${dealerId} from sheet:`, error);
+        throw error; // Re-throw to handle in the main function if needed
+    }
+}

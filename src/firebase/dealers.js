@@ -48,7 +48,6 @@ class DealerService {
     }
   }
 
-  
   async getDealers(userId, role) {
     const isAdminUser = role === 'superuser' || role === 'admin';
         const q = isAdminUser
@@ -68,7 +67,17 @@ class DealerService {
       throw new Error("Could not fetch dealers.");
     }
   }
-
+  async deleteDealer(dealerId) {
+      try {
+        const docRef = doc(db, 'dealers', dealerId);
+        await deleteDoc(docRef);
+        toast.success(`Dealer # deleted successfully`)
+      } catch (error) {
+        console.error('Error deleting Dealer:', error);
+        toast.error(`Failed to delete the dealer`)
+        throw new Error('Failed to delete Dealer.');
+      }
+    }
   async getDealerById(dealerId) {
     try {
       const docRef = doc(db, "dealers", dealerId);

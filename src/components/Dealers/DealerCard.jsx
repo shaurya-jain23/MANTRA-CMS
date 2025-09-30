@@ -1,8 +1,8 @@
-import { SquarePen } from 'lucide-react';
+import { SquarePen, Trash2 } from 'lucide-react';
 import { Button, Select } from '../index';
 
 
-function DealerCard({ key, dealer, onEdit, onStatusChange, userData }) {
+function DealerCard({ key, dealer,onDelete ,onEdit, onStatusChange, userData }) {
   const userRole = userData?.role;
   const isAuthor = dealer?.registered_by_id === userData?.uid;
   
@@ -78,10 +78,13 @@ function DealerCard({ key, dealer, onEdit, onStatusChange, userData }) {
             className="text-sm !w-fit !py-1"
             options={['Active', 'Disabled']}
           />
-          {showEditButton &&
+          {showEditButton && <>
             <Button type="submit" variant='secondary' size='small' onClick={() => onEdit({...dealer})}>
-            <SquarePen size={18}/>
-          </Button>
+              <SquarePen size={18}/>
+            </Button>
+            <Button type="submit" variant='secondary' size='small' onClick={() => onDelete(dealer.id)}>
+              <Trash2 className='text-red-500' size={18}/>
+            </Button> </>
           }
       </div>
     </div>

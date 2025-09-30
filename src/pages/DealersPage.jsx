@@ -112,6 +112,14 @@ function DealersPage() {
       dispatch(setDealersStatus("idle"))
   };
 
+  const handleDelete = async (dealerId) =>{
+    const toastId = toast.loading('Chnaging dealer status...');
+    await dealerService.deleteDealer(dealerId);
+    setDealers(dealers.filter(d => d.id === dealerId ));
+    toast.dismiss(toastId);
+    dispatch(setDealersStatus("idle"))
+  }
+
   const activeDealers = dealers.filter(d => d.status !== 'disabled').length;
   const inactiveDealers = dealers.filter(d => d.status === 'disabled').length;
   if (loading) {
@@ -188,6 +196,7 @@ function DealersPage() {
                 key={dealer.id} 
                 dealer={dealer}
                 onEdit={handleOpenForm}
+                onDelete={handleDelete}
                 onStatusChange={handleStatusChange}
                 userData={userData}
             />

@@ -84,7 +84,6 @@ export const deleteAndSyncBooking = https.onCall({ secrets: [googleServiceAccoun
     if (!request.auth) throw new https.HttpsError("unauthenticated", "You must be logged in.");
 
     const { bookingData } = request.data;
-    console.log(booking);
     try {
         const bookingRef = db.collection("bookings").doc(bookingData.id);
         const bookingSnap = await bookingRef.get();
