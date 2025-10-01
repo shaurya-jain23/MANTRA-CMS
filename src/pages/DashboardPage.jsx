@@ -10,6 +10,7 @@ import dealerService from '../firebase/dealers';
 import { useNavigate } from 'react-router-dom';
 import { Timestamp } from "firebase/firestore";
 import toast from 'react-hot-toast';
+import { useBooking } from '../contexts/BookingContext';
 
 const getColorScore = (colorString = '', type) => {
   const brightColors = ['RED', 'BLUE', 'GREEN'];
@@ -41,7 +42,6 @@ const DashboardPage = () => {
   const dispatch = useDispatch();
   const containerStatus = useSelector(selectContainerStatus);
   const containerData = useSelector(selectAllContainers);
-
   const [allContainers, setAllContainers] = useState([]); 
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -58,12 +58,11 @@ const DashboardPage = () => {
     'eta',
     'port',
     'colours'
-  ]); // Manages which columns are visible
+  ]); 
 
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedContainer, setSelectedContainer] = useState(null);
 
   const dropdownRef = useRef();
+  const { openBookingModal } = useBooking();
 
   
   useEffect(() => {
@@ -231,27 +230,11 @@ const DashboardPage = () => {
     // Add logic for XLSX later if needed
   };
 
+
   const handleOpenBookingModal = (container) => {
-    setSelectedContainer(container);
-    setIsBookingModalOpen(true);
+    openBookingModal(container);
   };
 
-  const handleCloseBookingModal = () => {
-    setSelectedContainer(null);
-    setIsBookingModalOpen(false);
-  };
-
-  const handleBookingSubmit = async (bookingData) => {
-    try {
-        await bookingService.createBooking(bookingData);
-        const dealer = await dealerService.getDealerById(bookingData.dealerId); 
-        await bookingService.updateContainerStatus(bookingData.containerId, `Pending Apporval`, dealer.trade_name);
-        handleCloseBookingModal();
-        navigate('/bookings');
-    } catch (error) {
-        alert(error.message);
-    }
-  };
 
   // --- RENDER LOGIC ---
   if (loading) {
@@ -259,7 +242,7 @@ const DashboardPage = () => {
   }
   const containersToShow = processedContainers.slice(0, visibleCount);
   return (
-    <div className="w-full flex flex-col justify-center items-center px-5 py-10 sm:px-10 md:px-20 lg:px-30 space-y-6">
+     <div className="w-full flex flex-col justify-center items-center px-5 py-10 sm:px-10 md:px-20 lg:px-30 space-y-6">
       <div className="w-full flex flex-col justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Container Dashboard</h1>
         <div className="mt-6 md:w-auto flex flex-col sm:items-center gap-4 sm:gap-6">
@@ -300,12 +283,12 @@ const DashboardPage = () => {
         onColumnChange={handleColumnChange}
         availableColumns={ALL_AVAILABLE_COLUMNS}
       />
-      <BookingForm
+      {/* <BookingForm
         container={selectedContainer}
         onSubmit={handleBookingSubmit}
         onCancel={handleCloseBookingModal}
         isOpen= {isBookingModalOpen}
-      />
+      /> */}
       <ContainerGrid 
         containers={containersToShow}
         entries={processedContainers.length}

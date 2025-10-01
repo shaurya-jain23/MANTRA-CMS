@@ -13,6 +13,7 @@ import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {toast} from 'react-hot-toast';
 import { parseISO,format, isValid } from 'date-fns';
+import { useBooking } from '../contexts/BookingContext';
 
 
 function SalesPage() {
@@ -33,9 +34,9 @@ function SalesPage() {
     const salesCardRef = useRef();
 
   // State for the booking modal
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedContainer, setSelectedContainer] = useState(null);
-  const [bookedContainer, setBookedContainer] = useState(null);
+
+  const { openBookingModal } = useBooking();
   
   
   useEffect(() => {
@@ -189,25 +190,7 @@ function SalesPage() {
 
   // --- Booking Modal Handlers ---
   const handleOpenBookingModal = (container) => {
-    setBookedContainer(container);
-    setIsBookingModalOpen(true);
-  };
-  const handleCloseBookingModal = () => setIsBookingModalOpen(false);
-
-  const handleBookingSubmit = async (bookingData) => {
-    const toastId = toast.loading('Creating the Booking...');
-    try {
-      await bookingService.createBooking(bookingData);
-      const dealer = await dealerService.getDealerById(bookingData.dealerId);
-      await bookingService.updateContainerStatus(bookingData.containerId, 'Pending Booking', dealer.trade_name);
-      handleCloseBookingModal();
-      navigate('/bookings');
-    } catch (error) {
-      toast.error(error.message)
-    }
-     finally{
-      toast.dismiss(toastId);
-     }
+    openBookingModal(container);
   };
 
   const atSeaCount = availableContainers.filter(c => c.status === 'At Sea').length;
@@ -306,13 +289,6 @@ function SalesPage() {
             </div>
         )}
       </>)}
-{/*       
-        <BookingForm
-            container={bookedContainer}
-            onSubmit={handleBookingSubmit}
-            onCancel={handleCloseBookingModal}
-            isOpen= {isBookingModalOpen}
-          /> */}
       </div>
     </Container>
     

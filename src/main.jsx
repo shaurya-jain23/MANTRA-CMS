@@ -13,7 +13,9 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage} from './pages';
+import BookingLayout from './Layouts/BookingLayout.jsx'
+import { ModalProvider } from './contexts/ModalContext';
 
 // Create the router
 const router = createBrowserRouter(
@@ -31,11 +33,27 @@ const router = createBrowserRouter(
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
       <Route element={<Protected authentication allowedRoles={['admin', 'superuser', 'manager']} />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard" element={
+            <BookingLayout>
+              <DashboardPage />
+            </BookingLayout>
+            } />
       </Route>
       <Route element={<Protected authentication allowedRoles={['sales', 'admin', 'superuser']} />}>
-        <Route path="/sales" element={<SalesPage />} />
-        <Route path="/bookings" element={<BookingsPage />} />
+        <Route path="/sales" element={
+          <BookingLayout>
+            <SalesPage />
+          </BookingLayout>} />
+        <Route path="/bookings" element={
+          <BookingLayout>
+            <BookingsPage />
+          </BookingLayout>
+          } />
+        <Route path="/bookings/:bId" element={
+          <BookingLayout>
+            <BookingDetailsPage />
+          </BookingLayout>
+          } />
         <Route path="/performa-invoices" element={<PerformaInvoicesPage />} />
         <Route path="/performa-invoices/new" element={<PIFormPage />} />
         <Route path="/performa-invoices/:piId/edit" element={<PIFormPage />} />
