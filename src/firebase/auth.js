@@ -16,6 +16,7 @@ import {
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import {toast} from 'react-hot-toast';
 import {getErrorMessage, checkNetworkConnection, customInfoToast} from '../assets/helperFunctions'
+import userService from "./user.js";
 
 
 
@@ -227,6 +228,40 @@ export class AuthService{
             toast.dismiss(toastId);
         }
     }
+    
+    // Add this method to the AuthService class in auth.js
+
+    async deleteUserAccount(userId) {
+    const toastId = toast.loading('Deleting user account...');
+        try {
+            if (!checkNetworkConnection()) {
+                throw new Error('Please check your internet connection.');
+            }
+            // Get the current user to verify permissions (client-side check)
+            const currentUser = this.auth.currentUser;
+            if (!currentUser) {
+            throw new Error('You must be logged in to perform this action.');
+            }
+            // Verify current user is a superuser (client-side check)
+            const currentUserProfile = await this.getUserProfile(currentUser.uid);
+            if (currentUserProfile?.role !== 'superuser') {
+            throw new Error('Only superusers can delete user accounts.');
+            }
+
+            // The cloud function will automatically delete the Auth user
+            await userService.deleteUser(userId);
+            
+            toast.success('User account deleted successfully');
+        } catch (error) {
+            const errorInfo = getErrorMessage(error);
+            console.error("Account deletion error:", errorInfo.message);
+            toast.error(errorInfo.message || 'Failed to delete user account. Please try again.');
+            throw new Error(errorInfo.message);
+        } finally {
+            toast.dismiss(toastId);
+        }
+    }
+
     async reauthenticate(currentPassword){
         const toastId = toast.loading('Reauthenticating...');
         try {
