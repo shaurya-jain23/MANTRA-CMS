@@ -70,17 +70,16 @@ function UpdateProfile() {
             icon={UserRound}
             placeholder="Enter your full name"
             {...register('displayName', { required: 'Full Name is required' })}
+            error={errors.displayName?.message} 
           />
-          {errors.displayName && <p className="text-sm text-red-500">{errors.displayName.message}</p>}
           <Input
             label="Username"
             type="text"
             icon={BookUser}
             placeholder="Enter your username"
             {...register('username', { required: 'Username is required' })}
+            error={errors.username?.message} 
           />
-          {errors.username && <p className="text-sm text-red-500">{errors.username.message}</p>}
-          
           <Input
             label="Email"
             type="email"
@@ -95,8 +94,8 @@ function UpdateProfile() {
                 message: 'Email address must be a valid address',
               }
             })}
+            error={errors.email?.message} 
           />
-          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           
           <Input
             label="Phone Number"
@@ -104,9 +103,8 @@ function UpdateProfile() {
             icon={Phone}
             placeholder="Enter your phone number"
             {...register('phone', { required: 'Phone Number is required' })}
+            error={errors.phone?.message} 
           />
-          {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
-
           <Select
             label="Role/Post"
             placeholder="Select your role"
@@ -115,9 +113,9 @@ function UpdateProfile() {
             {...register('role', {
               required: 'Please select your role',
               validate: value => value !== 'Select your role' || 'Please select your role'
-            })}            
+            })}  
+            error={errors.role?.message}          
           />
-          {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
 
            <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
             {loading ? (

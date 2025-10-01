@@ -99,7 +99,7 @@ class BookingService {
       toast.error(`Error: ${error.message}`)
       throw new Error("Could not update booking.");
       } finally{
-          toast.success(`Booking of #${bookingData.containerId || ''} updated successfully`)
+          toast.success(`Booking of #${bookingData?.containerId || ''} updated successfully`)
         }
     }
 
@@ -118,7 +118,7 @@ class BookingService {
       throw new Error(error.message || "Failed to delete booking.");
     }
     finally{
-          toast.success(`Booking for #${booking.containerId || ''} deleted successfully`)
+          toast.success(`Booking for #${booking?.containerId || ''} deleted successfully`)
         }
   }
   
@@ -136,7 +136,7 @@ class BookingService {
             throw new Error("Failed to approve and sync booking.");
         }
         finally{
-          toast.success(`Booking #${bookingData.containerId || ''} approved successfully`)
+          toast.success(`Booking #${bookingData?.containerId || ''} approved successfully`)
         }
     }
 
