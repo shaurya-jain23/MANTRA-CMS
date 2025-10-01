@@ -17,11 +17,11 @@ function Button({
   const variantClasses = {
     primary: 'w-full bg-gradient-to-br from-blue-800 to-blue-600 hover:to-blue-900 text-white focus:ring-blue-500',
     secondary: 'w-fit bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 focus:ring-slate-200',
-    ghost: 'w-fit bg-transparent hover:bg-slate-100 text-slate-700 focus:ring-slate-200',
+    ghost: 'w-fit bg-transparent hover:bg-slate-200 text-slate-700 focus:ring-slate-200',
   };
 
   const sizeClasses = {
-    small: 'p-2 h-8 text-sm', 
+    small: 'p-2 h-8 text-xs rounded-full', 
     medium: 'px-4 py-2 h-10 text-sm',
     large: 'px-6 py-3 h-12 text-base'
   }
@@ -31,8 +31,8 @@ function Button({
       baseClasses,
       variantClasses[variant],
       sizeClasses[size],
-      bgColor && `!${bgColor}`,
-      textColor && `!${textColor}`,
+      bgColor && `${bgColor}`,
+      textColor && `${textColor}`,
       className,
     ),
   );
