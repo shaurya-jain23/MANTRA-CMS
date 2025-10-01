@@ -87,14 +87,16 @@ function SalesCard({ container, onBookNow, onDownloadRequest, isAdmin }) {
         <Button
           onClick={handleBookClick}
           variant='primary'
-          className="!w-fit !p-2 text-xs">
+          size='small'
+          className="!w-fit">
                 BOOK NOW
         </Button>
         <Button
           onClick={handleDownloadCard}
-          variant='secondary'
-          className="!p-2">
-                <Download size={16} />
+          variant='ghost'
+          size='small'
+          >
+            <Download size={16} />
         </Button>
       </div>
     </div>

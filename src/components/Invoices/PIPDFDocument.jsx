@@ -467,6 +467,7 @@ const PIPDFDocument = ({ piData }) => {
   const {
     pi_number,
     pi_date,
+    placeOfDelivery=null,
     generated_by_name,
     billing,
     shipping,
@@ -520,7 +521,7 @@ const PIPDFDocument = ({ piData }) => {
             <View style={styles.invoiceInfoColumn}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Place of Supply:</Text>
-                <Text style={styles.infoValue}>{shippingInfo?.state || 'N/A'}</Text>
+                <Text style={styles.infoValue}>{placeOfDelivery || shippingInfo.state || 'N/A'}</Text>
               </View>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Sales Person:</Text>
@@ -596,7 +597,7 @@ const PIPDFDocument = ({ piData }) => {
           <View style={styles.addressHeader}>
             <View style={[styles.subtotalLeft]}>
                 <Text style={styles.subTotalLabel}>Freight:</Text>
-                <Text style={styles.subTotalValue}>{transport.included === 'true' ? 'Included' : 'Extra'}</Text>
+                <Text style={styles.subTotalValue}>{(transport.included === 'true' || transport.included === true ) ? 'Included' : 'Extra'}</Text>
                  
             </View>
             <View style={styles.subtotalRight}>

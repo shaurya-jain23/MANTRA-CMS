@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button, Select } from '../index';
-import {SquarePen, Trash2} from 'lucide-react'
+import {NotebookText, SquarePen, Trash2} from 'lucide-react'
 import {piStatusOptions} from '../../assets/utils'
 import { useNavigate } from 'react-router-dom';
 
@@ -58,6 +58,12 @@ const PICard = ({invoice, onDelete,onStatusChange, userData }) => {
           />
         {showEditButton &&
             <>
+              <Button
+                variant='ghost'
+                size='small'
+                onClick={() => navigate(`/performa-invoices/${invoice.id}`)}>
+                <NotebookText className='w-4 h-4 text-blue-500' />
+              </Button>
               <Button
                 variant='ghost'
                 size='small'

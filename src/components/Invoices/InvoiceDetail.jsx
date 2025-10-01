@@ -22,6 +22,7 @@ function InvoiceDetail({ piData }, ref) {
   const {
     pi_number,
     pi_date,
+    placeOfDelivery=null,
     generated_by_name,
     billing,
     shipping,
@@ -34,6 +35,7 @@ function InvoiceDetail({ piData }, ref) {
 
   const isShippingSame = shipping === 'same_as_billing';
   const shippingInfo = isShippingSame ? billing : shipping;
+
 
   return (
     <div className="bg-white border-2 border-gray-500 text-xs sm:text-sm md:text-base" ref={ref}>
@@ -61,7 +63,7 @@ function InvoiceDetail({ piData }, ref) {
           <p className="text-md"><strong>PI Date:</strong> {pi_date ? pi_date : 'N/A'}</p>
         </div>
         <div className="py-0.5 px-2 ">
-          <p className="text-md"><strong>Place of Supply:</strong> {shippingInfo.state}</p>
+          <p className="text-md"><strong>Place of Supply:</strong> {placeOfDelivery || shippingInfo.state}</p>
           <p className="text-md"><strong>Sales Person:</strong> {generated_by_name}</p>
         </div>
       </div>
@@ -133,7 +135,7 @@ function InvoiceDetail({ piData }, ref) {
 
       <div className="border-y-2 w-full bg-slate-100 border-gray-500 grid grid-cols-3 text-left justify-between items-center">
         <div className="py-0.5 px-2 border-r-2 h-full border-gray-500 flex items-center col-span-2">
-          <p className="text-md flex gap-2"><strong> Freight:</strong> <span>{transport.included === 'true' ? 'Included' : 'Extra'}</span></p>
+          <p className="text-md flex gap-2"><strong> Freight:</strong> <span>{(transport.included === 'true' || transport.included === true ) ? 'Included' : 'Extra'}</span></p>
         </div>
         <div className="py-0.5 px-2 flex items-center col-span-1">
           <p className="text-md flex flex-grow justify-between"><span className='font-semibold'>Sub Total:</span> <span>{formatCurrency(totals.subTotal)}</span></p>
