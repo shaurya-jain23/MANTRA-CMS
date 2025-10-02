@@ -15,6 +15,7 @@ function Pagination({ currentPage, totalEntries, entriesPerPage, onPageChange })
       <div className="flex items-center space-x-1">
         <Button
           onClick={() => onPageChange(currentPage - 1)}
+          className='rounded-full'
           variant='secondary'
           disabled={currentPage === 1}
           >
@@ -23,6 +24,7 @@ function Pagination({ currentPage, totalEntries, entriesPerPage, onPageChange })
         <span className="px-3 py-1 text-base">Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong></span>
         <Button
           onClick={() => onPageChange(currentPage + 1)}
+          className='rounded-full'
           variant='secondary'
           disabled={currentPage === totalPages}
           >

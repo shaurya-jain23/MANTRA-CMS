@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {Button} from '../index'
+import {Button, Select} from '../index'
 
 function ExportControls({ onExport }) {
   const [fileType, setFileType] = useState('PDF');
@@ -11,17 +11,16 @@ function ExportControls({ onExport }) {
   return (
     <div className="flex flex-col items-start xs:flex-row xs:items-center justify-end gap-4 p-4">
       <span className="text-sm font-medium text-gray-700">Export Data As:</span>
-      <select 
+      <Select 
         value={fileType} 
         onChange={(e) => setFileType(e.target.value)}
-        className="p-2 border border-gray-300 rounded-md shadow-sm"
-      >
-        <option value="PDF">PDF File</option>
-        {/* <option value="XLSX">Excel File</option> */}
-      </select>
+        className="text-sm !w-fit !py-1"
+        options={[{name: 'PDF File', value: 'PDF'}]}
+      />
       <Button 
+        variant='secondary'
         onClick={handleExportClick}
-        className="px-6 py-2 !w-fit text-sm font-medium"
+        className=""
       >
         OK
       </Button>
