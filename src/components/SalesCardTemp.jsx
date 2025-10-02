@@ -1,5 +1,5 @@
 import React from 'react';
-import {ColorBar} from '../index';
+import {ColorBar} from './index';
 import { parseISO,format, isValid } from 'date-fns';
 
 // This component is designed to be rendered off-screen for image capture.
