@@ -56,28 +56,6 @@ function ContainerGrid({ containers, visibleColumns, entries, onBookNow }) {
     }
   }, [selectedContainer, isDownloading]); 
 
-  // const triggerDownload = async () => {
-  //    const toastId = toast.loading('Downloading container card...');
-  //   const cardElement = salesCardRef.current;
-  //   if (!cardElement || !selectedContainer) return;
-
-  //   const canvas = await html2canvas(cardElement, { scale: 2 });
-  //   const dataUrl = canvas.toDataURL('image/png');
-    
-  //   const link = document.createElement('a');
-  //   link.href = dataUrl;
-  //   link.download = `MANTRA_Container_${selectedContainer.container_no}.png`;
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  //   toast.dismiss(toastId);
-  //   toast.success('Container card downloaded');
-  // };
-
-  if (!containers || containers.length === 0) {
-    return <p className="text-center text-gray-500 mt-8">No containers match the current filters.</p>
-  }
-
   return (
     <div className='xs:mb-5 mb-0'>
       {selectedContainer && (
@@ -88,7 +66,7 @@ function ContainerGrid({ containers, visibleColumns, entries, onBookNow }) {
       <div className='text-lg mb-1'>
         <p>No. of Entries: <b>{entries}</b></p>
       </div>
-      <div className="grid grid-cols-1 gap-2 xl:grid-cols-1">
+      <div className="grid grid-cols-1 gap-2">
         {containers.map((container) => (
           <ContainerCard 
             key={container.id} 

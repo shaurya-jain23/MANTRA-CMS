@@ -1,41 +1,18 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { selectAllContainers ,selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
 import { useSelector, useDispatch } from 'react-redux';
-import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls, BookingForm, Loading} from '../components';
+import {FilterPanel, ContainerGrid, VisibleColumns, DropDown, SearchBar, ShowMoreButton, ExportControls, Loading, Container} from '../components';
 import {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions} from '../assets/utils'
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import bookingService from '../firebase/bookings';
-import dealerService from '../firebase/dealers';
 import { useNavigate } from 'react-router-dom';
 import { Timestamp } from "firebase/firestore";
 import toast from 'react-hot-toast';
 import { useBooking } from '../contexts/BookingContext';
+import { getColorScore } from '../assets/helperFunctions';
+import { AlertCircle, FileText } from 'lucide-react';
 
-const getColorScore = (colorString = '', type) => {
-  const brightColors = ['RED', 'BLUE', 'GREEN'];
-  const darkColors = ['BLACK', 'GREY', 'WHITE'];
-  let score = 0;
-  const colors = colorString.replace(/\s/g, '').split(/[，, ;]/).map(part => {
-    const [name, value] = part.trim().split('-');
-    return {
-      name: name.trim().toUpperCase(),
-      value: parseInt(value, 10),
-    };
-  }).filter(color => !isNaN(color.value) && color.value > 0);
 
-  const total = colors.reduce((sum, color) => sum + color.value, 0);
-  colors.forEach(({name, value}) =>{
-    if(type === 'bright' && total > 0 && brightColors.includes(name)){
-      score += parseInt((value / total) * 100, 10);
-    }
-    if(type === 'dark' && total > 0 && darkColors.includes(name)){
-      score += parseInt((value / total) * 100);
-    }
-  })
-  console.log(colorString, score);
-  return score;
-};
 
 
 const DashboardPage = () => {
@@ -51,6 +28,7 @@ const DashboardPage = () => {
   const [monthKey, setMonthKey] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleCount, setVisibleCount] = useState(10);
+  const [error, setError] = useState('')
   const [visibleColumns, setVisibleColumns] = useState([
     'model',
     'destination',
@@ -73,12 +51,16 @@ const DashboardPage = () => {
         setAllContainers(containerData);
         setLoading(false);
       }
+      if(containerStatus === 'failed'){
+        setError('Failed to fetch containers data.')
+        toast.error(`Failed to fetch containers data`)
+        setLoading(false)
+      }
     }, [containerStatus, dispatch]);
 
   // --- MEMOIZED FILTERING & SORTING ---
   const processedContainers = useMemo(() => {
     const today = new Date();
-
     const etaProcessed = [...allContainers].map(c => {const dateObject= new Date(c.eta); 
           const firestoreTimestamp = Timestamp.fromDate(dateObject);
           return {...c, eta: firestoreTimestamp}})
@@ -125,7 +107,7 @@ const DashboardPage = () => {
     //filterpanel filters
     Object.keys(activeFilters).forEach(key => {
       const filterValue = activeFilters[key];
-      if (Array.isArray(filterValue) && filterValue.length > 0) {
+      if (Array.isArray(filterValue) && filterValue?.length > 0) {
         processed = processed.filter(c => {
           const match = c[key]?.trim().replace(/\s+/g, '_').toLowerCase()
           return filterValue.includes(match)
@@ -178,7 +160,7 @@ const DashboardPage = () => {
     setVisibleCount(prevCount => {
       if (prevCount === 10) return 25;
       if (prevCount === 25) return 45; 
-      return processedContainers.length; 
+      return processedContainers?.length; 
     });
   };
   
@@ -240,16 +222,16 @@ const DashboardPage = () => {
   if (loading) {
     return <Loading isOpen={true} message="Loading Dashboard..." />
   }
-  const containersToShow = processedContainers.slice(0, visibleCount);
+  const containersToShow = processedContainers?.slice(0, visibleCount);
   return (
-     <div className="w-full flex flex-col justify-center items-center px-5 py-10 sm:px-10 md:px-20 lg:px-30 space-y-6">
+    <Container>
       <div className="w-full flex flex-col justify-between">
         <h1 className="text-3xl font-bold text-gray-800">Container Dashboard</h1>
         <div className="mt-6 md:w-auto flex flex-col sm:items-center gap-4 sm:gap-6">
             <SearchBar
             query={searchQuery}
             setQuery={setSearchQuery}
-            resultCount={processedContainers.length} />
+            resultCount={processedContainers?.length} />
           <div className="flex gap-3 sm:gap-5 items-center flex-wrap sm:justify-center">
             <DropDown
               label="Port Arrival in"
@@ -283,27 +265,38 @@ const DashboardPage = () => {
         onColumnChange={handleColumnChange}
         availableColumns={ALL_AVAILABLE_COLUMNS}
       />
-      {/* <BookingForm
-        container={selectedContainer}
-        onSubmit={handleBookingSubmit}
-        onCancel={handleCloseBookingModal}
-        isOpen= {isBookingModalOpen}
-      /> */}
-      <ContainerGrid 
+      {error && 
+        <div className='flex flex-col items-center py-12 text-center'>
+        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+          <AlertCircle className='w-8 h-8 text-red-600'/>
+        </div>
+        <h3 className='text-lg font-medium text-slate-900 mb-2'>Error Occured</h3>
+        <p className="text-red-500  mb-6 max-w-md">Error: {error}</p>
+      </div>      
+      }
+      {!error && (processedContainers?.length === 0 ? <div className='flex flex-col items-center py-12 text-center'>
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <FileText className='w-8 h-8 text-slate-400'/>
+        </div>
+        <h3 className='text-lg font-medium text-slate-900 mb-2'>No containers found</h3>
+        <p className="text-slate-500 mb-6 max-w-md">Your search or filter criteria did not match any of the containers. <br /> Try adjusting search.</p>
+      </div> : <>
+       <ContainerGrid 
         containers={containersToShow}
-        entries={processedContainers.length}
+        entries={processedContainers?.length}
         visibleColumns={ALL_AVAILABLE_COLUMNS.filter(col => visibleColumns.includes(col.key))}
         onBookNow={handleOpenBookingModal}
       />
-      {visibleCount < processedContainers.length && (
+      {visibleCount < processedContainers?.length && (
         <ShowMoreButton onClick={handleShowMore} />
       )}
-      {processedContainers.length > 0 && (
+      {processedContainers?.length > 0 && (
         <div className="w-full sm:mt-8">
           <ExportControls onExport={handleExportData} />
         </div>
       )}
-    </div>
+      </>)}
+    </Container>
   );
 };
 
