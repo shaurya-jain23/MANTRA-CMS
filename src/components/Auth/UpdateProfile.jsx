@@ -6,6 +6,7 @@ import { selectUser, login } from '../../features/user/userSlice';
 import userService from '../../firebase/user'; 
 import { Input, Button, Select } from '../index';
 import { ArrowRight, BookUser, FileText, Mail, Phone, UserRound } from 'lucide-react';
+import { PLACES } from '../../assets/utils';
 
 function UpdateProfile() {
   const userData = useSelector(selectUser);
@@ -46,7 +47,7 @@ function UpdateProfile() {
   };
 
   return (
-    <div className="flex flex-grow items-center justify-center bg-gray-50">
+    <div className="w-full flex flex-grow items-center justify-center bg-gray-50">
       <div className="w-19/20 max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
        {/* Header */}
         <div className="text-center mb-8">
@@ -116,7 +117,17 @@ function UpdateProfile() {
             })}  
             error={errors.role?.message}          
           />
-
+          <Select
+            label="Work Location"
+            placeholder="Select your work location"
+            defaultValue="Select your work location"
+            options={PLACES.map(location => ({ value: location.value, name: location.label }))}
+            {...register('workplace', {
+              required: 'Please select your work location',
+              validate: value => value !== 'Select your work location' || 'Please select your work location'
+            })}
+            error={errors.role?.message} 
+          />
            <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
             {loading ? (
                         'Saving Details...'

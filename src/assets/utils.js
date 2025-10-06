@@ -230,7 +230,29 @@ export const accessoryOptions = {
   },
 };
 
-const piStatusOptions = [{name: 'Mark Paid', value: 'paid'},{ name: 'Mark Token paid', value: 'token'}, {name: 'Mark Unpaid', value: 'unpaid'}]
+export const ROLES = [
+  { value: 'superuser', label: 'Super User', level: 100 },
+  { value: 'admin', label: 'Administrator', level: 90 },
+  { value: 'manager', label: 'Manager', level: 80 },
+  { value: 'sales', label: 'Sales', level: 50 },
+  { value: 'accounts', label: 'Accounts', level: 50 },
+  { value: 'transporter', label: 'Transporter', level: 40 },
+  { value: 'cha', label: 'CHA', level: 40 },
+  { value: 'store', label: 'Store', level: 30 }
+];
+
+export const STATUSES = [
+  { value: 'active', label: 'Active', color: 'green' },
+  { value: 'pending', label: 'Pending Approval', color: 'orange' },
+  { value: 'disabled', label: 'Disabled', color: 'red' }
+];
+export const PLACES = [
+  { value: 'hisar', label: 'Hisar Branch', color: 'bg-teal-100 text-teal-800' },
+  { value: 'noida', label: 'Noida Branch', color: 'bg-violet-100 text-violet-800' },
+  { value: 'all', label: 'Multiple Branches', color: 'bg-amber-100 text-amber-800' },
+];
+
+const piStatusOptions = [{name: 'Mark Paid', value: 'paid'},{ name: 'Mark Token paid', value: 'token'}, { name: 'Mark Partially paid', value: 'partially'},{name: 'Mark Unpaid', value: 'unpaid'}]
 
 const containerDetailsOrder = {
   job_no: 1,

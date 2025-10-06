@@ -3,7 +3,7 @@ import userService from '../firebase/user';
 import authService from '../firebase/auth';
 import { useModal } from '../contexts/ModalContext';
 import { Button, SearchBar, Select, Container, Loading } from '../components';
-import { ROLES, STATUSES } from '../assets/utils';
+import { ROLES, STATUSES, PLACES } from '../assets/utils';
 import { AlertCircle, CheckCircle, FileText, XCircle } from 'lucide-react';
 
 // Define the available roles and statuses with hierarchical permissions
@@ -175,7 +175,7 @@ function UsersPage() {
     return roleObj?.label || role;
   };
 
-  if (loading) return <Loading isOpen={true} message="Loading Available Containers..." />
+  if (loading) return <Loading isOpen={true} message="Loading User Data..." />
 
   return (
     <Container>
@@ -262,6 +262,9 @@ function UsersPage() {
                   Contact
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Work Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Role
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -299,10 +302,19 @@ function UsersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Select
+                      value={user.workplace}
+                      onChange={(e) => handleFieldChange(user.id, 'workplace', e.target.value)}
+                      options={PLACES.map(location => ({ value: location.value, name: location.label }))}
+                      outerClasses="min-w-[120px]"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Select
                       value={user.role}
                       onChange={(e) => handleFieldChange(user.id, 'role', e.target.value)}
                       options={ROLES.map(role => ({ value: role.value, name: role.label }))}
-                      outerClasses="min-w-[140px]"
+                      outerClasses="min-w-[120px]"
+                      className='!w-fit'
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -310,13 +322,13 @@ function UsersPage() {
                       value={user.status}
                       onChange={(e) => handleFieldChange(user.id, 'status', e.target.value)}
                       options={STATUSES.map(status => ({ value: status.value, name: status.label }))}
-                      outerClasses="min-w-[140px]"
+                      outerClasses="min-w-[120px]"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {user.created_at?.seconds ? new Date(user.created_at.seconds * 1000).toLocaleDateString() : 'Unknown'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium min-w-[300px]">
                     <div className="flex flex-wrap gap-2">
                       {user.status === 'pending' && (
                         <Button

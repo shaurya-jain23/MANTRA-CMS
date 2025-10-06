@@ -9,7 +9,7 @@ import { Input, Button, Container, ConfirmationAlert, LogoutBtn, ReAuthModal, Ch
 import { SquarePen, Mail, Phone, UserRound, BookUser, Shield, LogOut, Trash2, Eye, EyeOff, Key, Calendar, BadgeCheck, AlertTriangle, ChevronLeft, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getDefaultRouteForRole } from "../assets/helperFunctions";
-import { getRoleBadgeColor } from "../assets/utils";
+import { getRoleBadgeColor, PLACES } from "../assets/utils";
 
 function ProfilePage() {
   const userData = useSelector(selectUser);
@@ -35,7 +35,6 @@ function ProfilePage() {
       const updatedData = {
         ...userData,
         ...data,
-        updated_at: new Date().toISOString()
       };
       await userService.updateUser(userData.uid, updatedData);
       dispatch(login(updatedData));
@@ -131,8 +130,8 @@ function ProfilePage() {
                     </span>
                   </div>
                 )}
-                <div className='grid grid-cols-2 gap-1'>
-                  <h2 className="text-xl font-semibold text-gray-900 col-span-2 ">{userData?.displayName}</h2>
+                <div className='grid grid-cols-3 gap-1'>
+                  <h2 className="text-xl font-semibold text-gray-900 col-span-3 ">{userData?.displayName}</h2>
                   <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-base ${getRoleBadgeColor(userData?.role)}`}>
                     {userData?.role?.toUpperCase()}
                   </span>
@@ -141,6 +140,9 @@ function ProfilePage() {
                       <BadgeCheck size={12} className="mr-1" /> Verified
                     </span>
                   )}
+                  <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-base ${PLACES.find(p => p.value === userData?.workplace)?.color}`}>
+                    {userData?.workplace?.toUpperCase()}
+                  </span>
                 </div>
               </div>
               <Profile

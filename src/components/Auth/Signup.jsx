@@ -8,6 +8,7 @@ import {ArrowRight, FileText, Lock, Mail, Phone, UserRound} from 'lucide-react'
 import authService from '../../firebase/auth'; 
 import { login as storeLogin } from '../../features/user/userSlice';
 import { Button, Input, Select } from '../index';
+import { PLACES } from '../../assets/utils';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -65,9 +66,8 @@ const Signup = () => {
             icon={UserRound}
             placeholder="Enter your full name"
             {...register('fullname', { required: 'Full Name is required' })}
+            error={errors.fullname?.message} 
           />
-          {errors.fullname && <p className="text-sm text-red-500">{errors.fullname.message}</p>}
-
           <Input
             label="Phone Number"
             type="tel"
@@ -77,9 +77,8 @@ const Signup = () => {
             value: /^[0-9]{10}$/,
             message: 'Phone number must be 10 digits',
           }, })}
+          error={errors.phone?.message} 
           />
-          {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
-          
           <Input
             label="Email"
             type="email"
@@ -92,8 +91,8 @@ const Signup = () => {
                 message: 'Email address must be a valid address',
               }
             })}
+            error={errors.email?.message} 
           />
-          {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
           
           <Input
             label="Password"
@@ -107,9 +106,8 @@ const Signup = () => {
                 message: 'Password must be at least 6 characters long'
               }
             })}
+            error={errors.password?.message} 
           />
-          {errors.password && <p className="text-sm text-red-500">{errors.password.message}</p>}
-
           <Select
             label="Role/Post"
             placeholder="Select your role"
@@ -119,9 +117,19 @@ const Signup = () => {
               required: 'Please select your role',
               validate: value => value !== 'Select your role' || 'Please select your role'
             })}
+            error={errors.role?.message} 
           />
-          {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
-
+          <Select
+            label="Work Location"
+            placeholder="Select your work location"
+            defaultValue="Select your work location"
+            options={PLACES.map(location => ({ value: location.value, name: location.label }))}
+            {...register('workplace', {
+              required: 'Please select your work location',
+              validate: value => value !== 'Select your work location' || 'Please select your work location'
+            })}
+            error={errors.role?.message} 
+          />
           <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
             {loading ? (
                         'Creatng Account...'
@@ -135,7 +143,7 @@ const Signup = () => {
 
         <p className="text-sm text-center text-gray-600">
           Already have an account?&nbsp;
-          <Link to="/" className="font-medium text-blue-600 hover:underline">
+          <Link to="/login" className="font-medium text-blue-600 hover:underline">
             Sign In
           </Link>
         </p>
