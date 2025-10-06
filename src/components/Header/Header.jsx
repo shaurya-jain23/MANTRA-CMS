@@ -32,33 +32,42 @@ function Header() {
     { name: "Login", slug: "/login", active: !authStatus },
     { name: "Signup", slug: "/signup", active: !authStatus },
   ];
-  if (authStatus) {
-    const adminRoles = ['admin', 'superuser', 'manager'];
-    if(adminRoles.includes(userData.role)){
-      navItems.push({ name: "Dashboard", slug: "/dashboard", active: authStatus});
-    }
-    const allowedRoles = ['admin', 'superuser', 'sales'];
-    const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
-    const salesText = (userData.role === 'sales') ? 'Available Containers' : 'Sales Panel';
-    const invoiceText = (userData.role === 'sales') ? 'My PIs' : 'All PIs'
-    if(allowedRoles.includes(userData.role)){
-      navItems.push({ name: salesText, slug: '/sales', active: authStatus });
-      navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
-      navItems.push({ name: invoiceText, slug: '/performa-invoices', active: authStatus });
-    }
-  }
-  if (authStatus) {
-    const allowedRoles = ['admin', 'superuser', 'sales', 'accounts'];
-    const dealerText = (userData.role === 'sales') ? 'My Dealers' : 'Dealers';
-    if(allowedRoles.includes(userData.role)){
-      navItems.push({ name: dealerText, slug: "/dealers", active: authStatus });
-    }
-  }
-  if (authStatus && userData?.role === 'superuser') {
-    navItems.push({ name: "Manage Users", slug: "/users", active: authStatus });
-    }
-  
 
+  if (authStatus){
+    navItems.push(
+      { name: "Update Profile", slug: "/update-profile", active: authStatus && !userData?.profileComplete }
+    );
+    if (userData?.status === "pending") {
+      navItems.push({ name: "Pending Approval", slug: "/pending-approval", active: authStatus && (userData.status === 'pending') });
+    }
+    if (userData?.status === "active"){
+        const adminRoles = ['admin', 'superuser', 'manager'];
+        if(adminRoles.includes(userData.role)){
+          navItems.push({ name: "Dashboard", slug: "/dashboard", active: authStatus});
+        }
+
+        const allowedRoles = ['admin', 'superuser', 'sales'];
+        const dealerText = (userData.role === 'sales') ? 'My Bookings' : 'Bookings';
+        const salesText = (userData.role === 'sales') ? 'Available Containers' : 'Sales Panel';
+        const invoiceText = (userData.role === 'sales') ? 'My PIs' : 'All PIs'
+        if(allowedRoles.includes(userData.role)){
+          navItems.push({ name: salesText, slug: '/sales', active: authStatus });
+          navItems.push({ name: dealerText, slug: '/bookings', active: authStatus });
+          navItems.push({ name: invoiceText, slug: '/performa-invoices', active: authStatus });
+        }
+
+        const dealerAllowedRoles = ['admin', 'superuser', 'sales', 'accounts'];
+        const dealerNavText = (userData.role === 'sales') ? 'My Dealers' : 'Dealers';
+        if(dealerAllowedRoles.includes(userData.role)){
+          navItems.push({ name: dealerNavText, slug: "/dealers", active: authStatus });
+        }
+
+        if (userData.role === 'superuser') {
+          navItems.push({ name: "Manage Users", slug: "/users", active: authStatus });
+        }
+    }
+  }
+  
   return (
     <header className="shadow-lg sticky top-0 z-50 bg-white">
       <HeaderContainer>
@@ -70,14 +79,14 @@ function Header() {
             </Link>
             <span className="font-bold text-md lg:text-xl text-gray-900 tracking-wide">MANTRA-CMS</span>
           </div>
-          <ul className="hidden md:flex items-center ml-auto space-x-4 text-md">
+          <ul className="hidden lg:flex items-center ml-auto space-x-4 text-md">
             {navItems.map((item) =>
               item.active? (
                 <li key={item.name}>
                   <NavLink
                     to={item.slug}
                     className={({ isActive }) =>
-                      `inline-block px-4 py-2 duration-300 rounded-full font-medium transition-all 
+                      `inline-block px-4 py-2 duration-300 rounded-full font-medium transition-all text-center
                       ${isActive ? "text-blue-700 bg-blue-50" : "text-gray-600 hover:text-blue-800 hover:bg-gray-50"}`
                     }
                   >
@@ -96,13 +105,12 @@ function Header() {
                     }}
                     user={userData}
                   />
-                {/* <LogoutBtn /> */}
               </li>
             )}
           </ul>
 
           {/* Hamburger Menu Button (Visible on mobile) */}
-          <div className="md:hidden flex">
+          <div className="lg:hidden flex">
              {authStatus && (<ProfileDropdown
                     isOpen={profileDropdownOpen}
                     onToggle={(e)=>{
@@ -119,7 +127,7 @@ function Header() {
 
         {/* Mobile Menu (Dropdown) */}
         
-          <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-screen' : 'max-h-0'}`}>
+          <div className={`lg:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMenuOpen ? 'max-h-screen' : 'max-h-0'}`}>
             <ul className="flex flex-col gap-4 items-start justify-center space-y-4  sm:space-y-4 py-4 pl-8 text-sm sm:text-base">
               {navItems.map((item) =>
                 item.active ? (
