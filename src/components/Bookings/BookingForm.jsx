@@ -9,16 +9,28 @@ import { setBookingsStatus } from "../../features/bookings/bookingsSlice";
 import { ModalContainer, Input, Button, Select } from '../index';
 import bookingService from '../../firebase/bookings';
 import dealerService from '../../firebase/dealers';
+import { parseISO,format, isValid } from 'date-fns';
 import { 
-  Battery, Zap, Circle, CheckCircle2, ArrowRight,ArrowLeft,Package,FileText, ShieldCheck, IndianRupee,MapPinned,
-  Wrench,
-  FilePen
-} from 'lucide-react';
+  Battery, Zap, Circle, CheckCircle2, ArrowRight,ArrowLeft,Package,FileText, ShieldCheck, IndianRupee,MapPinned,Wrench,FilePen} from 'lucide-react';
 import toast from 'react-hot-toast';
-import { calculatePaymentStatus, getPaymentStatusColor } from '../../assets/utils';
+import { calculatePaymentStatus, getPaymentStatusColor, accessoryOptions } from '../../assets/utils';
 
 const ContainerDetails = ({ container }) => {
-  const eta = container?.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() : 'N/A';
+
+  let processed = (c) => {
+      let dateObject;
+      if(c.eta?.seconds){
+        let isoString = new Date(c.eta.seconds * 1000).toISOString();
+        dateObject= parseISO(isoString)
+        if (!isValid(dateObject)) dateObject= 'N/A';
+      }
+      else{
+        dateObject = c.eta;
+      }
+        return {...c, eta: dateObject}
+    }
+  const processedContainer = processed(container);
+  const eta = processedContainer.eta ? format(processedContainer.eta, 'dd-MMM') : 'N/A';
   
   const details = [
     { label: 'Container No.', value: container?.container_no },
@@ -177,6 +189,8 @@ const AddonCard = ({
   const includedField = `${Field}.included`;
   const quantityField = `${Field}.quantity`;
   const priceField = `${Field}.price`;
+  const typeField = `${Field}.type`;
+  const camelCasedField = Field.charAt(0).toUpperCase() + Field.slice(1).toLowerCase();
   const priceIncludedField = `${Field}.price_included`
   const isIncluded = watch(includedField);
   const ispriceIncluded = watch(priceIncludedField);
@@ -221,11 +235,10 @@ const AddonCard = ({
       </div>
 
       {isIncluded && showIncludedInPrice && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
-            <>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
               <Input
                 type="number"
-                label='Quantity'
+                label='Quantity (psc)'
                 placeholder="Enter quantity"
                 {...register(quantityField, {required: isIncluded && 'Quantity is required',
                     min: { value: 1, message: 'Quantity must be greater than 0' },
@@ -244,7 +257,18 @@ const AddonCard = ({
                 className="w-full"
                 error={errors[Field]?.price?.message}
               />
-              <div className="col-span-2">
+              <Select
+                label={`${camelCasedField} Type`}
+                outerClasses='md:col-span-2'
+                placeholder={`-- Select ${camelCasedField} --`}
+                defaultValue={`-- Select ${camelCasedField} --`}
+                options={accessoryOptions[Field]?.options}
+                {...register(typeField, {required: isIncluded && `${camelCasedField} type is required`, 
+                  validate: value => value !== `-- Select ${camelCasedField} --` || `Please select ${Field} description`,})}
+                className="w-full"
+                error={errors[Field]?.type?.message}
+              />
+              <div className="col-span-1 md:col-span-2">
                 <label className="inline-flex items-center">
                   <input
                     type="checkbox"
@@ -254,7 +278,7 @@ const AddonCard = ({
                   <span className="ml-2 text-sm text-gray-600">Included in Main Price</span>
                 </label>
               </div>
-            </>
+            
         </div>
       )}
     </div>
@@ -374,10 +398,12 @@ const Step3Confirmation = ({ formData, dealers, container, register, watch, book
   const pricePerPiece = formData.pricePerPiece || 0;
   const batteryPrice = formData.battery?.price || 0;
   const batteryQty = formData.battery?.quantity || 0;
+  const batteryType = formData.battery?.type?.split(/[-_ ]/).join(' ').toLowerCase() || 'NILL';
   const chargerPrice = formData.charger?.price || 0;
   const chargerQty = formData.charger?.quantity || 0;
-  const transport = formData.transport?.included === 'true' ? 'Included' : `₹ ${(formData.transport?.charges || 0)}`;
-  const transportCharges = formData.transport?.included === 'true' ? 0 : (formData.transport?.charges || 0);
+  const chargerType = formData.charger?.type?.split(/[-_ ]/).join(' ').toLowerCase() || 'NILL';
+  const transport = (formData.transport?.included === 'true' || formData.transport?.included === true) ? 'Included' : `₹ ${(formData.transport?.charges || 0)}`;
+  const transportCharges = (formData.transport?.included === 'true' || formData.transport?.included === true) ? 0 : (formData.transport?.charges || 0);
   // Calculate totals
   const subtotal = (pricePerPiece * (container?.qty || 0));
   const batteryTotal = formData.battery?.included ? (batteryPrice * batteryQty) : 0;
@@ -426,7 +452,7 @@ const Step3Confirmation = ({ formData, dealers, container, register, watch, book
                 <div className="font-medium text-gray-900">Battery</div>
                 {batteryIncluded && (
                   <div className="text-sm text-gray-600">
-                    Quantity: {batteryQty} | Unit Price: {batteryPriceIncluded ? 'Included in Main Price' : `₹${batteryPrice}`} 
+                    Quantity: {batteryQty} psc | {batteryType} | Unit Price: {batteryPriceIncluded ? 'Included in Main Price' : `₹${batteryPrice}`} 
                   </div>
                 )}
               </div>
@@ -439,7 +465,7 @@ const Step3Confirmation = ({ formData, dealers, container, register, watch, book
                 <div className="font-medium text-gray-900">Charger</div>
                 {chargerIncluded && (
                   <div className="text-sm text-gray-600">
-                    Quantity: {chargerQty} | Unit Price: {chargerPriceIncluded ? 'Included in Main Price' : `₹${chargerPrice}`}
+                    Quantity: {chargerQty} psc | {chargerType} | Unit Price: {chargerPriceIncluded ? 'Included in Main Price' : `₹${chargerPrice}`}
                   </div>
                 )}
               </div>
@@ -536,17 +562,17 @@ function BookingFormModal() {
     }
   }, [isBookingModalOpen, bookingToEdit, reset]);
 
-   useEffect(() => {
-            if (dealersStatus === 'idle') {
-              dispatch(fetchDealers({ role: userData.role, userId: userData.uid }));
-            }
-            if(dealersStatus === 'succeeded'){
-              setDealers(dealersData);
-            }
-            if(dealersStatus === 'failed'){
-              setError('Failed to fetch dealers.')
-            }
-      }, [dealersStatus, dispatch, userData]);
+  useEffect(() => {
+        if (dealersStatus === 'idle') {
+          dispatch(fetchDealers({ role: userData.role, userId: userData.uid }));
+        }
+        if(dealersStatus === 'succeeded'){
+          setDealers(dealersData);
+        }
+        if(dealersStatus === 'failed'){
+          setError('Failed to fetch dealers.')
+        }
+    }, [dealersStatus, dispatch, userData]);
 
   // Watch form values 
   useEffect(()=> {
@@ -605,8 +631,10 @@ function BookingFormModal() {
           finalBookingData = { ...bookingToEdit, ...finalData };
           toast.success('Booking updated successfully!');
         } else {
+          const bookingId = await bookingService.getBookingId()
           finalBookingData = {
             ...finalData,
+            booking_id: bookingId,
             containerId: container.id,
             registeredBy: userData.uid,
             requested_by_name: userData.displayName,

@@ -11,7 +11,7 @@ import {
   where, 
   serverTimestamp 
 } from 'firebase/firestore';
-import {convertTimestamps} from '../assets/helperFunctions'
+import {convertTimestamps, convertStringsToTimestamps} from '../assets/helperFunctions'
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import {toast} from 'react-hot-toast';
@@ -20,6 +20,32 @@ const approveAndSyncBookingCallable = httpsCallable(functions, 'approveAndSyncBo
 const deleteAndSyncBookingCallable = httpsCallable(functions, 'deleteAndSyncBooking');
 
 class BookingService {
+    async getBookingId(bId = null) {
+      try {
+        if (bId) {
+          const docSnap = await getDoc(doc(db, 'bookings', String(bId)));
+          return docSnap.data();
+        }
+        const querySnapshot = await getDocs(collection(db, 'bookings'));
+        let maxNum = 0;
+        querySnapshot.forEach((doc) => {
+          const book = doc.data();
+          const num = parseInt(book?.booking_id?.split('-')[1]);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        });
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const newCount = String(maxNum + 1).padStart(3, '0');
+        const newBookingId = `${year}${month}${day}-${newCount}`;
+        return newBookingId;
+      } catch (error) {
+        console.error('Error generating Booking Id:', error);
+        toast.error(`Error occured while generating Booking Id`);
+        throw new Error('Could not generate a new Booking Id.');
+      }
+    }
     async createBooking(bookingData) {
         try {
         const bookingPayload = {
@@ -70,8 +96,9 @@ class BookingService {
       const bookingSnap = await getDoc(bookingRef);
       if (!bookingSnap.exists()) throw new Error("Booking not found!");
       const containerRef = bookingData.containerRef;
+      const bookingDataToUpdate = convertStringsToTimestamps(bookingData)
       const updatePayload = {
-            ...bookingData,
+            ...bookingDataToUpdate,
             dealerRef: doc(db, 'dealers', bookingData.dealerId),
             status: 'Pending', 
             rejectionReason: '',
