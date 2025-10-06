@@ -22,6 +22,8 @@ import Loading from "./Loading";
 import CollapsibleSection from "./CollapsibleSection";
 import Tooltip from "./Tooltip"
 import PaymentUpdateModal from "./PaymentUpdateModal";
+import Tabs from "./Tabs";
+import StatCard from "./StatCard";
 
 import Login from "./Auth/Login";
 import Signup from "./Auth/Signup";
@@ -35,7 +37,7 @@ import FilterPanel from "./dashboard/FilterPanel";
 import ContainerGrid from "./dashboard/ContainerGrid";
 import ContainerCard from "./dashboard/ContainerCard";
 import VisibleColumns from "./dashboard/VisibleColumns";
-import SalesCardTemp from "./dashboard/SalesCardTemp";
+import SalesCardTemp from "./SalesCardTemp";
 import ExportControls from "./dashboard/ExportControls";
 
 import DealerCard from "./Dealers/DealerCard";
@@ -45,9 +47,8 @@ import BookingForm from "./Bookings/BookingForm";
 import BookingCard from "./Bookings/BookingCard";
 
 import SalesCard from "./Sales/SalesCard";
-import StatCard from "./Sales/StatCard";
+import SalesStats from "./Sales/SalesStats";
 import Pagination from "./Sales/Pagination";
-import Tabs from "./Sales/Tabs";
 
 import PICard from "./Invoices/PICard";
 import CreateInvoice from "./Invoices/CreateInvoice";
@@ -55,4 +56,4 @@ import InvoiceSummary from "./Invoices/InvoiceSummary"
 import InvoiceDetail from "./Invoices/InvoiceDetail";
 import PIPDFDocument from "./Invoices/PIPDFDocument";
 
-export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs, Loading, ProfileDropdown, PICard, CreateInvoice, InvoiceDetail, ReAuthModal, ChangePasswordModal, Profile, PIPDFDocument, InvoiceSummary, Tooltip, CollapsibleSection, PaymentUpdateModal};
+export { Header, Footer, Logo, Protected, Container, LogoutBtn, Button, Input, Login, Signup, FilterOptionGroup, FilterPanel, ColorBar, ContainerCard, ContainerGrid, ToggleBtn, VisibleColumns, DropDown, SearchBar, ShowMoreButton, SalesCardTemp, ExportControls, Errors, Select, UpdateProfile, DealerCard, DealerForm, BookingForm, ModalContainer, CheckBox, BookingCard, HeaderContainer, ConfirmationAlert, SalesCard, StatCard, Pagination, Tabs, Loading, ProfileDropdown, PICard, CreateInvoice, InvoiceDetail, ReAuthModal, ChangePasswordModal, Profile, PIPDFDocument, InvoiceSummary, Tooltip, CollapsibleSection, PaymentUpdateModal, SalesStats};

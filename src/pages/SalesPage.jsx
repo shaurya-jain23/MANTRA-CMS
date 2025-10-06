@@ -2,10 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectUser } from '../features/user/userSlice';
-import { selectAllContainers ,selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
-import {SalesCard, BookingForm, SalesCardTemp,SearchBar, DropDown, ExportControls,StatCard, Pagination, Container, Tabs, Loading} from '../components'; 
-import bookingService from '../firebase/bookings';
-import dealerService from '../firebase/dealers';
+import { selectAllContainers, selectContainerStatus, fetchContainers } from '../features/containers/containersSlice';
+import {SalesCard, SalesCardTemp,SearchBar, DropDown, ExportControls,StatCard, Pagination, Container, Tabs, Loading, SalesStats, CollapsibleSection} from '../components'; 
 import { Ship, Anchor, ListChecks, FileText, AlertCircle } from 'lucide-react';
 import { TABS, salesColumns, salesSortOptions } from '../assets/utils';
 import html2canvas from 'html2canvas-pro';
@@ -28,6 +26,7 @@ function SalesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState('ALL');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [error, setError] = useState('')
   const containersPerPage = 10;
     const dropdownRef = useRef();
@@ -213,7 +212,18 @@ function SalesPage() {
               <StatCard title="At Sea" value={atSeaCount} icon={<Ship className="text-teal-500" />} />
               <StatCard title="At Port / In Transit" value={atPortCount} icon={<Anchor className="text-indigo-500" />} />
         </div> 
-
+        <div className="py-5 mt-5">
+          <CollapsibleSection
+            title="Port-wise Model Availability"
+            isOpen={isStatsOpen}
+            onToggle={() => setIsStatsOpen(!isStatsOpen)}
+            isComplete= {null}
+          >
+            <div className="p-4">
+              <SalesStats containers={allContainers} />
+            </div>
+          </CollapsibleSection>
+        </div>
         <div className="bg-white p-4 border-b-gray-100">
             <Tabs tabs={TABS} activeTab={activeTab} onTabClick={setActiveTab} />
             <div className="flex flex-col lg:flex-row justify-between items-center pt-6 gap-4">
@@ -222,7 +232,7 @@ function SalesPage() {
             setQuery={setSearchQuery} 
             className='rounded-xs py-2'
             resultCount={availableContainers.length}
-            placeholder='Search by Container No, Model,Port , BL No, Job No...'
+            placeholder='Search by Container No, Model, Port, BL No, Job No...'
             />
             <DropDown 
                 ref={dropdownRef}
