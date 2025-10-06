@@ -19,10 +19,23 @@ export const userSlice = createSlice({
       state.status = false;
       state.userData = null;
     },
+    updateUserData: (state, action) => {
+      if (state.userData) {
+        state.userData = {
+          ...state.userData,
+          ...action.payload
+        };
+      }
+    },
+    setUserStatus: (state, action) => {
+      if (state.userData) {
+        state.userData.status = action.payload;
+      }
+    },
   },
 });
 
-export const { login, logout } = userSlice.actions;
+export const { login, logout, updateUserData, setUserStatus } = userSlice.actions;
 
 export const selectUser = (state) => state.user.userData;
 export const selectIsLoggedIn = (state) => state.user.status
