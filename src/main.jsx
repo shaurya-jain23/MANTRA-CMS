@@ -13,9 +13,9 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage, AccountDisabledPage} from './pages';
 import BookingLayout from './Layouts/BookingLayout.jsx'
-import { ModalProvider } from './contexts/ModalContext';
+import DealerLayout from './Layouts/DealerLayout.jsx'
 
 // Create the router
 const router = createBrowserRouter(
@@ -26,6 +26,7 @@ const router = createBrowserRouter(
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/disabled" element={<AccountDisabledPage />} />
       </Route>
       <Route element={<Protected authentication />}>
         <Route path="/pending-approval" element={<PendingApprovalPage />} />
@@ -55,12 +56,24 @@ const router = createBrowserRouter(
           </BookingLayout>
           } />
         <Route path="/performa-invoices" element={<PerformaInvoicesPage />} />
-        <Route path="/performa-invoices/new" element={<PIFormPage />} />
-        <Route path="/performa-invoices/:piId/edit" element={<PIFormPage />} />
+        <Route path="/performa-invoices/new" element={
+          <DealerLayout>
+            <PIFormPage />
+          </DealerLayout>
+          } />
+        <Route path="/performa-invoices/:piId/edit" element={
+          <DealerLayout>
+            <PIFormPage />
+          </DealerLayout>
+          } />
         <Route path="/performa-invoices/:piId" element={<PIShowPage />} />
       </Route>
       <Route element={<Protected authentication allowedRoles={['admin', 'superuser', 'sales', 'accounts']} />}>
-        <Route path="/dealers" element={<DealersPage />} />
+        <Route path="/dealers" element={
+          <DealerLayout>
+             <DealersPage />
+          </DealerLayout>
+          } />
       </Route>
       <Route element={<Protected authentication allowedRoles={['superuser']} />}>
         <Route path="/users" element={<UsersPage />} />

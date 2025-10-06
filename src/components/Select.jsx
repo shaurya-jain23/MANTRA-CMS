@@ -2,6 +2,7 @@ import React, { useId, useMemo } from 'react'
 import { twMerge } from 'tailwind-merge';
 import clsx from 'clsx';
 
+
 function Select({
     options,
     label,
@@ -9,7 +10,9 @@ function Select({
     placeholder= 'Please select an option',
     required=false,
     error,
+    showAddOption = false,
     disabled = false,
+    addOptionText = "Add New Dealer",
     ...props
 }, ref) {
     const id = useId()
@@ -25,7 +28,7 @@ function Select({
                 'border-slate-200': !error,
                 'bg-gray-100 cursor-not-allowed opacity-70': disabled,
                 'bg-white cursor-pointer': !disabled,
-                'pl-10': props.icon
+                'pl-10': props.icon,
             }
         ),
         className
@@ -46,30 +49,36 @@ function Select({
                     </div>
                 )}
             <select 
-            name=""
-            {...props} 
-            id={id} 
-            ref={ref} 
-            required 
-            className={selectClasses}
-            aria-invalid={error ? 'true' : 'false'}
-            aria-describedby={error ? `${id}-error` : undefined}
-            >
-            <option key={placeholder} value={placeholder} disabled>{placeholder || 'Please select an option'}</option>
-            {options?.map((option)=>{
-                const value = typeof option === 'object' ? option.value : option.trim().toLowerCase().replace(/\s+/g, '_')
-                return(
-                <option key = {value} value={value} option={option.name || option}>
-                    {option.name || option }
-                </option>)
-            })}
-        </select>
+                name=""
+                {...props} 
+                id={id} 
+                ref={ref} 
+                required={required}
+                className={selectClasses}
+                aria-invalid={error ? 'true' : 'false'}
+                aria-describedby={error ? `${id}-error` : undefined}
+                >
+                <option key={placeholder} value={placeholder} disabled>{placeholder || 'Please select an option'}</option>
+                {options?.map((option)=>{
+                    const value = typeof option === 'object' ? option.value : option.trim().toLowerCase().replace(/\s+/g, '_')
+                    const label = typeof option === 'object' ? option.name : option;
+                    return(
+                    <option key = {value} value={value} option={option.name || option}>
+                        {label }
+                    </option>)
+                })}
+                {showAddOption && (
+                    <option value="__add_new__" className="text-blue-600 font-semibold bg-blue-50">
+                        {addOptionText}
+                    </option>
+                )}
+            </select>
         {/* Custom dropdown arrow */}
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
         </div>
         {error && (
                 <p id={`${id}-error`} className="mt-1 text-sm text-red-600 flex items-center gap-1">

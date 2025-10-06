@@ -1,13 +1,14 @@
-// BookingLayout.jsx
 import React from 'react';
-import { Outlet } from 'react-router-dom';
 import { BookingProvider } from '../contexts/BookingContext';
+import { DealerProvider } from '../contexts/DealerContext';
 
 function BookingLayout({children}) {
   return (
-    <BookingProvider>
-      {children}
-    </BookingProvider>
+    <DealerProvider>
+      <BookingProvider>
+        {children}
+      </BookingProvider>
+    </DealerProvider>
   );
 }
 

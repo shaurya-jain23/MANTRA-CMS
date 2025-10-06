@@ -4,14 +4,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useBooking } from '../../contexts/BookingContext';
 import { selectUser } from '../../features/user/userSlice';
-import { selectAllDealers, selectDealersStatus, fetchDealers, selectDealerById } from '../../features/dealers/dealersSlice';
+import { selectAllDealers, selectDealersStatus, fetchDealers } from '../../features/dealers/dealersSlice';
 import { setBookingsStatus } from "../../features/bookings/bookingsSlice";
 import { ModalContainer, Input, Button, Select } from '../index';
 import bookingService from '../../firebase/bookings';
-import dealerService from '../../firebase/dealers';
+import { useDealer } from '../../contexts/DealerContext';
 import { parseISO,format, isValid } from 'date-fns';
 import { 
-  Battery, Zap, Circle, CheckCircle2, ArrowRight,ArrowLeft,Package,FileText, ShieldCheck, IndianRupee,MapPinned,Wrench,FilePen} from 'lucide-react';
+  Battery,Zap, Circle, CheckCircle2, ArrowRight,ArrowLeft,Package,FileText, ShieldCheck, IndianRupee,MapPinned,Wrench,FilePen,
+  AlertCircle} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { calculatePaymentStatus, getPaymentStatusColor, accessoryOptions } from '../../assets/utils';
 
@@ -95,29 +96,54 @@ const Stepper = ({ steps, currentStep }) => {
   );
 };
 
-const Step1BookingDetails = ({ register, control, errors, dealers, watch }) => {
+const Step1BookingDetails = ({ register, control, errors, dealers, watch, handleDealerChange }) => {
   const transportIncluded = ((watch('transport.included') === 'true') || (watch('transport.included') === true)  ? true : false) ;
 
   return (
     <div className="space-y-6">
       <div className="">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Booking Details</h3>
-        <Controller
-            name="dealerId"
-            control={control}
-            rules={{ required: 'Please select a dealer',validate: value => value !== '-- Select Dealer --' || 'Please select dealer' }}
-            render={({ field }) => (
-              <Select
-                {...field}
-                placeholder="-- Select Dealer --"
-                defaultValue="-- Select Dealer --"
-                label='Dealer Selection'
-                required
-                options={dealers.map(d => ({value: d.id, name: d.trade_name}))}
-                error={errors.dealerId?.message}
-              />
+        <div className="flex flex-col gap-2">
+          <Controller
+              name="dealerId"
+              control={control}
+              rules={{ required: 'Please select a dealer',validate: value => value !== '-- Select Dealer --' || 'Please select dealer' }}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  placeholder="-- Select Dealer --"
+                  defaultValue="-- Select Dealer --"
+                  label='Dealer Selection'
+                  onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '__add_new__') {
+                        handleDealerChange(value);
+                      } else {
+                        field.onChange(e);
+                        handleDealerChange(value);
+                      }
+                    }}
+                  required
+                  addOptionText="+ Add New Dealer"
+                  outerClasses="w-full"
+                  showAddOption={true}
+                  options={dealers.map(d => ({value: d.id, name: d.trade_name}))}
+                  error={errors.dealerId?.message}
+                />
+              )}
+            />
+            {dealers.length === 0 && (
+              <div className="mt-3 p-4 flex flex-wrap gap-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-2 text-yellow-800">
+                  <AlertCircle size={16} />
+                  <span className="text-sm font-medium">No dealers found:</span>
+                </div>
+                <p className="text-sm text-yellow-700 ">
+                  Use the dropdown above to add your first dealer.
+                </p>
+              </div>
             )}
-          />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
           <div className="space-y-4 flex-col flex justify-between">
              <Input
@@ -158,6 +184,7 @@ const Step1BookingDetails = ({ register, control, errors, dealers, watch }) => {
                         required={!transportIncluded}
                         placeholder="Enter transport charges"
                         {...register('transport.charges', { valueAsNumber: true })}
+                        error={errors.transport?.charges?.message}
                       />
                     )}
           </div>
@@ -535,6 +562,8 @@ function BookingFormModal() {
     { number: 3, title: 'Confirm', icon: ShieldCheck }
   ];
 
+  const { openDealerModal } = useDealer();
+
   const { register, handleSubmit, control, reset, setValue, watch, formState: { errors }, trigger } = useForm({
     defaultValues: {
       transport: { included: true, charges: 0 },
@@ -564,7 +593,7 @@ function BookingFormModal() {
 
   useEffect(() => {
         if (dealersStatus === 'idle') {
-          dispatch(fetchDealers({ role: userData.role, userId: userData.uid }));
+          dispatch(fetchDealers({ role: userData?.role, userId: userData?.uid }));
         }
         if(dealersStatus === 'succeeded'){
           setDealers(dealersData);
@@ -585,6 +614,22 @@ function BookingFormModal() {
               subscription.unsubscribe()
           }
       }, [watch, setValue, dealers])
+
+  const handleDealerChange = (value) => {
+    if (value === '__add_new__') {
+      // Open dealer modal and set a callback to refresh dealers
+      openDealerModal(null, {
+        onSuccess: () => {
+          
+          dispatch(fetchDealers({ role: userData?.role, userId: userData?.uid }));
+        }
+      });
+      // Reset the select value
+      setValue('dealerId', '-- Select Dealer --');
+    } else {
+      setValue('dealerId', value);
+    }
+  }
 
   const validateStep1 = async () => {
     const fields = ['dealerId', 'pricePerPiece', 'placeOfDelivery'];
@@ -691,6 +736,7 @@ return (
                 errors={errors} 
                 dealers={dealers}
                 watch={watch}
+                handleDealerChange={handleDealerChange}
               />
             )}
 

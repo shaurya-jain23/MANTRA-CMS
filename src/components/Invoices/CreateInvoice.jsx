@@ -5,11 +5,13 @@ import { useForm, useFieldArray, Controller, useWatch } from 'react-hook-form';
 import { selectUser } from '../../features/user/userSlice';
 import { selectAllDealers, selectDealersStatus, fetchDealers } from '../../features/dealers/dealersSlice';
 import { Input, Button, Select, Loading, Tooltip, CollapsibleSection } from '../index';
+import { format, parse } from 'date-fns';
 import InvoiceSummary from './InvoiceSummary';
 import ItemRow from './ItemRow';
 import PersistentSaveButton from './PersistentSaveButton';
 import ProgressBar from './ProgressBar';
 import toast from 'react-hot-toast';
+import { useDealer } from '../../contexts/DealerContext';
 
 function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
   const { register, control, handleSubmit, watch, setValue, trigger, getValues,formState: { errors, dirtyFields } } = useForm({
@@ -62,13 +64,31 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     items: false,
     summary: false
   });
+  const { openDealerModal } = useDealer();
 
-  // const sections = [
-  //   { number: 1, title: 'Invoice Details'},
-  //   { number: 2, title: 'Billing & Shipping'},
-  //   { number: 3, title: 'Item Details' },
-  //   { number: 4, title: 'Summary & Terms'}
-  // ];
+  const [piDate, setPiDate] = useState(format(new Date(), 'dd/MM/yyyy'));
+
+  useEffect(() => {
+    if (piToEdit) {
+      const parsedDate = parse(piToEdit.pi_date, 'dd/MM/yyyy', new Date());
+      setPiDate(format(parsedDate, 'dd/MM/yyyy'));
+    } 
+  }, [piToEdit]);
+
+  const handleDealerChange = (value) => {
+      if (value === '__add_new__') {
+        // Open dealer modal and set a callback to refresh dealers
+        openDealerModal(null, {
+          onSuccess: () => {
+            dispatch(fetchDealers({ role: userData?.role, userId: userData?.uid }));
+          },
+        });
+        // Reset the select value
+        setValue('dealerId', '-- Select Dealer --');
+      } else {
+        setValue('dealerId', value);
+      }
+    }
 
   // Use useWatch only for UI-related values that need re-renders
   const sameAsBilling = useWatch({ control, name: 'same_as_billing' });
@@ -223,7 +243,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
       taxAmount: tax,
       grandTotal: total
     };
-  }, [getValues, freightIncluded]);
+  }, [getValues, freightIncluded, currentSection]);
 
 
     // Section validation
@@ -327,6 +347,13 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
       return;
     }
     setIsSubmitting(true);
+
+    // Recalculate totals one last time on submit to ensure accuracy
+    const items = data.items || [];
+    const freightCharges = data.transport.included === "false" ? (Number(data.transport?.charges) || 0) : 0;
+    const subTotal = items.reduce((acc, item) => acc + ((Number(item?.qty) || 0) * (Number(item?.unit_price) || 0)), 0) * (100 / 105);
+    const taxAmount = subTotal * 0.05;
+    const grandTotal = subTotal + taxAmount + freightCharges;
     try {
       const dealer = dealers.find(d => d.id === data.dealerId);
       const piData = piToEdit ? {
@@ -339,7 +366,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
         billing: { ...data.billing, firm: dealer?.trade_name },
         shipping: data.same_as_billing ? 'same_as_billing' : { ...data.shipping },
         pi_number: piNumber,
-        pi_date: new Date().toLocaleDateString(),
+        pi_date: piDate,
         generated_by_id: userData?.uid,
         generated_by_name: userData?.displayName,
         totals: { subTotal, taxAmount, grandTotal },
@@ -405,7 +432,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                   />
                   <Input 
                     label="PI Date" 
-                    value={new Date().toLocaleDateString()} 
+                    value={piDate} 
                     readOnly 
                     disabled 
                   />
@@ -432,7 +459,17 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                   {/* Bill To */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold text-slate-900">Bill To</h3>
-                    
+                    {dealers.length === 0 && (
+                        <div className="mt-3 p-4 flex flex-wrap gap-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center gap-2 text-yellow-800">
+                            <AlertCircle size={16} />
+                            <span className="text-sm font-medium">No dealers found:</span>
+                          </div>
+                          <p className="text-sm text-yellow-700 ">
+                            Use the dropdown above to add your first dealer.
+                          </p>
+                        </div>
+                      )}
                     <Controller
                       name="dealerId"
                       control={control}
@@ -444,7 +481,19 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                           {...field}
                           defaultValue="-- Select Dealer --"
                           required
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '__add_new__') {
+                              handleDealerChange(value);
+                            } else {
+                              field.onChange(e);
+                              handleDealerChange(value);
+                            }
+                          }}
                           options={dealers.map(d => ({value: d.id, name: d.trade_name}))}
+                          outerClasses="w-full"
+                          showAddOption={true}
+                          addOptionText="+ Add New Dealer"
                           error={errors.dealerId?.message}
                         />
                       )}
