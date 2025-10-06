@@ -13,7 +13,7 @@ const CollapsibleSection = ({
     <div className={`bg-white rounded-lg shadow-sm border border-slate-200 shadow-gray-100  ${className}`}>
       <div 
         className={`flex justify-between items-center p-4 rounded-t-lg cursor-pointer ${
-          isComplete ? 'bg-green-50' : 'bg-slate-50'
+          isComplete === null ? '' : isComplete ? 'bg-green-50' : 'bg-slate-50'
         }`}
         onClick={onToggle}
       >
@@ -27,7 +27,7 @@ const CollapsibleSection = ({
           {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </span>
       </div>
-      <div className={`collapsible-content ${isOpen ? 'open' : ''}`}>
+      <div className={`max-h-fit ${isOpen ? 'open' : ''}`}>
         {isOpen && children}
       </div>
     </div>

@@ -12,6 +12,9 @@ const SalesCardTemp = React.forwardRef(({ container }, ref) => {
       dateObject= parseISO(isoString)
       if (!isValid(dateObject)) dateObject= 'N/A';
     }
+    else{
+        dateObject = c.eta;
+      }
       return {...c, eta: dateObject}
   }
   const processedContainer = processed(container);
