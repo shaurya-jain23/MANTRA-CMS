@@ -1,7 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import html2canvas from 'html2canvas-pro';
-import { ColorBar, SalesCardTemp } from '../index';
+import { ColorBar } from '../index';
 import { ChevronDown, Download } from 'lucide-react';
 import {Button} from '../index'
 import { salesStatusMap, containerStatusMap, containerDetailsOrder } from '../../assets/utils';
@@ -14,8 +12,6 @@ const DetailRow = ({ label, value }) => (
 );
 
 function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpanded, onToggle, onBookNow }) {
-  // const [isExpanded, setIsExpanded] = useState(false);
-  const navigate = useNavigate();
   const salesCardRef = useRef();
   const eta = container.eta?.seconds ? new Date(container.eta.seconds * 1000).toLocaleDateString() :'N/A';
   const etd = container.etd?.seconds ? new Date(container.etd.seconds * 1000).toLocaleDateString() : 'N/A';
@@ -27,11 +23,11 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
 
   const handleDownloadClick = (e) => {
     e.stopPropagation();
-    onDownloadRequest(); // Call the function passed from the parent grid
+    onDownloadRequest(); 
   };
 
   const handleTrackClick = (e) => {
-    e.stopPropagation(); // Prevent the card from toggling when the button is clicked
+    e.stopPropagation(); 
     if (container.container_no) {
       const url = `https://www.ldb.co.in/ldb/containersearch/39/${container.container_no}`;
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -39,18 +35,18 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
       alert('Tracking link not available for this container.');
     }
   }
-  // Dynamically create a list of key details to show in the collapsed view
+  
   const keyDetails = visibleColumns
     .map((key) =>
       key === 'colours'
         ? { label: 'Color Distribution', value: <ColorBar colorString={container[key]} /> }
         : { label: key.replace(/_/g, ' '), value: container[key] }
     )
-    .slice(0, 8); // Show up to 4 key details
+    .slice(0, 8); 
 
   // --- Logic for the new 2-column layout ---
   const allDetailKeys = Object.keys(container)
-    .filter((key) => ['id', 'update_timestamps', 'booking_order'].indexOf(key) === -1)
+    .filter((key) => ['id', 'update_timestamps', 'booking_order', 'booking_remarks', 'shipping_rent'].indexOf(key) === -1)
     .sort((a, b) => containerDetailsOrder[a] - containerDetailsOrder[b]);
 
   const midPoint = Math.ceil(allDetailKeys.length / 2);
@@ -160,16 +156,16 @@ function ContainerCard({ container, visibleColumns, onDownloadRequest,  isExpand
             </dl>
           </div>
           <div className="mt-4 flex justify-end gap-2">
-            <div className={`${eta && eta <= new Date().toLocaleDateString() ? 'block' : 'hidden' } w-40`}>
-              <Button type="submit" bgColor='bg-blue-600' className="hover:bg-blue-700 text-sm" onClick={handleTrackClick}>
+            <div className={`${container.status !=='Reached Destination' ? 'block' : 'hidden' }`}>
+              <Button type="submit" variant='secondary' size='small' onClick={handleTrackClick}>
                 Track Shipment
               </Button>
             </div>
             <div>
               <Button
                 onClick={handleBookClick}
-                bgColor='bg-blue-800'
-                className="text-sm font-medium hover:bg-blue-600 disabled:bg-gray-400"
+                variant='primary'
+                size='small'
                 disabled={container.sales_status !== 'Available for sale'}
               >
                 {container.sales_status === 'Available for sale' ? 'Book Now' : 'Not Available'}

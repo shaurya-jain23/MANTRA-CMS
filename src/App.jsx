@@ -8,6 +8,7 @@ import { Outlet } from 'react-router-dom';
 import {Info} from 'lucide-react'
 import { Toaster } from 'react-hot-toast';
 import { ModalProvider } from './contexts/ModalContext';
+import { useUserStatusMonitor } from './hooks/useUserStatusMonitor';
 
 function App() {
    const [loading, setLoading] = useState(true)
@@ -23,8 +24,14 @@ function App() {
           dispatch(logout())
         }
       })
+      .catch((error) => {
+        console.error("Error during app initialization:", error);
+        dispatch(logout())
+      })
       .finally(()=> setLoading(false))
   }, [])
+
+  useUserStatusMonitor();
   if (loading) {
     return (<Loading isOpen={loading} message="Loading the Page..." />)
   }
