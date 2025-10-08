@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast';
 import { db } from '../config/firebase.js';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, } from 'firebase/firestore';
+import {convertStringsToTimestamps} from '../assets/helperFunctions'
 
 class UserService {
   // Fetches all users from the 'users' collection
@@ -22,7 +23,8 @@ class UserService {
   async updateUser(userId, data) {
     try {
       const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, data);
+      const dataToUpdate = convertStringsToTimestamps(data);
+      await updateDoc(userDocRef, {...dataToUpdate, updated_at: serverTimestamp()});
       toast.success('User updated successfully');
     } catch (error) {
       console.error("Error updating user:", error);

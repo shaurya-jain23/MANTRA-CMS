@@ -13,6 +13,25 @@ export const convertTimestamps = (docData) => {
   return data;
 };
 
+export const convertStringsToTimestamps = (docData) => {
+  if (!docData) {
+    return null;
+  }
+  const data = { ...docData };
+  for (const key in data) {
+    if (typeof data[key] === 'string' && data[key]) {
+      // Check if the string is in ISO 8601 format
+      const isoRegex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}).*Z$/;
+      if (isoRegex.test(data[key])) {
+        const date = new Date(data[key]);
+        if (!isNaN(date.getTime())) {
+          data[key] = date; // Convert the string back to a Date object
+        }
+      }
+    }
+  }
+  return data;
+};
 
 export const getDefaultRouteForRole =  function (role) {
   switch (role) {
@@ -32,7 +51,134 @@ export const getDefaultRouteForRole =  function (role) {
   }
 }
 
+export const transformBookingToPI = (booking, container, dealer, userData) => {
+  // Calculate totals based on booking data
+  const pricePerPiece = booking.pricePerPiece || 0;
+  const quantity = container?.qty || 0;
+  const subtotal = pricePerPiece * quantity;
+  
+  // Calculate battery, charger, tyre amounts if included
+  let extrasTotal = 0;
+  if (booking.battery?.included && !booking.battery?.price_included) {
+    extrasTotal += (booking.battery?.price || 0) * (booking.battery?.quantity || 0);
+  }
+  if (booking.charger?.included && !booking.charger?.price_included) {
+    extrasTotal += (booking.charger?.price || 0) * (booking.charger?.quantity || 0);
+  }
 
+  const transportCharges = (['false', false].includes(booking.transport?.included)) ? (booking.transport?.charges || 0) : 0;
+  
+  const grandTotal = subtotal + extrasTotal + transportCharges;
+  const finalSubtotal = (grandTotal* (100/105));
+  const taxAmount = finalSubtotal * 0.05; // Assuming 5% tax
+
+let piStatus = 'unpaid';
+switch (booking?.payment?.status) {
+    case "Not Received":
+        piStatus = 'unpaid';
+        break;
+    case "Full Payment Received":
+        piStatus = 'paid';
+        break;
+    case "Partial Received":
+        piStatus = 'partially';
+        break;
+    case "Full Token Received":
+    case "Partial Token Received":
+        piStatus = 'token';
+        break;
+    default:
+        piStatus = 'unknown';
+}
+  let deliveryTerms = 'after_10_days';
+switch (container?.status) {
+    case "At Sea": 
+      deliveryTerms = 'after_15_days';
+      break;
+    case "Reached Port":
+    case "Clearance Pending":
+      deliveryTerms = 'after_10_days';
+      break;
+    case "At CFS":
+    case "DO Pending":
+       deliveryTerms = 'after_5_days';
+       break;
+    default:
+       deliveryTerms = 'after_10_days';
+  }
+
+  // Transform booking items to PI items format
+  const items = [{
+    model: container?.model?.toLowerCase() || 'single_light',
+    qty: quantity,
+    unit_price: pricePerPiece,
+    description: {
+      battery: booking.battery?.included ? booking.battery?.type : 'none',
+      model: container?.specifications?.trim().replace(/\s+/g, '_').toLowerCase() || 'standard',
+      charger: booking.charger?.included ? booking.charger?.type : 'none'
+    },
+    with_battery: (booking.battery?.included && booking.battery?.price_included) || false,
+    with_charger: (booking.charger?.included && booking.charger?.price_included) || false,
+    with_tyre: booking.tyre?.included || false,
+    with_assembling: booking.assembling?.included || false
+  }];
+
+  if(booking.battery?.included && !booking.battery?.price_included){
+    const batteryItem = {
+      model: 'battery',
+      qty: booking.battery?.quantity,
+      unit_price: booking.battery?.price,
+      description: {
+        model: booking.battery?.type.trim().replace(/\s+/g, '_').toLowerCase() || 'standard',
+      }
+    }
+    items.push(batteryItem);
+  }
+  if(booking.charger?.included && !booking.charger?.price_included){
+    const chargerItem = {
+      model: 'charger',
+      qty: booking.charger?.quantity,
+      unit_price: booking.charger?.price,
+      description: {
+        model: booking.charger?.type.trim().replace(/\s+/g, '_').toLowerCase() || 'standard',
+      }
+    }
+    items.push(chargerItem);
+  }
+
+  return {
+    bookingId: booking.id,
+    placeOfDelivery: booking.placeOfDelivery,
+    dealerId: booking.dealerId,
+    generated_by_id: userData.uid,
+    generated_by_name: booking.requested_by_name,
+    status: piStatus,
+    billing: {
+      address: dealer?.address || '',
+      firm: dealer?.trade_name || '',
+      district: dealer?.district || '',
+      gst_no: dealer?.gst_no || '',
+      state: dealer?.state || ''
+    },
+    shipping: 'same_as_billing',
+    same_as_billing: true,
+    delivery_terms: deliveryTerms,
+    transport: {
+      charges: transportCharges,
+      included: booking.transport?.included || false
+    },
+    items: items,
+    totals: {
+      subTotal: finalSubtotal,
+      taxAmount: taxAmount,
+      grandTotal: grandTotal
+    },
+    billing_remarks: booking.remarks || `Generated from booking ${booking.id}`,
+    pi_date: new Date().toLocaleDateString('en-IN'), 
+    pi_number: '', 
+    createdAt: new Date().toISOString(),
+  };
+};
 
 
 export const checkNetworkConnection = () => {
@@ -111,3 +257,48 @@ export const customInfoToast = (message, removeDelay) => {
     }
   );
 };
+
+
+export const getColorScore = (colorString = '', type) => {
+  const brightColors = ['RED', 'BLUE', 'GREEN'];
+  const darkColors = ['BLACK', 'GREY', 'WHITE'];
+  let score = 0;
+  const colors = colorString.replace(/\s/g, '').split(/[，, ;]/).map(part => {
+    const [name, value] = part.trim().split('-');
+    return {
+      name: name.trim().toUpperCase(),
+      value: parseInt(value, 10),
+    };
+  }).filter(color => !isNaN(color.value) && color.value > 0);
+
+  const total = colors.reduce((sum, color) => sum + color.value, 0);
+  colors.forEach(({name, value}) =>{
+    if(type === 'bright' && total > 0 && brightColors.includes(name)){
+      score += parseInt((value / total) * 100, 10);
+    }
+    if(type === 'dark' && total > 0 && darkColors.includes(name)){
+      score += parseInt((value / total) * 100);
+    }
+  })
+  console.log(colorString, score);
+  return score;
+};
+
+export const getSalesApprovalChain = (creatorRole) => {
+    const chain = [];
+    const now = new Date();
+
+    if (creatorRole === 'sales') {
+      chain.push(
+        { role: 'sales_manager', status: 'pending', timestamp: null, comments: '' },
+        { role: 'admin', status: 'pending', timestamp: null, comments: '' }
+      );
+    } else if (creatorRole === 'admin' || creatorRole === 'sales_manager') {
+      chain.push(
+        { role: 'admin', status: 'pending', timestamp: null, comments: '' }
+      );
+    }
+    // superuser doesn't need approval chain
+
+    return chain;
+  }

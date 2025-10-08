@@ -15,9 +15,9 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import {toast} from 'react-hot-toast';
+import {convertTimestamps, convertStringsToTimestamps} from '../assets/helperFunctions';
 import {getErrorMessage, checkNetworkConnection, customInfoToast} from '../assets/helperFunctions'
 import userService from "./user.js";
-
 
 
 const generateUsername = (name) => {
@@ -42,13 +42,7 @@ export class AuthService{
             const userRef = doc(db, "users", uid);
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
-                const userProfileData=  userSnap.data();
-                if (userProfileData.created_at && typeof userProfileData.created_at.toDate === 'function') {
-                    userProfileData.created_at = userProfileData.created_at.toDate().toISOString();
-                }
-                if (userProfileData.updated_at && typeof userProfileData.updated_at.toDate === 'function') {
-                    userProfileData.updated_at = userProfileData.updated_at.toDate().toISOString();
-                }
+                const userProfileData = convertTimestamps(userSnap.data());
                 return userProfileData;
             }
             return null;
@@ -159,7 +153,6 @@ export class AuthService{
         const result = new Promise((resolve) => {
             onAuthStateChanged(this.auth, async (user) => {
                 if (!user) return resolve(null);
-                
                 try {
                     const profile = await this.getUserProfile(user.uid);
                     const userData = {email: user.email, uid: user.uid, displayName: user.displayName, ...profile};

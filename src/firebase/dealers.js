@@ -7,11 +7,12 @@ import {
   getDocs, 
   getDoc,
   query, 
-  where, 
+  where,
+  deleteDoc,
   serverTimestamp 
 } from 'firebase/firestore';
 import {toast} from 'react-hot-toast';
-import {convertTimestamps} from '../assets/helperFunctions'
+import {convertTimestamps, convertStringsToTimestamps} from '../assets/helperFunctions'
 
 class DealerService {
   async addDealer(dealerData, user) {
@@ -37,7 +38,8 @@ class DealerService {
   async updateDealer(dealerId, dealerData) {
     try {
       const dealerRef = doc(db, 'dealers', dealerId);
-      await updateDoc(dealerRef, dealerData);
+      const dataToUpdate = convertStringsToTimestamps(dealerData)
+      await updateDoc(dealerRef, dataToUpdate);
     } catch (error) {
       console.error("Error updating dealer:", error);
       toast.error(`Failed to update #${dealerId} dealer`)
