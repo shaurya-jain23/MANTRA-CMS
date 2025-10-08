@@ -4,7 +4,7 @@ import {NotebookText, SquarePen, Trash2} from 'lucide-react'
 import {piStatusOptions} from '../../assets/utils'
 import { useNavigate } from 'react-router-dom';
 
-const PICard = ({invoice, onDelete,onStatusChange, userData }) => {
+const PICard = ({invoice, onAction,onStatusChange, userData }) => {
   const navigate = useNavigate();
   const userRole = userData?.role;
   const isAuthor = invoice?.generated_by_id === userData?.uid;
@@ -74,7 +74,7 @@ const PICard = ({invoice, onDelete,onStatusChange, userData }) => {
                 textColor='text-red-700'
                 variant='ghost'
                 size='small'
-                onClick={() => onDelete(invoice.id, invoice.pi_number)}>
+                onClick={() => onAction('delete', invoice)}>
                 <Trash2 className='w-4 h-4 text-red-500'/>
               </Button>
             </>

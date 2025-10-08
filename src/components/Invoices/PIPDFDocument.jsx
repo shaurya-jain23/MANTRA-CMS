@@ -503,7 +503,7 @@ const PIPDFDocument = ({ piData }) => {
 
           {/* Title */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>PERFORMA INVOICE</Text>
+            <Text style={styles.title}>PROFORMA INVOICE</Text>
           </View>
 
           {/* Invoice Information */}
@@ -569,9 +569,9 @@ const PIPDFDocument = ({ piData }) => {
                     {items.map((item, index) => {
                 const amount = (item.qty || 0) * ((item.unit_price) * (100/105) || 0);
                 const model = (item.model || '').replace(/_/g, ' ').toUpperCase();
-                const descriptionModel = (item.description?.model)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const descriptionModel = (item.description?.model)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
                 const fullDescription= `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}`
                 return (
                   <View style={styles.tableRow} key={index}>
@@ -579,7 +579,7 @@ const PIPDFDocument = ({ piData }) => {
                     <Text style={[styles.tableCol, styles.colDescription, styles.textLeft]}>
                       <Text style={styles.productName}>{model}</Text>
                       {'\n'}
-                      <Text style={styles.productDescription}>{fullDescription}</Text>
+                      <Text style={styles.productDescription}>{['BATTERY', 'CHARGER'].includes(model) ? descriptionModel : fullDescription}</Text>
                     </Text>
                     <Text style={[styles.tableCol, styles.colQty, styles.textCenter]}>{item.qty}</Text>
                     <Text style={[styles.tableCol, styles.colUnitWithGst, styles.textRight]}>{formatCurrency(item.unit_price)}</Text>
@@ -634,7 +634,7 @@ const PIPDFDocument = ({ piData }) => {
                   <Text style={styles.totalLabel}>Tax Amount:</Text>
                   <Text style={styles.totalValue}>{formatCurrency((totals.subTotal || 0) * 5/100)}</Text>
                 </View>
-                 {(transport.included === 'false') &&  <View style={styles.totalRow}>
+                 {(['false', false].includes(transport.included)) &&  <View style={styles.totalRow}>
                   <Text style={styles.totalLabel}>Freight Charges:</Text>
                   <Text style={styles.totalValue}>{formatCurrency(transport.charges)}</Text>
                 </View> }
@@ -669,7 +669,7 @@ const PIPDFDocument = ({ piData }) => {
               <Text style={styles.termsItem}>2. This quotation is valid for a period of 14 days only from the PI Date.</Text>
               <Text style={styles.termsItem}>3. Goods once sold cannot be returned in any case and once payment received, it cannot be returned in any case.</Text>
               <Text style={styles.termsItem}>4. Goods will dispatch from 2-3 days after receiving full payment.</Text>
-              <Text style={styles.termsItem}>5. Please use this performa invoice only for Payment Purpose & don't use for road permit/way bills or return.</Text>
+              <Text style={styles.termsItem}>5. Please use this proforma invoice only for Payment Purpose & don't use for road permit/way bills or return.</Text>
               <Text style={styles.termsItem}>6. "Subject to 'HISAR' Jurisdiction only. E.&.O.E"</Text>
               <Text style={styles.termsItem}>We hope you will find our offer acceptable and looking forward towards a long term business relationship with us.</Text>
               <Text style={styles.termsItem}>Warm Regards,</Text>

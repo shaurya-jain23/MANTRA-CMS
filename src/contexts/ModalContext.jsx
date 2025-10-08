@@ -18,7 +18,8 @@ export const ModalProvider = ({ children }) => {
     message: '',
     onConfirm: null,
     confirmText: 'Confirm',
-    confirmColor: 'bg-blue-600'
+    confirmColor: 'bg-blue-600',
+    icon: null,
   });
 
   const showModal = (modalConfig) => {
@@ -26,8 +27,10 @@ export const ModalProvider = ({ children }) => {
   };
 
   const hideModal = () => {
-    setModal({ ...modal, isOpen: false });
+    setModal({ ...modal, isOpen: false, title: '',  message: '', onConfirm: null});
   };
+
+  
 
   const handleConfirm = () => {
     if (modal.onConfirm) {
