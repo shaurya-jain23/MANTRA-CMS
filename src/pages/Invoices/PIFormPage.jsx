@@ -6,6 +6,7 @@ import piService from '../../firebase/piService';
 import {toast} from 'react-hot-toast';
 import { CreateInvoice, Container, Loading } from '../../components';
 import { fetchPis, selectPIStatus, setPIStatus, selectPIById } from '../../features/performa-invoices/PISlice';
+import { PI_STATUS } from '../../assets/utils';
 
 function PIFormPage() {
     const navigate = useNavigate();
@@ -40,25 +41,32 @@ function PIFormPage() {
 
     const handleFormSubmit = async (piData) => {
       const toastId = toast.loading(piId ? 'Updating the Performa Invoice...' : 'Creating the Performa Invoice...');
-      if (piId) { 
-        await piService.updatePI(piId, piData);
-        dispatch(setPIStatus("idle"))
-        navigate(`/performa-invoices/${piId}`);
-        // navigate(`/performa-invoices`);
-      } else { // Create new PI
-        const newPiId = await piService.addPI(piData);
-        dispatch(setPIStatus("idle"))
-        navigate(`/performa-invoices/${newPiId}`);
-        // navigate(`/performa-invoices`);
+      try {
+        if (piId) { 
+          await piService.updatePI(piId, piData);
+          if (piData.status === PI_STATUS.SUBMITTED && piToEdit.status === PI_STATUS.DRAFT) {
+              await piService.submitPIForApproval(piId, piData.pi_number);
+          }
+          dispatch(setPIStatus("idle"))
+          navigate(`/performa-invoices/${piId}`);
+        } else { // Create new PI
+          const newPiId = await piService.addPI(piData);
+          if (piData.status === PI_STATUS.SUBMITTED) {
+              await piService.submitPIForApproval(newPiId, piData.pi_number);
+            }
+          dispatch(setPIStatus("idle"))
+          navigate(`/performa-invoices/${newPiId}`);
+        }
+      } catch (error) {
+        console.error('Form submission error:', error);
+        toast.error('Failed to save PI: ' + error.message);
+      } finally{
+        toast.dismiss(toastId);
       }
-      toast.dismiss(toastId);
     };
   
-  
-  // A simplified structure for the form
-  // --- RENDER LOGIC ---
   if (loading) {
-    return <Loading isOpen={true} message="Loading Page..." />
+    return <Loading isOpen={true} message={piId ? "Loading Invoice for Edit..." : "Loading Form..."} />
   }
   return (
     <Container>

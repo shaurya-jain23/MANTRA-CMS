@@ -11,6 +11,7 @@ import ItemRow from './ItemRow';
 import PersistentSaveButton from './PersistentSaveButton';
 import ProgressBar from './ProgressBar';
 import toast from 'react-hot-toast';
+import {PI_TYPES, PI_STATUS} from '../../assets/utils'
 import { useDealer } from '../../contexts/DealerContext';
 
 function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
@@ -29,9 +30,11 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
         return {
           ...piToEdit,
           shipping: defaultShipping,
+          type: piToEdit.type || PI_TYPES.NORMAL,
         };
       } else {
         return {
+          type: PI_TYPES.NORMAL,
           items: [{ qty: 0, unit_price: 0 }],
           transport: { included: 'true', charges: 0 },
           same_as_billing: true,
@@ -46,6 +49,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
   });
 
   const dispatch = useDispatch();
+
   // useSelectors: 
   const dealersStatus = useSelector(selectDealersStatus);
   const dealersData = useSelector(selectAllDealers);
@@ -94,6 +98,9 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
   const sameAsBilling = useWatch({ control, name: 'same_as_billing' });
   const freightIncluded = useWatch({ control, name: 'transport.included' });
   const freightCharges = useWatch({ control, name: 'transport.charges' });
+  const warrantyIncluded = useWatch({ control, name: 'warranty_terms' });
+  const piType = useWatch({ control, name: 'type' });
+  
 
   const hasFormChanges = useMemo(() => {
     if (!piToEdit) return true; 
@@ -128,7 +135,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     const items = formValues.items || [];
 
     const completion = {
-      invoice: !!(piNumber && userData?.displayName),
+      invoice: !!(piNumber && userData?.displayName && formValues.type),
       shipping: !!(formValues.dealerId && 
         formValues.billing?.district && 
         formValues.billing?.state && 
@@ -149,7 +156,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
           item.unit_price > 0
         )
       ),
-      summary: !!(formValues.delivery_terms && (formValues.delivery_terms !== '-- Delivery Days --'))
+      summary: piType === 'container' ? !!(formValues.delivery_terms && (formValues.delivery_terms !== '-- Delivery Days --')) : true
     };
 
     if (section) {
@@ -259,7 +266,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
         return await trigger(fields);
       },
       items: async () => {await trigger('items'); return checkSectionCompletion('items')},
-      summary: async () => await trigger(['delivery_terms'])
+      summary: (async () => {if(piType === 'container') return await trigger(['delivery_terms']); else return true})
     };
     let isValid = false;
     if(section && section !== currentSection){
@@ -292,6 +299,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
 
   const handleNextSection = async () => {
     const isValid = await validateCurrentSection();
+    setError('')
     if (isValid) {
       const currentIndex = sections.indexOf(currentSection);
       if (currentIndex < sections.length - 1) {
@@ -304,6 +312,9 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
           });
         }, 100);
       }
+    }
+    else {
+      setError('current section not valid')
     }
   };
 
@@ -340,46 +351,133 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     } 
   };
 
+  const calculateTotals = (formData) => {
+  const items = formData.items || [];
+  const freightCharges = formData.transport?.included === "false" ? (Number(formData.transport?.charges) || 0) : 0;
+  const subTotal = items.reduce((acc, item) => {
+    const qty = Number(item?.qty) || 0;
+    const price = Number(item?.unit_price) || 0;
+    return acc + (qty * price);
+  }, 0) * (100 / 105); // Exclude GST
 
-  const handleFormSubmit = async (data) => {
-    if (piToEdit && !hasFormChanges) {
-      toast.success('No changes detected.');
-      return;
-    }
-    setIsSubmitting(true);
+  const taxAmount = subTotal * 0.05;
+  const grandTotal = subTotal + taxAmount + freightCharges;
 
-    // Recalculate totals one last time on submit to ensure accuracy
-    const items = data.items || [];
-    const freightCharges = data.transport.included === "false" ? (Number(data.transport?.charges) || 0) : 0;
-    const subTotal = items.reduce((acc, item) => acc + ((Number(item?.qty) || 0) * (Number(item?.unit_price) || 0)), 0) * (100 / 105);
-    const taxAmount = subTotal * 0.05;
-    const grandTotal = subTotal + taxAmount + freightCharges;
-    try {
-      const dealer = dealers.find(d => d.id === data.dealerId);
-      const piData = piToEdit ? {
-        ...data,
-        billing: { ...data.billing, firm: dealer?.trade_name },
-        shipping: data.same_as_billing ? 'same_as_billing' : { ...data.shipping },
-        totals: { subTotal, taxAmount, grandTotal },
-      } : {
-        ...data,
-        billing: { ...data.billing, firm: dealer?.trade_name },
-        shipping: data.same_as_billing ? 'same_as_billing' : { ...data.shipping },
+  return { subTotal, taxAmount, grandTotal };
+};
+
+
+  const handleSaveDraft = async (data = null) => {
+  const formData = data || getValues();
+  setIsSubmitting(true);
+  try {
+    const dealer = dealers.find(d => d.id === formData.dealerId);
+    const piData = {
+      ...formData,
+      billing: { ...formData.billing, firm: dealer?.trade_name },
+      shipping: formData.same_as_billing ? 'same_as_billing' : { ...formData.shipping },
+      status: PI_STATUS.DRAFT,
+      ...(piToEdit ? {} : {
         pi_number: piNumber,
         pi_date: piDate,
         generated_by_id: userData?.uid,
         generated_by_name: userData?.displayName,
-        totals: { subTotal, taxAmount, grandTotal },
-      };
-      await onSubmit(piData);
-    } catch (error) {
-      console.error("Form submission error:", error);
-      setError('Failed to submit the form. Please try again.');
+        generated_by_role: userData?.role,
+      }),
+      totals: calculateTotals(formData),
+    };
+    await onSubmit(piData);
+    if (piToEdit) {
+      toast.success('PI draft updated successfully');
+    } else {
+      toast.success('PI draft saved successfully');
     }
-     finally {
-      setIsSubmitting(false);
+  } catch (error) {
+    console.error("Error saving draft:", error);
+    toast.error('Failed to save draft');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleSubmitForApproval = async (data = null) => {
+  const formData = data || getValues();
+  setIsSubmitting(true);
+  
+  try {
+    const dealer = dealers.find(d => d.id === formData.dealerId);
+    const piData = {
+      ...formData,
+      billing: { ...formData.billing, firm: dealer?.trade_name },
+      shipping: formData.same_as_billing ? 'same_as_billing' : { ...formData.shipping },
+      status: PI_STATUS.SUBMITTED,
+      ...(piToEdit ? {} : {
+        pi_number: piNumber,
+        pi_date: piDate,
+        generated_by_id: userData?.uid,
+        generated_by_name: userData?.displayName,
+        generated_by_role: userData?.role,
+      }),
+      totals: calculateTotals(formData),
+    };
+    await onSubmit(piData);
+    if (piToEdit) {
+      toast.success('PI submitted for approval successfully');
+      await piService.submitPIForApproval(piToEdit.id, piToEdit.pi_number);
+    } else {
+      toast.success('PI created and submitted for approval successfully');
     }
-  };
+    
+    toast.success('PI submitted for approval successfully');
+    navigate('/performa-invoices');
+  } catch (error) {
+    console.error("Error submitting for approval:", error);
+    toast.error('Failed to submit for approval');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleFormSubmit = async () => {
+  if (piToEdit && !hasFormChanges) {
+    toast.success('No changes detected.');
+    return;
+  }
+  
+  setIsSubmitting(true);
+  try {
+    const formData = getValues();
+    const dealer = dealers.find(d => d.id === formData.dealerId);
+    const totals = calculateTotals(formData);
+    
+    const piData = {
+      ...formData,
+      billing: { ...formData.billing, firm: dealer?.trade_name },
+      shipping: formData.same_as_billing ? 'same_as_billing' : { ...formData.shipping },
+      totals: totals,
+      ...(piToEdit ? {} : {
+        pi_number: piNumber,
+        pi_date: piDate,
+        generated_by_id: userData?.uid,
+        generated_by_name: userData?.displayName,
+        generated_by_role: userData?.role,
+        status: PI_STATUS.DRAFT, 
+      }),
+    };
+    await onSubmit(piData);
+    
+    if (piToEdit) {
+      toast.success('PI updated successfully');
+    } else {
+      toast.success('PI created successfully');
+    }
+  } catch (error) {
+    console.error("Form submission error:", error);
+    setError('Failed to save the PI. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
   if (loading) {
@@ -388,7 +486,6 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
 
   return (
     <div>
-      {/* Progress Bar */}
       <ProgressBar 
         currentSection={currentSection}
         completedSections={completedSections}
@@ -412,6 +509,16 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
               <h2 className='text-xl font-semi-bold text-slate-900'>{piToEdit ? "Edit Performa Invoice" : "Create Performa Invoice"}</h2>
+              {piToEdit && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  piToEdit.status === PI_STATUS.DRAFT ? 'bg-yellow-100 text-yellow-800' :
+                  piToEdit.status === PI_STATUS.SUBMITTED ? 'bg-blue-100 text-blue-800' :
+                  piToEdit.status === PI_STATUS.FINAL ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {piToEdit.status.replace(/_/g, ' ').toUpperCase()}
+                </div>
+              )}
             </div>
 
             {/* Invoice Details Section */}
@@ -423,7 +530,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
               isComplete={completedSections.invoice}
             >
               <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Input 
                     label="Invoice Number" 
                     value={piNumber} 
@@ -441,6 +548,23 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                     value={userData?.displayName} 
                     readOnly 
                     disabled 
+                  />
+                  <Controller
+                    name="type"
+                    control={control}
+                    rules={{ required: 'PI type is required' }}
+                    render={({ field }) => (
+                      <Select
+                        label="PI Type"
+                        required
+                        {...field}
+                        options={[
+                          { value: PI_TYPES.NORMAL, name: 'Normal Order PI' },
+                          { value: PI_TYPES.CONTAINER, name: 'Container Order PI ' }
+                        ]}
+                        error={errors.type?.message}
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -614,6 +738,8 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                       errors={errors}
                       watch={watch}
                       remove={remove}
+                      piType={piType}
+                      setValue={setValue}
                     />
                   ))}
                 </div>
@@ -651,8 +777,8 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                       {...register('billing_remarks')} 
                       rows={4} 
                     />
-                    
                     <div className='flex gap-10 w-full'>
+                      {piType === 'container' && 
                         <Select 
                           label="Delivery Terms" 
                           placeholder="-- Delivery Days --"
@@ -664,7 +790,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                            })}
                           options={["After 5 days", "After 10 days", "After 15 days", "After 20 days", "After 40 days"]}
                           error={errors.delivery_terms?.message}
-                        />
+                        />}
                       <div>
                         <label className="block text-sm font-medium text-slate-600 mb-2">
                           <Tooltip text="Specify if freight charges are included in the price, or to be charged extra">
@@ -693,7 +819,20 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
                         </div>
                       </div>
                     </div>
-                    
+
+                      {piType === 'normal' && <div className='flex gap-10 w-full'>
+                        <label className="inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            {...register('warranty_terms')}
+                            className="sr-only peer"
+                          />
+                          <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <span className="ml-3 text-sm font-medium text-gray-900">
+                            {warrantyIncluded ? 'With Warranty' : 'Without Without'}
+                          </span>
+                        </label>
+                      </div>}
 
                     {freightIncluded === "false" && (
                       <Input 
@@ -725,9 +864,12 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
         onNext={handleNextSection}
         onBack= {hanlePrevSection}
         onConfirm={handleSubmit(handleFormSubmit)}
+        onSaveDraft={handleSubmit(handleSaveDraft)}
+        onSubmitApproval={handleSubmit(handleSubmitForApproval)}
         isSummaryVisible={isFormComplete}
         isSubmitting={isSubmitting}
         isDisabled={piToEdit && !hasFormChanges}
+        piToEdit={piToEdit}
       />
     </div>
   );
