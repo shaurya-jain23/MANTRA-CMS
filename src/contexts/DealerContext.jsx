@@ -29,9 +29,9 @@ export const DealerProvider = ({ children }) => {
     setModalConfig({});
   }, []);
 
-  const handleDealerSuccess = useCallback(() => {
+  const handleDealerSuccess = useCallback((data) => {
     if (modalConfig.onSuccess) {
-      modalConfig.onSuccess();
+      modalConfig.onSuccess(data);
     }
     closeDealerModal();
   }, [modalConfig, closeDealerModal]);
