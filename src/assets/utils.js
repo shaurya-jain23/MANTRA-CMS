@@ -206,16 +206,15 @@ const getRoleBadgeColor = (role) => {
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
 
-  // accessoryOptions.js
 export const accessoryOptions = {
   battery: {
     options: [
-      "TAINNENG LEAD ACID 7KG",
-        "TAINNENG LEAD ACID 7.2KG",
-        "TAINNENG LEAD ACID 6KG",
-        "CHILWEE LEAD ACID 7KG",
-        "CHILWEE LEAD ACID 7.2KG",
-        "CHILWEE LEAD ACID 6.6KG",
+      "TAINNENG L.A. 7KG",
+        "TAINNENG L.A. 7.2KG",
+        "TAINNENG L.A. 6KG",
+        "CHILWEE L.A. 7KG",
+        "CHILWEE L.A. 7.2KG",
+        "CHILWEE L.A. 6.6KG",
     ]
   },
   charger: {
@@ -228,6 +227,57 @@ export const accessoryOptions = {
       "Solar Power 72V",
     ]
   },
+};
+export const normalAccessoryOptions = {
+  battery: {
+    options: [
+      "48V 32Ah L.A. S.P.",
+      "60V 32Ah L.A. S.P.",
+      "72V 32Ah L.A. S.P.",
+      "72V 42Ah L.A. Chilwee",
+      "60V 42Ah L.A. Chilwee",
+      "48V 32Ah L.A. 7KG Chilwee",
+      "60V 32Ah L.A. 7KG Chilwee",
+      "72V 32Ah L.A. 7KG Chilwee",
+      "48V 32Ah L.A. 7.2KG Chilwee",
+      "60V 32Ah L.A. 7.2KG Chilwee",
+      "72V 32Ah L.A. 7.2KG Chilwee",
+      "48V 32Ah L.A. 6.7KG Chilwee",
+      "60V 32Ah L.A. 6.7KG Chilwee",
+      "72V 32Ah L.A. 6.7KG Chilwee",
+      "52V 34Ah Lithium",
+      "48V 32Ah Lithium",
+      "60V 30Ah Lithium",
+      "72V 20Ah Lithium",
+      "60V 34Ah Lithium",
+      "72V 42Ah Lithium",
+      "72V 32Ah Lithium",
+    ]
+  },
+  charger: {
+    options: [
+      "KY 72V",
+      "KY 60V",
+      "KY 48V",
+      "Solar Power 48V",
+      "Solar Power 60V",
+      "Solar Power 72V",
+    ]
+  },
+};
+
+export const PI_STATUS = {
+  DRAFT: 'draft',
+  SUBMITTED: 'submitted',
+  APPROVED_BY_SALES_MANAGER: 'approved_sm',
+  APPROVED_BY_ADMIN: 'approved_admin',
+  FINAL: 'final',
+  REJECTED: 'rejected'
+};
+
+export const PI_TYPES = {
+  CONTAINER: 'container',
+  NORMAL: 'normal'
 };
 
 export const ROLES = [
