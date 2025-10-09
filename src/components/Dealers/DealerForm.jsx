@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Input, Button, Select,ModalContainer } from '../index'; 
+import { useDealer } from '../../contexts/DealerContext';
+import { selectUser } from '../../features/user/userSlice';
+import dealerService from '../../firebase/dealers';
+import toast from 'react-hot-toast';
+import {setDealersStatus } from '../../features/dealers/dealersSlice';
+import { useDispatch, useSelector } from 'react-redux';
 
-function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
-    const { register, handleSubmit, control,reset, watch, setValue, formState: { errors } } = useForm({
-    defaultValues: dealerToEdit || { status: 'Active' },
-    shouldUnregister: true,
-    });
-
-    const selectedStateCode = watch('state');
-    const [allIndianStates, setAllIndianStates] = useState([])
-    const [districts, setDistricts] = useState([])
-
-    const loadStates = async (countryCode) => {
+function DealerForm({onSuccess}) {
+  const { isDealerModalOpen, dealerToEdit, closeDealerModal } = useDealer();
+  const { register, handleSubmit, control,reset, watch, setValue, formState: { errors } } = useForm({
+  defaultValues: dealerToEdit || { status: 'Active' },
+  shouldUnregister: true,
+  });
+  const dispatch = useDispatch();
+  const userData = useSelector(selectUser);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const selectedStateCode = watch('state');
+  const [allIndianStates, setAllIndianStates] = useState([])
+  const [districts, setDistricts] = useState([])
+  const [error, setError] = useState('');
+  
+  const loadStates = async (countryCode) => {
       const { State } = await import("country-state-city");
       return State.getStatesOfCountry(countryCode);
     };
@@ -20,10 +30,10 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
       const { City } = await import("country-state-city");
       return City.getCitiesOfState(countryCode, stateCode);
     };
-
+    
   
     useEffect(() => {
-    if (isOpen){
+    if (isDealerModalOpen){
       loadStates("IN").then(setAllIndianStates)
       if (dealerToEdit) {
         reset(dealerToEdit);
@@ -40,7 +50,7 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
       else{
         reset({ status: 'Active' });
       }
-  }, [isOpen, dealerToEdit, reset, setValue]);
+  }, [isDealerModalOpen, dealerToEdit, reset, setValue]);
 
     selectedStateCode ? loadCities('IN', selectedStateCode).then(setDistricts) : [];
     // const allIndianStates = loadStates('IN');
@@ -59,33 +69,64 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
       
     }, [selectedStateCode, dealerToEdit, setValue]);
 
+
+  const handleFormSubmit = async (data) => {
+    setIsSubmitting(true);
+    const toastId = toast.loading(dealerToEdit ? 'Updating dealer...' : 'Registering a dealer...');
+    const transformedData = {
+        ...data,
+        state: allIndianStates.find(s => s.isoCode === data.state)?.name.toUpperCase(),
+        district: data.district.toUpperCase(),
+        trade_name: data.trade_name.toUpperCase()
+      };
+    try {
+        if (dealerToEdit) {
+          await dealerService.updateDealer(dealerToEdit.id, transformedData);
+          toast.success('Dealer updated successfully!');
+        } else {
+          await dealerService.addDealer(transformedData, userData);
+          toast.success('Dealer registered successfully!');
+        }
+      if (onSuccess) {
+        onSuccess(transformedData);
+      } else {
+        closeDealerModal();
+      }
+      dispatch(setDealersStatus("idle"))
+    } catch (error) {
+      console.error('Dealer Form error:', error);
+      setError(`Dealer Form error: ${error}`)
+      toast.error(error.message || 'Failed to process Dealer');
+    } finally {
+      toast.dismiss(toastId);
+      setIsSubmitting(false);
+    }
+  };
+
+    if (!isDealerModalOpen) return null;
+
   return (
-    <ModalContainer isOpen={isOpen} className='max-w-2xl !p-0'>
+    <ModalContainer isOpen={isDealerModalOpen} onClose={closeDealerModal} className='max-w-2xl !p-0'>
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
         <h2 className="text-2xl font-bold mb-2">{dealerToEdit ? 'Edit Dealer' : 'Register New Dealer'}</h2>
         <p className="text-green-100">{dealerToEdit ? 'Edit Dealer' : 'Register New Dealer'} for creating performa invoices, post booking requests, etc</p>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-              <Input label="Dealer Trade Name" required {...register('trade_name', { required: 'Trade/Firm name is required' })} />
-              {errors.trade_name && <p className="text-sm text-red-500">{errors.trade_name.message}</p>}
+              <Input label="Dealer Trade Name" required {...register('trade_name', { required: 'Trade/Firm name is required' })} error={errors.trade_name?.message}  />
           </div>
           <div>
-              <Input label="GST No." required {...register('gst_no', { required: 'GST no. is required' })} />
-              {errors.gst_no && <p className="text-sm text-red-500">{errors.gst_no.message}</p>}
+              <Input label="GST No." required {...register('gst_no', { required: 'GST no. is required' })} error={errors.gst_no?.message} />
           </div>
           <div>
-              <Input label="Contact Person" required {...register('contact_person', { required: 'Contact person name is required' })} />
-              {errors.contact_person && <p className="text-sm text-red-500">{errors.contact_person.message}</p>}
+              <Input label="Contact Person" required {...register('contact_person', { required: 'Contact person name is required' })} error={errors.contact_person?.message} />
           </div>
           <div>
-              <Input label="Contact Number" required type="tel" {...register('contact_number', { required: 'Dealer contact number is required' })} />
-              {errors.contact_number && <p className="text-sm text-red-500">{errors.contact_number.message}</p>}
+              <Input label="Contact Number" required type="tel" {...register('contact_number', { required: 'Dealer contact number is required' })} error={errors.contact_number?.message}/>
           </div>
-          <Input label="Email Address" type="email" {...register('email')} />
-          {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
-          <Input label="Pincode" type="text" {...register('pincode')} />
+          <Input label="Email Address" type="email" {...register('email')} error={errors.phone?.message} />
+          <Input label="Pincode" type="text" {...register('pincode', { required: 'Dealer pincode is required' })} error={errors.pincode?.message} />
         </div>
           <Controller
               name="state"
@@ -99,16 +140,16 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
                   required
                   defaultValue="-- Select State --"
                   options={allIndianStates.map(state => ({value: state.isoCode, name: state.name}))}
+                  error={errors.state?.message}
               />
               )}
           />
-          {errors.state && <p className="text-sm text-red-500">{errors.state.message}</p>}
           <Controller
               name="district"
               control={control}
               required
               rules={{ required: 'Please select dealer District',
-                       validate: value => value !== '-- Select District --' || 'Please select dealer district' }}
+                      validate: value => value !== '-- Select District --' || 'Please select dealer district' }}
               render={({ field }) => (
               <Select
                   placeholder="-- Select District --"
@@ -116,14 +157,14 @@ function DealerForm({ dealerToEdit, onSubmit, onCancel, isOpen }) {
                   disabled={!selectedStateCode}
                   defaultValue="-- Select District --"
                   options={districts.map(district => ({value: district.isoCode, name: district.name}))}
+                  error={errors.district?.message}
               />
               )}
           />
-          {errors.district && <p className="text-sm text-red-500">{errors.district.message}</p>}
-        <Input as="textarea" label="Full Address" {...register('address')} />
+        <Input as="textarea" label="Full Address" {...register('address', {required: 'Dealer address is required'})} error={errors.address?.message}/>
         <div className="flex justify-end space-x-4 pt-4">
-          <Button type="button" variant='secondary' className='!w-full' onClick={onCancel} bgColor="bg-gray-500">Cancel</Button>
-          <Button type="submit">{dealerToEdit ? 'Update Dealer' : 'Register Dealer'}</Button>
+          <Button type="button" variant='secondary' disabled={isSubmitting} className='!w-full' onClick={closeDealerModal}>Cancel</Button>
+          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : (dealerToEdit ? 'Update Dealer' : 'Register Dealer')}</Button>
         </div>
       </form>
     </ModalContainer>
