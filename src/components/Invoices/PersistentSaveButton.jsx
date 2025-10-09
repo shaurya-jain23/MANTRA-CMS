@@ -1,63 +1,115 @@
 import React from 'react';
-import {CheckCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import {CheckCircle, ChevronRight, ChevronLeft, Send, Save } from 'lucide-react';
 import {Button} from '../index'
 import { useNavigate } from 'react-router-dom';
+import {PI_STATUS} from '../../assets/utils'
 
 const PersistentSaveButton = ({ 
   currentSection, 
   onNext,
   onBack, 
   onConfirm, 
+  onSaveDraft,
+  onSubmitApproval,
   isSummaryVisible,
   isSubmitting,
-  isDisabled = false
+  isDisabled = false,
+  piToEdit = null
 }) => {
   const navigate = useNavigate();
   const getButtonConfig = () => {
+    if (piToEdit) {
+      const isDraft = piToEdit.status === PI_STATUS.DRAFT;
+      const isSubmitted = piToEdit.status === PI_STATUS.SUBMITTED;
+      
+      if (isSummaryVisible) {
+        if (isDraft) {
+          return {
+            primaryText: 'Save & Submit for Approval',
+            primaryIcon: Send,
+            primaryOnClick: onSubmitApproval,
+            primaryVariant: 'primary',
+            secondaryText: 'Save as Draft',
+            secondaryIcon: Save,
+            secondaryOnClick: onSaveDraft,
+            showSecondary: true
+          };
+        } else if (isSubmitted) {
+          return {
+            primaryText: 'Update PI',
+            primaryIcon: CheckCircle,
+            primaryOnClick: onConfirm,
+            primaryVariant: 'primary',
+            secondaryText: 'Cancel',
+            secondaryOnClick: () => navigate('/performa-invoices'),
+            showSecondary: true
+          };
+        } else {
+          // For approved/final PIs, only allow updates
+          return {
+            primaryText: isDisabled ? 'No Changes Made' : 'Update PI',
+            primaryIcon: CheckCircle,
+            primaryOnClick: onConfirm,
+            primaryVariant: 'primary',
+            secondaryText: 'Cancel',
+            secondaryOnClick: () => navigate('/performa-invoices'),
+            showSecondary: true
+          };
+        }
+      }
+    }
     if (isSummaryVisible) {
       return {
-        text: isDisabled ? 'No Changes Made' : 'Confirm & Update PI',
-        icon: CheckCircle,
-        onClick: onConfirm,
-        variant: 'success'
+        primaryText: 'Save & Submit for Approval',
+        primaryIcon: Send,
+        primaryOnClick: onSubmitApproval,
+        primaryVariant: 'primary',
+        secondaryText: 'Save as Draft',
+        secondaryIcon: Save,
+        secondaryOnClick: onSaveDraft,
+        showSecondary: true
       };
     }
-
     switch (currentSection) {
       case 'summary':
         return {
-          text: 'Review Invoice',
-          icon: ChevronRight,
-          onClick: onNext,
-          variant: 'primary'
+          primaryText: 'Review Invoice',
+          primaryIcon: ChevronRight,
+          primaryOnClick: onNext,
+          primaryVariant: 'primary',
+          showSecondary: false
         };
       case 'items':
         return {
-          text: 'Next: Summary & Terms',
-          icon: ChevronRight,
-          onClick: onNext,
-          variant: 'primary'
+          primaryText: 'Next: Summary & Terms',
+          primaryIcon: ChevronRight,
+          primaryOnClick: onNext,
+          primaryVariant: 'primary',
+          showSecondary: false
         };
       case 'shipping':
         return {
-          text: 'Next: Item Details',
-          icon: ChevronRight,
-          onClick: onNext,
-          variant: 'primary'
+          primaryText: 'Next: Item Details',
+          primaryIcon: ChevronRight,
+          primaryOnClick: onNext,
+          primaryVariant: 'primary',
+          showSecondary: false
         };
       case 'invoice':
       default:
         return {
-          text: 'Next: Billing & Shipping',
-          icon: ChevronRight,
-          onClick: onNext,
-          variant: 'primary'
+          primaryText: 'Next: Billing & Shipping',
+          primaryIcon: ChevronRight,
+          primaryOnClick: onNext,
+          primaryVariant: 'primary',
+          showSecondary: false
         };
     }
   };
 
   const buttonConfig = getButtonConfig();
-  const IconComponent = buttonConfig.icon;
+  const PrimaryIcon = buttonConfig.primaryIcon;
+  const SecondaryIcon = buttonConfig.secondaryIcon;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 shadow-lg">
@@ -77,20 +129,35 @@ const PersistentSaveButton = ({
               {!isDisabled &&<ChevronLeft size={18} className="mr-2"/>}
               {isDisabled? 'Cancel' : 'Back'}
             </Button>  
+            {buttonConfig.showSecondary && (
+              <Button
+                type="button"
+                variant='secondary'
+                disabled={isSubmitting}
+                onClick={buttonConfig.secondaryOnClick}
+                className="gap-2"
+              >
+                {buttonConfig.secondaryIcon && <SecondaryIcon size={18} />}
+                {isSubmitting ? 'Saving...' : buttonConfig.secondaryText}
+              </Button>
+            )}
             <Button
               type="button"
-              variant='primary'
+              variant={buttonConfig.primaryVariant}
               disabled={isSubmitting || isDisabled}
-              onClick={buttonConfig.onClick}
-              className={`${
-                buttonConfig.variant === 'success' 
+              onClick={buttonConfig.primaryOnClick}
+              className={`gap-2 ${
+                buttonConfig.primaryVariant === 'success' 
                   ? 'bg-green-600 hover:bg-green-700' 
                   : ''
               } w-fit gap-2`}
-            > {isSubmitting ? 'Submitting...' :<>
-            <span>{buttonConfig.text}</span>
-              {buttonConfig.variant !== 'disabled' && <IconComponent size={18} />}
-              </> }
+            >
+              {isSubmitting ? 'Saving...' : (
+                <>
+                  <span>{buttonConfig.primaryText}</span>
+                  {buttonConfig.primaryIcon && <PrimaryIcon size={18} />}
+                </>
+              )}
             </Button>
           </div>
         </div>
