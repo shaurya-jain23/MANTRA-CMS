@@ -1,30 +1,79 @@
-import React from 'react';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { Controller } from 'react-hook-form';
 import { Select, Input, Button } from '../index';
-import { modelOptions, accessoryOptions } from '../../assets/utils';
+import { modelOptions, accessoryOptions, normalAccessoryOptions } from '../../assets/utils';
+import { useState, useEffect, useMemo } from 'react';
 
 
-const ItemRow = ({ index, control, register, errors, watch, remove }) => {
+const ItemRow = ({ index, control, register, errors, watch, remove, piType, setValue }) => {
   const selectedModel = watch(`items.${index}.model`);
   const descriptionOptions = selectedModel ? modelOptions[selectedModel] : [];
   const qty = watch(`items.${index}.qty`) || 0;
   const unitPrice = watch(`items.${index}.unit_price`) || 0;
   const itemTotal = qty * unitPrice;
+  let withBattery = watch(`items.${index}.with_battery`);
+  let withCharger = watch(`items.${index}.with_charger`);
+  // const [withBC, setWithBC] = useState({battery: true, charger: true})
+  const [voltage, setVoltage] = useState('');
 
   // Watch accessory checkboxes
-  const withBattery = watch(`items.${index}.with_battery`);
-  const withCharger = watch(`items.${index}.with_charger`);
+  const showCheckboxes = selectedModel ? !['battery', 'charger'].includes(selectedModel) : false;
 
+  useEffect(() => {
+    if (!withBattery && !withCharger) {
+      setVoltage('');
+    }
+    if (!withBattery) {
+      setValue(`items.${index}.description.battery`, '');
+    }
+    if (!withCharger) {
+        setValue(`items.${index}.description.charger`, '');
+    }
+  }, [withBattery, withCharger, setValue, index]);
+
+  const filteredBatteryOptions = useMemo(() => {
+    if (piType === 'normal' && voltage) {
+      return normalAccessoryOptions.battery.options.filter(option => 
+        option.toLowerCase().includes(voltage)
+      );
+    }
+    return [];
+  }, [piType, voltage]);
+
+  const filteredChargerOptions = useMemo(() => {
+    if (piType === 'normal' && voltage) {
+      return normalAccessoryOptions.charger.options.filter(option => 
+        option.toLowerCase().includes(voltage)
+      );
+    }
+    return [];
+  }, [piType, voltage]);
+
+   const handleVoltageChange = (newVoltage) => {
+    setVoltage(newVoltage);
+    // Reset selections since voltage has changed
+    setValue(`items.${index}.description.battery`, '');
+    setValue(`items.${index}.description.charger`, '');
+  };
+
+  
   const getGridClass = () => {
-  if (withBattery && withCharger) {
-    return 'lg:grid-cols-10 md:grid-cols-3';
-  }
-  else if ((withBattery || withCharger) && !(withBattery && withCharger)) {
-    return 'lg:grid-cols-8 md:grid-cols-3';
-  }
-  return 'lg:grid-cols-6 md:grid-cols-2';
-};
+    if (piType === 'normal' && (withBattery || withCharger)) {
+      if(withBattery && withCharger){
+        return 'lg:grid-cols-6 md:grid-cols-4';
+      }
+      return 'lg:grid-cols-4 md:grid-cols-3';
+    }
+    else if ((withBattery || withCharger)) {
+      if(withBattery && withCharger){
+        return 'lg:grid-cols-6 md:grid-cols-4';
+      }
+      return 'lg:grid-cols-8 md:grid-cols-3';
+    }
+    return 'lg:grid-cols-6 md:grid-cols-3';
+  };
+
+
 
   return (
     <div className="flex items-start gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
@@ -60,7 +109,7 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
               render={({ field }) => (
                 <Select
                   label='Description'
-                  outerClasses='lg:col-span-2'
+                  outerClasses='md:col-span-2'
                   placeholder="-- Product Description --"
                   {...field}
                   required
@@ -71,42 +120,66 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
                 />
               )}
             />
-          {withBattery && (
-                <Controller
-                  name={`items.${index}.description.battery`}
-                  control={control}
-                  rules={{ required: 'Please select battery description',validate: value => value !== '-- Select Battery --' || 'Please select battery description' }}
-                  render={({ field }) => (
-                    <Select
-                      label='Battery Type'
-                      outerClasses='lg:col-span-2'
-                      placeholder="-- Select Battery --"
-                      defaultValue="-- Select Battery --"
-                      {...field}
-                      options={accessoryOptions.battery.options}
-                      error={errors.items?.[index]?.description?.battery.message}
+
+          {(withBattery || withCharger) && (
+                <>
+                {/* VOLTAGE SELECTOR (Normal PI Type Only) */}
+                {piType === 'normal' && (
+                         <Select
+                            label='Battery/Charger Voltage'
+                            value={voltage}
+                            required
+                            outerClasses='lg:col-span-2'
+                            onChange={(event) => handleVoltageChange(event.target.value)}
+                            options={['48V', '60V', '72V']}
+                            placeholder="-- Select Voltage --"
+                            defaultValue="-- Select Voltage --"
+                         />
+                )}
+
+                {/* BATTERY SELECTOR */}
+                {withBattery && (
+                     <Controller
+                        name={`items.${index}.description.battery`}
+                        control={control}
+                        rules={{ required: 'Please select battery description',validate: value => value !== '-- Select Battery --' || 'Please select battery description' }}
+                        render={({ field }) => (
+                            <Select
+                                label='Battery Type'
+                                outerClasses='lg:col-span-2'
+                                placeholder="-- Select Battery --"
+                                defaultValue="-- Select Battery --"
+                                {...field}
+                                disabled={piType === 'normal' && !voltage}
+                                options={piType === 'normal' ? filteredBatteryOptions : accessoryOptions.battery.options}
+                                error={errors.items?.[index]?.description?.battery?.message}
+                            />
+                        )}
                     />
-                  )}
-                />
-            )}
-          {withCharger && (
-                <Controller
-                  name={`items.${index}.description.charger`}
-                  control={control}
-                  rules={{ required: 'Please select charger description',validate: value => value !== "-- Select Charger --" || 'Please select charger description' }}
-                  render={({ field }) => (
-                    <Select
-                      label='Charger Type'
-                      outerClasses='lg:col-span-2'
-                      placeholder="-- Select Charger --"
-                      defaultValue="-- Select Charger --"
-                      {...field}
-                      options={accessoryOptions.charger.options}
-                      error={errors.items?.[index]?.description?.charger.message}
+                )}
+
+                {/* CHARGER SELECTOR */}
+                {withCharger && (
+                     <Controller
+                        name={`items.${index}.description.charger`}
+                        control={control}
+                        rules={{ required: 'Please select charger description',validate: value => value !== "-- Select Charger --" || 'Please select charger description' }}
+                        render={({ field }) => (
+                            <Select
+                                label='Charger Type'
+                                outerClasses='lg:col-span-2'
+                                placeholder="-- Select Charger --"
+                                defaultValue="-- Select Charger --"
+                                {...field}
+                                disabled={piType === 'normal' && !voltage}
+                                options={piType === 'normal' ? filteredChargerOptions : accessoryOptions.charger.options}
+                                error={errors.items?.[index]?.description?.charger?.message}
+                            />
+                        )}
                     />
-                  )}
-                />
-            )}
+                )}
+                </>
+          )}
           {/* Quantity */}
           <div className="w-full col-span-1">
             <Input
@@ -141,10 +214,11 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
         </div>
 
         {/* Options and Total */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <div className="flex flex-wrap items-center gap-y-2 gap-x-6 md:col-span-2">
+        <div className={`mt-4 grid grid-cols-1  gap-4 items-center ${selectedModel ? 'md:grid-cols-3' : 'md:grid-cols-1'}`}>
+          {showCheckboxes ?
+          (<div className="flex flex-wrap items-center gap-y-2 gap-x-6 md:col-span-2">
             <span className="text-sm font-medium text-slate-600">Options:</span>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" {...register(`items.${index}.with_battery`)} />
                 With Battery
@@ -153,16 +227,28 @@ const ItemRow = ({ index, control, register, errors, watch, remove }) => {
                 <input type="checkbox" {...register(`items.${index}.with_charger`)} />
                 With Charger
               </label>
+              {(piType === 'container') && <>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" {...register(`items.${index}.with_tyre`)} />
+                  With Tyre
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" {...register(`items.${index}.with_assembling`)} />
+                  With Assembling
+                </label>
+                </>
+              }
+              {(piType === 'normal') && 
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" {...register(`items.${index}.with_tyre`)} />
-                With Tyre
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" {...register(`items.${index}.with_assembling`)} />
-                With Assembling
-              </label>
+                  <input type="checkbox" {...register(`items.${index}.with_accessories`)} />
+                  With Accessories
+              </label>}
             </div>
-          </div>
+          </div>) : (
+            <div className={`text-sm text-slate-500 italic md:col-span-2 ${selectedModel ? 'block' : 'hidden'}`}>
+              No additional options available for {selectedModel}
+            </div>
+          )}
           
           <div className="flex items-center gap-4 justify-self-end">
             <span className="text-sm font-medium text-slate-900">
