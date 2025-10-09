@@ -5,7 +5,9 @@ import { selectAllDealers ,selectDealersStatus, fetchDealers, setDealersStatus }
 import dealerService from '../firebase/dealers';
 import { Button, DealerCard, DealerForm, Container, StatCard, Tabs, SearchBar, Loading } from '../components';
 import {toast} from 'react-hot-toast';
-import { PlusCircle,Store, BadgeCheck, BadgeX, AlertCircle, FileText  } from 'lucide-react';
+import { PlusCircle,Store, BadgeCheck, BadgeX, AlertCircle, FileText, AlertTriangle  } from 'lucide-react';
+import { useModal } from '../contexts/ModalContext';
+import { useDealer } from '../contexts/DealerContext';
 
 function DealersPage() {
   const dispatch = useDispatch();
@@ -15,16 +17,18 @@ function DealersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [dealerToEdit, setDealerToEdit] = useState(null);
   const [activeTab, setActiveTab] = useState('ALL');
   const userData = useSelector(selectUser);
   const isAdmin = ['admin', 'superuser'].includes(userData?.role);
+  const { showModal } = useModal();
+
+  const { openDealerModal, isDealerModalOpen } = useDealer();
 
   // Fetch dealers based on user role
   useEffect(() => {
       if (dealersStatus === 'idle') {
-        dispatch(fetchDealers({ role: userData.role, userId: userData.uid }));
+        dispatch(fetchDealers({ role: userData?.role, userId: userData?.uid }));
       }
       if(dealersStatus === 'succeeded'){
         setDealers(dealersData);
@@ -36,8 +40,6 @@ function DealersPage() {
         setLoading(false)
       }
     }, [dealersStatus, dispatch, userData]);
-
-
 
   const TabsOptions =  [...new Set(dealers.map(c => c.registered_by_name?.trim().toUpperCase()).filter(Boolean))].map(u => { return {name: u}})
   const SalesTabs = [{name: 'ALL'}, ...TabsOptions]
@@ -69,53 +71,65 @@ function DealersPage() {
   const [allIndianStates, setAllIndianStates] = useState([])
   useEffect(() => {
     loadStates("IN").then(setAllIndianStates);
-  }, [isFormOpen]);
+  }, [isDealerModalOpen]);
   const handleOpenForm = (dealer = null) => {
     if(dealer){
-        dealer.state = allIndianStates.find(s => {
-          if(s.name.toUpperCase() == dealer.state.toUpperCase()) return s.name})?.isoCode;
-        setDealerToEdit(dealer);
+      const preparedDealer = {
+          ...dealer,
+          state: allIndianStates.find(s => {
+            if(s.name.toUpperCase() == dealer.state.toUpperCase()) return s.name
+          })?.isoCode
+        };
+        openDealerModal(preparedDealer, {
+          onSuccess: (data) => {
+            if(data){
+              setDealers(dealers.map(d => d.id === data?.id ? { ...d, ...data } : d));
+            }
+            else{
+              dispatch(setDealersStatus("idle"));
+            }
+          }
+        });
+        // dealer.state = allIndianStates.find(s => {
+        //   if(s.name.toUpperCase() == dealer.state.toUpperCase()) return s.name})?.isoCode;
+        // setDealerToEdit(dealer);
     }
     else{
-      setDealerToEdit(null);
+      openDealerModal(null, {
+        onSuccess: (data) => {
+          if(data){
+            setDealers([data, ...dealers]);
+          }
+          else{
+            dispatch(setDealersStatus("idle"));
+          }
+        }
+      });
     }
-    setIsFormOpen(true);
-  };
-
-  const handleCloseForm = () => {
-    setIsFormOpen(false);
-    setDealerToEdit(null);
-  };
-
-  const handleFormSubmit = async (data) => {
-    const toastId = toast.loading('Submitting the Form...');
-    data.state = allIndianStates.find(s => s.isoCode === data.state).name.toUpperCase();
-    data.district= data.district.toUpperCase();
-    data.trade_name= data.trade_name.toUpperCase();
-    if (dealerToEdit) { 
-      await dealerService.updateDealer(dealerToEdit.id, data);
-      setDealers(dealers.map(d => d.id === dealerToEdit.id ? { ...d, ...data } : d));
-    } else { 
-      const newDealer = await dealerService.addDealer(data, userData);
-      setDealers([newDealer, ...dealers]);
-    }
-    toast.dismiss(toastId);
-    dispatch(setDealersStatus("idle"))
-    handleCloseForm();
   };
   
   const handleStatusChange = async (dealerId, status) => {
-      const toastId = toast.loading('Chnaging dealer status...');
+      const toastId = toast.loading('Changing dealer status...');
       await dealerService.updateDealer(dealerId, { status });
       setDealers(dealers.map(d => d.id === dealerId ? { ...d, status } : d));
       toast.dismiss(toastId);
       dispatch(setDealersStatus("idle"))
   };
 
+  const openDeleteModal = async (dealerId) =>{
+    showModal({
+            title: "Delete Dealer",
+            message: "Are you sure you want to permanently delete this registered dealer? This action cannot be undone.",
+            onConfirm: ()=> {handleDelete(dealerId)},
+            confirmText: "Yes, Delete",
+            confirmColor: "bg-red-600",
+            icon: <AlertTriangle className="h-12 w-12 text-red-500" />
+        });
+  }
   const handleDelete = async (dealerId) =>{
-    const toastId = toast.loading('Chnaging dealer status...');
+    const toastId = toast.loading('Deleting dealer...');
     await dealerService.deleteDealer(dealerId);
-    setDealers(dealers.filter(d => d.id === dealerId ));
+    setDealers(dealers.filter(d => d.id !== dealerId )); 
     toast.dismiss(toastId);
     dispatch(setDealersStatus("idle"))
   }
@@ -190,26 +204,19 @@ function DealersPage() {
           <div className="col-span-2">ACTIONS</div>
         </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4 lg:space-y-0">
             {processedDealers.map(dealer => (
             <DealerCard 
                 key={dealer.id} 
                 dealer={dealer}
                 onEdit={handleOpenForm}
-                onDelete={handleDelete}
+                onDelete={openDeleteModal}
                 onStatusChange={handleStatusChange}
                 userData={userData}
             />
             ))}
         </div>
       </>)}
-      <DealerForm
-        key={dealerToEdit ? dealerToEdit.id : "new"}
-        dealerToEdit={dealerToEdit}
-        onSubmit={handleFormSubmit}
-        onCancel={handleCloseForm}
-        isOpen={isFormOpen}
-      />
       </div>
     </Container>
   );
