@@ -12,7 +12,8 @@ import {
   updateDoc,
   deleteDoc
 } from 'firebase/firestore';
-import {convertTimestamps} from '../assets/helperFunctions'
+import {convertTimestamps, convertStringsToTimestamps, getSalesApprovalChain} from '../assets/helperFunctions';
+import {PI_STATUS, PI_TYPES} from '../assets/utils';
 import {toast} from 'react-hot-toast';
 
 class PIService {
@@ -46,8 +47,6 @@ class PIService {
     const q = isAdminUser
         ? query(collection(db, 'performa_invoices'))
         : query(collection(db, 'performa_invoices'), where('generated_by_id', '==', userId));
-        
-        
     try {
         const querySnapshot = await getDocs(q);
         const performa_invoices = [];
@@ -65,11 +64,19 @@ class PIService {
   }
   async addPI(piData) {
     try {
-      const docRef = await addDoc(collection(db, 'performa_invoices'), {
+      if (!piData.pi_number) {
+        piData.pi_number = await this.getPINumber();
+      }
+      const piWithDefaults = {
         ...piData,
+        type: piData.type || PI_TYPES.NORMAL,
+        status: PI_STATUS.DRAFT,
         createdAt: serverTimestamp(),
-        status: 'unpaid', // Default status for new PIs
-      });
+        approval_chain: getSalesApprovalChain(piData.generated_by_role),
+        payments: [],
+        internal_notes: [],
+      };
+      const docRef = await addDoc(collection(db, 'performa_invoices'), piWithDefaults);
       toast.success(`Perform Invoice #${piData.pi_number} generated successfully`)
       return docRef.id;
     } catch (error) {
@@ -78,11 +85,13 @@ class PIService {
       throw new Error('Failed to save new Proforma Invoice.');
     }
   }
+  
   async updatePI(piId, piData) {
     try {
       const piRef = doc(db, 'performa_invoices', piId);
+      const dataToUpdate = convertStringsToTimestamps(piData);
       await updateDoc(piRef, {
-        ...piData,
+        ...dataToUpdate,
         updatedAt: serverTimestamp(),
       });
       toast.success(`Perform Invoice #${piData?.pi_number || ''} updated successfully`)
@@ -92,6 +101,23 @@ class PIService {
       throw new Error('Failed to update Proforma Invoice.');
     }
   }
+
+  async submitPIForApproval(piId, piNumber) {
+    try {
+      const piRef = doc(db, 'performa_invoices', piId);
+      await updateDoc(piRef, {
+        status: PI_STATUS.SUBMITTED,
+        submitted_at: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      toast.success(`PI #${piNumber} submitted for approval`);
+    } catch (error) {
+      console.error('Error submitting PI for approval:', error);
+      toast.error(`Failed to submit PI for approval`);
+      throw new Error('Failed to submit PI for approval.');
+    }
+  }
+
   async deletePI(piId, piNumber) {
     try {
       const piRef = doc(db, 'performa_invoices', piId);
@@ -103,7 +129,31 @@ class PIService {
       throw new Error('Failed to delete Proforma Invoice.');
     }
   }
+  async getPIByBookingId(bookingId) {
+  try {
+    const q = query(
+      collection(db, 'performa_invoices'),
+      where('bookingId', '==', bookingId)
+    );
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error checking existing PI:', error);
+    return null;
+  }
+  }
+  
+  async getPIsByType(userId, role, type) {
+    const allPIs = await this.getPIs(userId, role);
+    return allPIs.filter(pi => pi.type === type);
+  }
 }
+
 
 const piService = new PIService();
 export default piService;

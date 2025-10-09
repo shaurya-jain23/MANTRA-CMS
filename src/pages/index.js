@@ -12,9 +12,10 @@ import DealersPage from "./DealersPage";
 import BookingsPage from "./BookingPage";
 import BookingDetailsPage from "./BookingDetailsPage";
 import SalesPage from "./SalesPage";
+import AccountDisabledPage from './AccountDisabledPage'
 
 import PIFormPage from "./Invoices/PIFormPage";
 import PerformaInvoicesPage from "./Invoices/PerformaInvoicesPage";
 import PIShowPage from "./Invoices/PIShowPage";
 
-export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage};
+export {HomePage, LoginPage, SignupPage, DashboardPage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage, AccountDisabledPage};

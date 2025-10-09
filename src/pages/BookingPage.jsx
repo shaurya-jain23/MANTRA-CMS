@@ -134,8 +134,6 @@ function BookingsPage() {
   const handleEdit = (container, booking) => {
     openBookingModal(container, booking);
   };
-  
-  
 
   useEffect(() => {
       if (alertState.isOpen && alertState.action) {
@@ -255,7 +253,7 @@ function BookingsPage() {
               <div>Booking Status</div>
               <div className="col-span-2">Actions</div>
           </div>
-          <div className="">
+          <div className="space-y-4 lg:space-y-0">
             {processedBookings.map(booking => (
               <BookingCard
                 key={booking.id}
