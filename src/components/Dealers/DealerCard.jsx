@@ -55,22 +55,26 @@ function DealerCard({ key, dealer,onDelete ,onEdit, onStatusChange, userData }) 
             options={['Active', 'Disabled']}
           />
         
-        {showEditButton &&
+        {showEditButton && <>
             <Button
               type="submit" 
-              variant='secondary'
+              variant='ghost'
               size='small'
               onClick={() =>{onEdit({...dealer, district: modifedDistrict})}}>
             <SquarePen size={18}/>
-          </Button>
+          </Button> 
+          <Button type="submit" variant='ghost' size='small' onClick={() => onDelete(dealer.id)}>
+              <Trash2 className='text-red-500' size={18}/>
+            </Button> 
+          </>
           }
         
       </div>
     </div>
   <div className="bg-white p-4 rounded-xs border border-gray-200 w-full lg:hidden">
-    <div className="flex justify-between items-start">
-      <h3 className="font-bold text-lg text-blue-700">{dealer.trade_name}</h3>
-      <div className="flex items-center space-x-2 gap-2 w-auto">
+    <div className="flex flex-wrap gap-y-1 justify-between items-start">
+      <h3 className="font-bold text-base sm:text-md md:text-lg text-blue-700">{dealer.trade_name}</h3>
+      <div className="flex items-center justify-between  space-x-2 gap-2 w-auto">
           <Select
             placeholder="Select status"
             defaultValue={dealer.status}
@@ -79,17 +83,17 @@ function DealerCard({ key, dealer,onDelete ,onEdit, onStatusChange, userData }) 
             options={['Active', 'Disabled']}
           />
           {showEditButton && <>
-            <Button type="submit" variant='secondary' size='small' onClick={() => onEdit({...dealer})}>
+            <Button type="submit" variant='ghost' size='small' onClick={() => onEdit({...dealer, district: modifedDistrict})}>
               <SquarePen size={18}/>
             </Button>
-            <Button type="submit" variant='secondary' size='small' onClick={() => onDelete(dealer.id)}>
+            <Button type="submit" variant='ghost' size='small' onClick={() => onDelete(dealer.id)}>
               <Trash2 className='text-red-500' size={18}/>
             </Button> </>
           }
       </div>
     </div>
-    <p className="text-sm text-gray-600 mt-2">GST: {dealer.gst_no}</p>
-    <p className="text-sm text-gray-600">{dealer.contact_person} - {dealer.contact_number}</p>
+    <p className="text-sm text-gray-600 mt-6">GST: {dealer.gst_no}</p>
+    <p className="text-sm text-gray-600 mt-1">{dealer.contact_person} - {dealer.contact_number}</p>
     <p className="text-sm text-gray-500 mt-1">{dealer.district}, {dealer.state} - {dealer.pincode}</p>
     {showRegisteredBy && (
       <p className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-200">Registered By: {dealer.registered_by_name}</p>
