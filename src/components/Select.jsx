@@ -33,6 +33,8 @@ function Select({
         ),
         className
     );
+
+    const finalValue = props.value ? props.value : props.defaultValue;
     
   return (
     <div className={`flex flex-col ${props?.outerClasses? props.outerClasses : ''}`}>
@@ -54,6 +56,7 @@ function Select({
                 id={id} 
                 ref={ref} 
                 required={required}
+                value={finalValue}
                 className={selectClasses}
                 aria-invalid={error ? 'true' : 'false'}
                 aria-describedby={error ? `${id}-error` : undefined}
