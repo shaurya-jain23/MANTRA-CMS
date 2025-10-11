@@ -156,7 +156,9 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
           item.unit_price > 0
         )
       ),
-      summary: piType === 'container' ? !!(formValues.delivery_terms && (formValues.delivery_terms !== '-- Delivery Days --')) : true
+      summary: piType === 'container' 
+      ? !!(formValues.delivery_terms && (formValues.delivery_terms !== '-- Delivery Days --'))
+      : true
     };
 
     if (section) {
@@ -165,7 +167,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
       setCompletedSections(completion);
       return completion;
     }
-  }, [piNumber, userData, getValues]);
+  }, [piNumber, userData, getValues, piType]);
   
     // Fetch dealers - fixed useEffect
   useEffect(() => {
@@ -228,7 +230,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
   const isFormComplete = useMemo(() => 
     Object.values(completedSections).every(Boolean), 
     [completedSections]
-  );
+);
 
   // Memoized calculations based on watched items
   const { subTotal, taxAmount, grandTotal } = useMemo(() => {
@@ -266,7 +268,7 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
         return await trigger(fields);
       },
       items: async () => {await trigger('items'); return checkSectionCompletion('items')},
-      summary: (async () => {if(piType === 'container') return await trigger(['delivery_terms']); else return true})
+      summary: (async () => {if(piType === 'container'){ return await trigger(['delivery_terms']);} else{ return true; }})
     };
     let isValid = false;
     if(section && section !== currentSection){
@@ -296,26 +298,24 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     return isValid;
   };
 
-
   const handleNextSection = async () => {
     const isValid = await validateCurrentSection();
-    setError('')
-    if (isValid) {
-      const currentIndex = sections.indexOf(currentSection);
-      if (currentIndex < sections.length - 1) {
-        setCurrentSection(sections[currentIndex + 1]);
-        // Auto-scroll to the new section
-        setTimeout(() => {
-          document.getElementById(sections[currentIndex + 1])?.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }, 100);
+    setError('');
+      if (isValid) {
+        const currentIndex = sections.indexOf(currentSection);
+        if (currentIndex < sections.length - 1) {
+          setCurrentSection(sections[currentIndex + 1]);
+          // Auto-scroll to the new section
+          setTimeout(() => {
+            document.getElementById(sections[currentIndex + 1])?.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' 
+            });
+          }, 100);
+        }
+      } else {
+        setError('Please complete all required fields in the current section before proceeding.');
       }
-    }
-    else {
-      setError('current section not valid')
-    }
   };
 
   const hanlePrevSection = async ()=>{
@@ -335,21 +335,21 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
     
 
   const handleSectionToggle = async (section) => {
-    if (section !== currentSection) {
-      const isValid = await validateCurrentSection(section);
-      if (isValid) { 
-        setCurrentSection(section);
-        setTimeout(() => {
-          document.getElementById(section)?.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-        }, 100);
-      } else{
-          toast.error(`First complete the previous sections`);
-      }
-    } 
-  };
+  if (section !== currentSection) {
+    const isValid = await validateCurrentSection(section);
+    if (isValid) {
+      setCurrentSection(section);
+      setTimeout(() => {
+        document.getElementById(section)?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }, 100);
+    } else {
+      toast.error(`Please complete the previous sections first`);
+    }
+  } 
+};
 
   const calculateTotals = (formData) => {
   const items = formData.items || [];
@@ -386,12 +386,9 @@ function CreateInvoice({ piNumber, onSubmit, piToEdit = null }) {
       }),
       totals: calculateTotals(formData),
     };
-    await onSubmit(piData);
-    if (piToEdit) {
-      toast.success('PI draft updated successfully');
-    } else {
-      toast.success('PI draft saved successfully');
-    }
+    console.log(piData);
+    
+    // await onSubmit(piData);
   } catch (error) {
     console.error("Error saving draft:", error);
     toast.error('Failed to save draft');
@@ -778,19 +775,30 @@ const handleFormSubmit = async () => {
                       rows={4} 
                     />
                     <div className='flex gap-10 w-full'>
-                      {piType === 'container' && 
-                        <Select 
-                          label="Delivery Terms" 
-                          placeholder="-- Delivery Days --"
-                          required
-                          className='!w-fit !px-7'
-                          defaultValue="-- Delivery Days --"
-                          {...register('delivery_terms', {
-                            validate: (value) => value !== '-- Delivery Days --' || 'Delivery terms are required'
-                           })}
-                          options={["After 5 days", "After 10 days", "After 15 days", "After 20 days", "After 40 days"]}
-                          error={errors.delivery_terms?.message}
-                        />}
+                      {piType === 'container' && (
+                        <Controller
+                          name="delivery_terms"
+                          control={control}
+                          rules={{
+                            required: piType === 'container' ? 'Delivery terms are required' : false,
+                            validate: piType === 'container' 
+                              ? (value) => value !== '-- Delivery Days --' || 'Delivery terms are required'
+                              : undefined
+                          }}
+                          render={({ field }) => (
+                            <Select 
+                              label="Delivery Terms" 
+                              placeholder="-- Delivery Days --"
+                              required
+                              className='!w-fit !px-7'
+                              {...field}
+                              defaultValue="-- Delivery Days --"
+                              options={["After 5 days", "After 10 days", "After 15 days", "After 20 days", "After 40 days"]}
+                              error={errors.delivery_terms?.message}
+                            />
+                          )}
+                        />
+                      )}
                       <div>
                         <label className="block text-sm font-medium text-slate-600 mb-2">
                           <Tooltip text="Specify if freight charges are included in the price, or to be charged extra">
