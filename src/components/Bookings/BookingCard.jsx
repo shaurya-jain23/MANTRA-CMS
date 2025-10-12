@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import {calculatePaymentStatus, containerStatusMap, getPaymentStatusColor} from '../../assets/utils';
 import { useNavigate } from 'react-router-dom';
 
-function BookingCard({ booking, userRole, onEdit, onAction,onPaymentUpdate }) {
+function BookingCard({ booking, userRole, onEdit, onAction, onPaymentUpdate }) {
   const navigate = useNavigate();
   const getStatusColor = (status) => {
     if (status === 'Approved') return 'bg-green-100 text-green-800';
@@ -92,7 +92,7 @@ function BookingCard({ booking, userRole, onEdit, onAction,onPaymentUpdate }) {
         </div>
 
         {/* Actions (2 col on desktop) */}
-        <div className="lg:col-span-2 flex flex-row lg:justify-around justify-between lg:pt-0 lg:items-center gap-2 lg:mt-0 pt-4">
+        <div className="lg:col-span-2 flex flex-row flex-wrap lg:justify-around justify-between lg:pt-0 lg:items-center gap-2 lg:mt-0 pt-4">
           {userRole === 'superuser' && booking.status === 'Pending' && (
               <>
                 <Button

@@ -12,6 +12,7 @@ import {
 import { Button, InvoiceDetail, Loading, Container, PIPDFDocument } from '../../components';
 import toast from 'react-hot-toast';
 import { PDFDownloadLink, PDFViewer, BlobProvider } from '@react-pdf/renderer';
+import { usePIActions } from '../../hooks/usePIActions';
 
 function PIShowPage() {
   const { piId } = useParams();
@@ -22,10 +23,14 @@ function PIShowPage() {
   const userData = useSelector(selectUser);
   const piRef = useRef();
   const printIframeRef = useRef();
-  const [pdfBlob, setPdfBlob] = useState(null);
-
   const piToShow = useSelector((state) => selectPIById(state, piId)) || null;
   const PIStatus = useSelector(selectPIStatus);
+  const {
+    processingAction,
+    handleConfirmAction,
+    alertState,
+    setAlertState
+  } = usePIActions();
 
   const handlePrint = (blob) => {
     if (!blob) {
@@ -135,6 +140,7 @@ function PIShowPage() {
     }
   };
 
+
   useEffect(() => {
     if (PIStatus === 'idle' && userData) {
       dispatch(fetchPis({ role: userData.role, userId: userData.uid }));
@@ -193,10 +199,15 @@ function PIShowPage() {
             </div>
           </div>
           <div className="flex flex-wrap justify-between gap-2 w-full">
-            <Button variant="secondary" size='small' onClick={()=> navigate('/performa-invoices')} className="gap-2">
-              <ArrowLeft size={16} />
-                Back to All PIs
-            </Button>
+            {piData.bookingId ? 
+              <Button variant="secondary" size='small' onClick={()=> navigate(`/bookings/${piData.bookingId}`)} className="gap-2">
+                <ArrowLeft size={16} />
+                  Back to your booking
+              </Button> :
+              <Button variant="secondary" size='small' onClick={()=> navigate('/performa-invoices')} className="gap-2">
+                <ArrowLeft size={16} />
+                  Back to All PIs
+              </Button>}
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button
                 variant="secondary"
@@ -209,7 +220,7 @@ function PIShowPage() {
               <Button
                 variant="secondary"
                 size='small'
-                onClick={() => navigate(`/performa-invoices/${piId}/edit`)}
+                onClick={() => setAlertState({ isOpen: true, action : 'delete', performa_invoice:piToShow })}
                 className="text-red-500"
               >
                 <Trash2 size={16} className="mr-2" /> Delete
@@ -262,7 +273,7 @@ function PIShowPage() {
           </div>
         </div>
         <div id="invoice-content-wrapper">
-          {/* <div className="hidden lg:block border rounded-lg p-4 bg-gray-50">
+          <div className="hidden lg:block border rounded-lg p-4 bg-gray-50">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">PDF Preview</h3>
                   <p className="text-sm text-gray-600">A4 Size Preview</p>
@@ -272,14 +283,14 @@ function PIShowPage() {
                     <PIPDFDocument piData={piData} />
                   </PDFViewer>
                 </div>
-              </div> */}
-          <div
+              </div>
+          {/* <div
             id="invoice-preview"
             className="bg-white p-2 sm:p-8 md:p-12 md:px-20 rounded-sm shadow-md border border-slate-200"
             ref={piRef}
           >
             <InvoiceDetail piData={piData} />
-          </div>
+          </div> */}
         </div>
       </div>
     </Container>
