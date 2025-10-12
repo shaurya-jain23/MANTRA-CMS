@@ -104,16 +104,16 @@ const styles = StyleSheet.create({
   companyInfo: {
     width: '70%',
     borderLeft: '1pt solid #6b7280',
-    padding: 10,
+    padding: 8,
   },
   companyName: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 600,
     marginBottom: 6,
     color: '#0f172a',
   },
   companyAddress: {
-    fontSize: 8,
+    fontSize: 7,
     marginBottom: 1,
     maxWidth: 350,
     color: '#4b5563',
@@ -123,18 +123,18 @@ const styles = StyleSheet.create({
   // Title Section
   titleSection: {
     borderBottom: '1pt solid #6b7280',
-    paddingBottom: 5,
-    paddingTop: 3,
+    paddingTop: 1,
     alignItems: 'center',
     display:'flex',
     justifyContent: 'center',
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: 700,
     textTransform: 'uppercase',
     color: '#000',
+    lineHeight: 1.5,
     letterSpacing: 1,
   },
   
@@ -145,8 +145,8 @@ const styles = StyleSheet.create({
   },
   invoiceInfoColumn: {
     width: '50%',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
   },
   invoiceInfoLeft: {
     borderRight: '1pt solid #6b7280',
@@ -159,13 +159,15 @@ const styles = StyleSheet.create({
     fontWeight: 600,
     width: '35%',
     color: '#000',
-    fontSize: 9,
+    fontSize: 7,
+    lineHeight: 1.5,
   },
   infoValue: {
     width: '65%',
     color: '#000',
-    fontSize: 9,
+    fontSize: 7,
     fontWeight: 400,
+    lineHeight: 1.2,
   },
   
   // Address Header
@@ -176,12 +178,13 @@ const styles = StyleSheet.create({
   },
   addressHeaderCell: {
     width: '50%',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
     fontWeight: 700,
     textTransform: 'uppercase',
     color: '#1e293b',
-    fontSize: 9,
+    fontSize: 7,
+    lineHeight: 1.2,
     textAlign: "left",
   },
   
@@ -192,30 +195,30 @@ const styles = StyleSheet.create({
   addressContent: {
     flexDirection: 'row',
     borderBottom: '1pt solid #6b7280',
-    minHeight: 85,
+    minHeight: 60,
   },
   addressCell: {
     width: '50%',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingTop: 3,
   },
   firmName: {
     fontWeight: 600,
-    marginBottom: 2,
     color: '#0f172a',
-    fontSize: 9,
+    fontSize: 7,
   },
   addressText: {
-    marginBottom: 2,
+    marginBottom: 1,
     color: '#4b5563',
-    fontSize: 8,
+    lineHeight: 1.5,
+    fontSize: 6,
     fontWeight: 400,
   },
   gstText: {
-    marginTop: 2,
     fontWeight: 500,
     color: '#1f2937',
-    fontSize: 9,
+    lineHeight: 1.5,
+    fontSize: 7,
   },
   
   // Table Styles
@@ -230,19 +233,23 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     borderBottom: '1pt solid #d1d5db',
-    minHeight: 32,
+    minHeight: 25,
   },
   tableCol: {
     borderRight: '1pt solid #d1d5db',
-    padding: 4,
+    paddingTop: 3,
+    paddingBottom: 1,
+    paddingHorizontal: 3,
+    fontSize: 6.5,
     color: '#6b7280',
+    lineHeight: 1.2,
     justifyContent: 'center',
   },
   tableHeader: {
     backgroundColor: '#f1f5f9',
     fontWeight: 'semibold',
     textTransform: 'uppercase',
-    fontSize: 8,
+    fontSize: 6,
     color: '#4b5563',
   },
   rightBorder2: {
@@ -250,7 +257,11 @@ const styles = StyleSheet.create({
   },
   // Column Widths
   colIndex: { width: '5%' },
-  colDescription: { width: '35%' },
+  colDescription: { width: '43%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start'
+   },
   colQty: { width: '8%' },
   colUnitWithGst: { width: '12%' },
   colUnitWithoutGst: { width: '12%' },
@@ -263,50 +274,52 @@ const styles = StyleSheet.create({
   textLeft: { textAlign: 'left' },
   
   tBody: {
-    minHeight: '120'
+    minHeight: '200'
   },
   // Product Styles
   productName: {
-    fontWeight: 700,
-    marginBottom: 1,
+    fontWeight: 600,
     color: '#1f2937',
-    fontSize: 9,
+    fontSize: 6.5,
   },
+  
   productDescription: {
-    fontSize: 8,
+    fontSize: 6,
     color: '#6b7280',
     fontWeight: 400,
   },
   // Subtotal Header
   subtotalLeft: {
-     width: '60%',
-     borderRight: '1pt solid #6b7280',
-     display: 'flex', 
-     flexDirection: 'row',
-     gap: '5',
-     justifyContent: 'flex-start',
-     alignItems: 'center',
-     paddingHorizontal: 6,
-    paddingVertical: 4,
+    width: '60%',
+    borderRight: '1pt solid #6b7280',
+    display: 'flex', 
+    flexDirection: 'row',
+    gap: '5',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    paddingVertical: 2,
   },
   subtotalRight: {
     width: '40%',
     display: 'flex', 
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
     
   },
   subTotalLabel: {
     fontWeight: 600,
     color: '#1f2937',
-    fontSize: 9,
+    fontSize: 8,
+    lineHeight: 1.2,
   },
   subTotalValue: {
     fontWeight: 400,
     color: '#1f2937',
-    fontSize: 9,
+    fontSize: 8,
+    lineHeight: 1.2,
   },
   
   // Summary Section
@@ -317,71 +330,71 @@ const styles = StyleSheet.create({
   summaryLeft: {
     width: '60%',
     borderRight: '1pt solid #6b7280',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'flex-start'
   },
   summaryRight: {
     width: '40%',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
   },
   summaryItem: {
     flexDirection: 'row',
-    gap: 4,
+    gap: 3,
     alignContent: 'center',
   },
   summaryLabel: {
     fontWeight: 600,
     color: '#1f2937',
-    fontSize: 9,
+    fontSize: 7,
   },
   summaryWords: {
     color: '#1f2937',
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 400,
   },
   amountWords: {
     fontStyle: 'italic',
     color: '#1f2937',
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 400,
   },
   
   // Totals Section
   totalsSection: {
-    marginTop: 4,
+    marginTop: 3,
   },
   totalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 3,
+    marginBottom: 2,
     alignItems: 'center',
   },
   totalLabel: {
     fontWeight: 600,
     color: '#1f2937',
-    fontSize: 9,
+    fontSize: 7,
   },
   totalValue: {
     fontWeight: 400,
     color: '#1f2937',
-    fontSize: 9,
+    fontSize: 7,
   },
   grandTotalRow: {
-    paddingTop: 4,
+    paddingTop: 3,
   },
   grandTotalLabel: {
     fontWeight: 700,
     color: '#0f172a',
-    fontSize: 10,
+    fontSize: 8,
   },
   grandTotalValue: {
     fontWeight: 700,
     color: '#0f172a',
-    fontSize: 10,
+    fontSize: 8,
   },
   
   // Bank Details Section
@@ -392,61 +405,64 @@ const styles = StyleSheet.create({
   bankLeft: {
     width: '40%',
     borderRight: '1pt solid #6b7280',
-    paddingHorizontal: 6,
+    paddingHorizontal: 3,
     paddingVertical: 4,
   },
   bankRight: {
     width: '60%',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    paddingHorizontal: 5,
+    paddingVertical: 3,
   },
   bankTitle: {
     fontWeight: 600,
-    marginBottom: 4,
+    marginBottom: 3,
     color: '#111827',
-    fontSize: 9,
+    fontSize: 7,
   },
   bankText: {
-    marginBottom: 1,
-    fontSize: 8,
+    marginBottom: 0.9,
+    fontSize: 7,
     color: '#111827',
     fontWeight: 400,
   },
   
   // Footer Section
   footer: {
-    paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
   },
   footerTitle: {
     fontWeight: 700,
-    marginBottom: 3,
+    marginBottom: 2,
     color: '#0f172a',
-    fontSize: 10,
+    fontSize: 8,
     textAlign: 'left',
   },
   termsList: {
-    marginBottom: 5,
+    marginBottom: 4,
   },
   termsItem: {
-    marginBottom: 2,
+    marginBottom: 3,
     fontStyle: 'italic',
-    fontSize: 8,
+    fontSize: 7,
     color: '#1f2937',
     fontWeight: 400,
-    lineHeight: 1.2,
+    lineHeight: 1,
   },
   signature: {
     textAlign: 'right',
-    marginTop: 15,
+    marginTop: 10,
     fontWeight: 600,
-    fontSize: 10,
+    fontSize: 8,
     color: '0f172a',
   },
   computerGenerated: {
     textAlign: 'center',
     marginTop: 10,
-    fontSize: 8,
+    fontSize: 6,
     color: '#1f2937',
     fontStyle: 'italic',
     fontWeight: 400,
@@ -475,7 +491,10 @@ const PIPDFDocument = ({ piData }) => {
     items = [],
     transport = {},
     billing_remarks,
-    totals = {}
+    totals = {},
+    type= 'normal',
+    warranty_terms, 
+    pi_location='hisar'
   } = piData;
 
   const isShippingSame = shipping === 'same_as_billing';
@@ -572,15 +591,15 @@ const PIPDFDocument = ({ piData }) => {
                 const descriptionModel = (item.description?.model)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
                 const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
                 const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const fullDescription= `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}`
+                const fullDescription= type==='container' ? `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}` 
+                : `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}`;
                 return (
                   <View style={styles.tableRow} key={index}>
                     <Text style={[styles.tableCol, styles.colIndex, styles.textCenter]}>{index + 1}</Text>
-                    <Text style={[styles.tableCol, styles.colDescription, styles.textLeft]}>
-                      <Text style={styles.productName}>{model}</Text>
-                      {'\n'}
+                    <View style={[styles.tableCol, styles.colDescription, styles.textLeft]}>
+                      <Text style={styles.productName}>{model} {item.with_accessories ? '(With Accessories)' : null}</Text>
                       <Text style={styles.productDescription}>{['BATTERY', 'CHARGER'].includes(model) ? descriptionModel : fullDescription}</Text>
-                    </Text>
+                    </View>
                     <Text style={[styles.tableCol, styles.colQty, styles.textCenter]}>{item.qty}</Text>
                     <Text style={[styles.tableCol, styles.colUnitWithGst, styles.textRight]}>{formatCurrency(item.unit_price)}</Text>
                     <Text style={[styles.tableCol, styles.colUnitWithoutGst, styles.textRight]}>{formatCurrency(item.unit_price * (100/105))}</Text>
@@ -613,9 +632,9 @@ const PIPDFDocument = ({ piData }) => {
                 <Text style={styles.summaryLabel}>
                   Note: 
                 </Text>
-                <Text style={styles.summaryWords}> The container will be dispatched
-                  {delivery_terms?.replace(/_/g, ' ').toLowerCase() || 'N/A'} of receiving 30% advance payment.
-                </Text>
+                {type=== 'container' ? (<Text style={styles.summaryWords}> The container will be dispatched
+                  {delivery_terms?.replace(/_/g, ' ').toLowerCase() || ' N/A'} of receiving 30% advance payment.
+                </Text>) : null}
               </View>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryLabel}>Grand Total In Words:</Text>
@@ -649,15 +668,30 @@ const PIPDFDocument = ({ piData }) => {
           {/* Bank Details & Remarks */}
           <View style={styles.bankDetailsSection}>
             <View style={styles.bankLeft}>
-              <Text style={styles.bankText}>Bank Name: Punjab National Bank</Text>
-              <Text style={styles.bankText}>Bank Branch: Fatehabad</Text>
-              <Text style={styles.bankText}>A/C Name: MANTRA E-BIKES</Text>
-              <Text style={styles.bankText}>A/C No.: 0146108700000032</Text>
-              <Text style={styles.bankText}>IFSC Code: PUNB0014610</Text>
+                { pi_location=== 'noida' && type==='normal' ? <View>
+                  <Text style={styles.bankText}>Bank Name: Punjab National Bank</Text>
+                  <Text style={styles.bankText}>Bank Branch: Mandi Adampur</Text>
+                  <Text style={styles.bankText}>A/C Name: MANTRA E-BIKES</Text>
+                  <Text style={styles.bankText}>A/C No.: 1816102100000514</Text>
+                  <Text style={styles.bankText}>IFSC Code: PUNB0181610</Text>
+                </View> : <View>
+                <Text style={styles.bankText}>Bank Name: Punjab National Bank</Text>
+                <Text style={styles.bankText}>Bank Branch: Fatehabad</Text>
+                <Text style={styles.bankText}>A/C Name: MANTRA E-BIKES</Text>
+                <Text style={styles.bankText}>A/C No.: 0146108700000032</Text>
+                <Text style={styles.bankText}>IFSC Code: PUNB0014610</Text>
+                </View>
+              }
             </View>
             <View style={styles.bankRight}>
-              <Text style={styles.bankTitle}>Remarks:</Text>
-              <Text style={styles.bankText}>{billing_remarks || 'N/A'}</Text>
+              <View>
+                <Text style={styles.bankTitle}>Remarks:</Text>
+                <Text style={styles.bankText}>{billing_remarks || 'N/A'}</Text>
+              </View>
+              {warranty_terms && 
+                <View>
+                  <Text style={styles.bankTitle}>{warranty_terms ? '': 'NO GUARANTEE NO WARRANTY'}</Text>
+                </View>}
             </View>
           </View>
 
