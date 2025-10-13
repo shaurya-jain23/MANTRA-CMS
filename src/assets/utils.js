@@ -328,4 +328,32 @@ const containerDetailsOrder = {
   shipping_rent: 21,
 }
 
+export const bankDetailsConfig = {
+  hisar: {
+    name: 'Punjab National Bank',
+    branch: 'Fatehabad',
+    acName: 'MANTRA E-BIKES',
+    acNo: '0146108700000032',
+    ifsc: 'PUNB0014610',
+  },
+  noida: {
+    name: 'Punjab National Bank',
+    branch: 'Mandi Adampur',
+    acName: 'MANTRA E-BIKES',
+    acNo: '1816102100000514',
+    ifsc: 'PUNB0181610',
+  }
+};
+
+export const termsAndConditions = [
+  "Payment: 100% Advance",
+  "This quotation is valid for a period of 14 days only from the PI Date.",
+  "Goods once sold cannot be returned in any case and once payment received, it cannot be returned in any case.",
+  "Goods will dispatch from 2-3 days after receiving full payment.",
+  "Please use this proforma invoice only for Payment Purpose & don't use for road permit/way bills or return.",
+  "\"Subject to 'HISAR' Jurisdiction only. E.&.O.E\"",
+  "We hope you will find our offer acceptable and looking forward towards a long term business relationship with us.",
+  "Warm Regards,"
+];
+
 export {sortOptions, etaOptions, ALL_AVAILABLE_COLUMNS, monthOptions, salesStatusMap, containerStatusMap, containerDetailsOrder, salesColumns, TABS, salesSortOptions, bookingTabs, modelOptions, piStatusOptions, getRoleBadgeColor}

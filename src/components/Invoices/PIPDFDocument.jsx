@@ -9,54 +9,61 @@ import {
   Font
 } from '@react-pdf/renderer';
 import { ToWords } from 'to-words';
+import { bankDetailsConfig, termsAndConditions } from '../../assets/utils';
 
 // Register Urbanist font
 Font.register({
-  family: 'Urbanist',
+  family: 'NotoSans',
   fonts: [
     {
-      src: '/fonts/Urbanist-Regular.ttf',
+      src: '/fonts/NotoSans-Regular.ttf',
       fontWeight: 'normal',
     },
     {
-      src: '/fonts/Urbanist-Medium.ttf',
+      src: '/fonts/NotoSans-Medium.ttf',
       fontWeight: 'medium',
     },
     {
-      src: '/fonts/Urbanist-SemiBold.ttf',
+      src: '/fonts/NotoSans-SemiBold.ttf',
       fontWeight: 'semibold',
     },
     {
-      src: '/fonts/Urbanist-Bold.ttf',
+      src: '/fonts/NotoSans-Bold.ttf',
       fontWeight: 'bold',
     },
     {
-      src: '/fonts/Urbanist-Italic.ttf', // Added italic variant
+      src: '/fonts/NotoSans-Italic.ttf', // Added italic variant
       fontWeight: 'normal',
       fontStyle: 'italic',
     },
     {
-      src: '/fonts/Urbanist-BoldItalic.ttf', // Added bold-italic variant
+      src: '/fonts/NotoSans-BoldItalic.ttf', // Added bold-italic variant
       fontWeight: 'bold',
       fontStyle: 'italic',
     },
   ],
 });
 
+
+
 const formatCurrency = (amount) => {
-  if (!amount && amount !== 0) return '₹0.00';
+  if (amount === null || amount === undefined) return '₹ 0.00';
   
   // Handle string inputs and remove any existing formatting
   const numAmount = typeof amount === 'string' 
     ? parseFloat(amount.replace(/[^0-9.-]/g, '')) 
     : Number(amount);
   
-  if (isNaN(numAmount)) return '₹0.00';
+  if (isNaN(numAmount)) return '₹ 0.00';
   
-  return new Intl.NumberFormat('en-IN', {
+  const formattedNumber =  new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(numAmount);
+
+  return formattedNumber;
 };
 
 const toWords = new ToWords({
@@ -68,13 +75,57 @@ const toWords = new ToWords({
   },
 });
 
+const generateFullDescription = (item, type) => {
+    const descriptionModel = (item.description?.model)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+    if (['BATTERY', 'CHARGER'].includes((item.model || '').toUpperCase())) {
+        return descriptionModel;
+    }
+
+    const parts = [descriptionModel];
+    if (item.with_battery) parts.push(`With ${descriptionBattery} Battery`); else parts.push('Without Battery');
+    if (item.with_charger) parts.push(`With ${descriptionCharger} Charger`); else parts.push('Without Charger');
+
+    if (type === 'container') {
+        if (item.with_tyre) parts.push('With Tyre'); else parts.push('Without Tyre');
+        if (item.with_assembling) parts.push('With Assembling'); else parts.push('In CKD');
+    }
+    
+    return parts.join(', ');
+};
+
+// --- SUB-COMPONENT ---
+
+const TableRow = ({ item, index, type, styles }) => {
+  const amount = (item.qty || 0) * ((item.unit_price) * (100/105) || 0);
+  const model = (item.model || '').replace(/_/g, ' ').toUpperCase();
+  const fullDescription = generateFullDescription(item, type);
+
+  return (
+    <View style={styles.tableRow} key={index}>
+      <Text style={[styles.tableCol, styles.colIndex, styles.textCenter]}>{index + 1}</Text>
+      <View style={[styles.tableCol, styles.colDescription, styles.textLeft]}>
+        <Text style={styles.productName}>{model} {item.with_accessories ? '(With Accessories)' : null}</Text>
+        <Text style={styles.productDescription}>{fullDescription}</Text>
+      </View>
+      <Text style={[styles.tableCol, styles.colQty, styles.textCenter]}>{item.qty}</Text>
+      <Text style={[styles.tableCol, styles.colUnitWithGst, styles.textRight]}>{formatCurrency(item.unit_price)}</Text>
+      <Text style={[styles.tableCol, styles.colUnitWithoutGst, styles.textRight]}>{formatCurrency(item.unit_price * (100/105))}</Text>
+      <Text style={[styles.tableCol, styles.colGst, styles.textRight]}>5%</Text>
+      <Text style={[styles.tableCol, styles.colAmount, styles.textRight, styles.rightBorder2]}>{formatCurrency(amount)}</Text>
+    </View>
+  );
+};
+
 // Create styles with pixel-perfect measurements
-const styles = StyleSheet.create({
+const getStyles = (type) => StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
     fontSize: 10,
-    fontFamily: 'Urbanist',
+    fontFamily: 'NotoSans',
     lineHeight: 1.3,
     padding: 10,
   },
@@ -123,7 +174,7 @@ const styles = StyleSheet.create({
   // Title Section
   titleSection: {
     borderBottom: '1pt solid #6b7280',
-    paddingTop: 1,
+    paddingVertical: 1,
     alignItems: 'center',
     display:'flex',
     justifyContent: 'center',
@@ -200,7 +251,7 @@ const styles = StyleSheet.create({
   addressCell: {
     width: '50%',
     paddingHorizontal: 5,
-    paddingTop: 3,
+    paddingVertical: 3,
   },
   firmName: {
     fontWeight: 600,
@@ -233,14 +284,14 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: 'row',
     borderBottom: '1pt solid #d1d5db',
-    minHeight: 25,
+    minHeight: type === 'container' ? 35 : 25,
   },
   tableCol: {
     borderRight: '1pt solid #d1d5db',
-    paddingTop: 3,
+    paddingVertical: 3,
     paddingBottom: 1,
     paddingHorizontal: 3,
-    fontSize: 6.5,
+    fontSize: type === 'container' ? 7 : 6.5,
     color: '#6b7280',
     lineHeight: 1.2,
     justifyContent: 'center',
@@ -280,11 +331,12 @@ const styles = StyleSheet.create({
   productName: {
     fontWeight: 600,
     color: '#1f2937',
-    fontSize: 6.5,
+    fontSize: type === 'container' ? 7.5 : 6.5,
+    marginBottom: type === 'container' ? 3 : 0
   },
   
   productDescription: {
-    fontSize: 6,
+    fontSize: type === 'container' ? 7 : 6,
     color: '#6b7280',
     fontWeight: 400,
   },
@@ -417,7 +469,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   bankTitle: {
-    fontWeight: 600,
+    fontWeight: 700,
     marginBottom: 3,
     color: '#111827',
     fontSize: 7,
@@ -473,7 +525,7 @@ const PIPDFDocument = ({ piData }) => {
   if (!piData) {
     return (
       <Document>
-        <Page size="A4" style={styles.page}>
+        <Page size="A4" style={getStyles('normal')?.page}>
           <Text>No invoice data available</Text>
         </Page>
       </Document>
@@ -497,8 +549,14 @@ const PIPDFDocument = ({ piData }) => {
     pi_location='hisar'
   } = piData;
 
+  const styles = getStyles(type);
+  
+
   const isShippingSame = shipping === 'same_as_billing';
   const shippingInfo = isShippingSame ? billing : shipping;
+
+  const bankInfo = (pi_location === 'noida' && type === 'normal') ? bankDetailsConfig.noida : bankDetailsConfig.hisar;
+
 
   return (
     <Document>
@@ -574,7 +632,7 @@ const PIPDFDocument = ({ piData }) => {
           <View style={styles.tableContainer}>
             <View style={styles.table}>
               {/* Table Header */}
-              <View style={[styles.tableRow, styles.tableHeader]}>
+              <View style={[styles?.tableRow, styles.tableHeader]}>
                 <Text style={[styles.tableCol, styles.colIndex, styles.textCenter]}>#</Text>
                 <Text style={[styles.tableCol, styles.colDescription, styles.textLeft]}>Product Name & Description</Text>
                 <Text style={[styles.tableCol, styles.colQty, styles.textCenter]}>Qty</Text>
@@ -585,29 +643,9 @@ const PIPDFDocument = ({ piData }) => {
               </View>
                   {/* Table Body */}
                 <View style={styles.tBody}>
-                    {items.map((item, index) => {
-                const amount = (item.qty || 0) * ((item.unit_price) * (100/105) || 0);
-                const model = (item.model || '').replace(/_/g, ' ').toUpperCase();
-                const descriptionModel = (item.description?.model)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const fullDescription= type==='container' ? `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}` 
-                : `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}`;
-                return (
-                  <View style={styles.tableRow} key={index}>
-                    <Text style={[styles.tableCol, styles.colIndex, styles.textCenter]}>{index + 1}</Text>
-                    <View style={[styles.tableCol, styles.colDescription, styles.textLeft]}>
-                      <Text style={styles.productName}>{model} {item.with_accessories ? '(With Accessories)' : null}</Text>
-                      <Text style={styles.productDescription}>{['BATTERY', 'CHARGER'].includes(model) ? descriptionModel : fullDescription}</Text>
-                    </View>
-                    <Text style={[styles.tableCol, styles.colQty, styles.textCenter]}>{item.qty}</Text>
-                    <Text style={[styles.tableCol, styles.colUnitWithGst, styles.textRight]}>{formatCurrency(item.unit_price)}</Text>
-                    <Text style={[styles.tableCol, styles.colUnitWithoutGst, styles.textRight]}>{formatCurrency(item.unit_price * (100/105))}</Text>
-                    <Text style={[styles.tableCol, styles.colGst, styles.textRight]}>5%</Text>
-                    <Text style={[styles.tableCol, styles.colAmount, styles.textRight, styles.rightBorder2]}>{formatCurrency(amount)}</Text>
-                  </View>
-                );
-              })}
+                    {items.map((item, index) => (
+                  <TableRow item={item} index={index} type={type} key={index} styles={styles} />
+                ))}
                 </View>
             </View>
           </View>
@@ -668,30 +706,21 @@ const PIPDFDocument = ({ piData }) => {
           {/* Bank Details & Remarks */}
           <View style={styles.bankDetailsSection}>
             <View style={styles.bankLeft}>
-                { pi_location=== 'noida' && type==='normal' ? <View>
-                  <Text style={styles.bankText}>Bank Name: Punjab National Bank</Text>
-                  <Text style={styles.bankText}>Bank Branch: Mandi Adampur</Text>
-                  <Text style={styles.bankText}>A/C Name: MANTRA E-BIKES</Text>
-                  <Text style={styles.bankText}>A/C No.: 1816102100000514</Text>
-                  <Text style={styles.bankText}>IFSC Code: PUNB0181610</Text>
-                </View> : <View>
-                <Text style={styles.bankText}>Bank Name: Punjab National Bank</Text>
-                <Text style={styles.bankText}>Bank Branch: Fatehabad</Text>
-                <Text style={styles.bankText}>A/C Name: MANTRA E-BIKES</Text>
-                <Text style={styles.bankText}>A/C No.: 0146108700000032</Text>
-                <Text style={styles.bankText}>IFSC Code: PUNB0014610</Text>
-                </View>
-              }
+                <Text style={styles.bankText}>Bank Name: {bankInfo.name}</Text>
+                <Text style={styles.bankText}>Bank Branch: {bankInfo.branch}</Text>
+                <Text style={styles.bankText}>A/C Name: {bankInfo.acName}</Text>
+                <Text style={styles.bankText}>A/C No.: {bankInfo.acNo}</Text>
+                <Text style={styles.bankText}>IFSC Code: {bankInfo.ifsc}</Text>
             </View>
             <View style={styles.bankRight}>
               <View>
                 <Text style={styles.bankTitle}>Remarks:</Text>
                 <Text style={styles.bankText}>{billing_remarks || 'N/A'}</Text>
               </View>
-              {warranty_terms && 
-                <View>
-                  <Text style={styles.bankTitle}>{warranty_terms ? '': 'NO GUARANTEE NO WARRANTY'}</Text>
-                </View>}
+              {!warranty_terms && 
+              <View>
+                <Text style={styles.bankTitle}>NO GUARANTEE NO WARRANTY</Text>
+              </View>}
             </View>
           </View>
 
@@ -699,14 +728,9 @@ const PIPDFDocument = ({ piData }) => {
           <View style={styles.footer}>
             <Text style={styles.footerTitle}>Terms & Conditions</Text>
             <View style={styles.termsList}>
-              <Text style={styles.termsItem}>1. Payment: 100% Advance</Text>
-              <Text style={styles.termsItem}>2. This quotation is valid for a period of 14 days only from the PI Date.</Text>
-              <Text style={styles.termsItem}>3. Goods once sold cannot be returned in any case and once payment received, it cannot be returned in any case.</Text>
-              <Text style={styles.termsItem}>4. Goods will dispatch from 2-3 days after receiving full payment.</Text>
-              <Text style={styles.termsItem}>5. Please use this proforma invoice only for Payment Purpose & don't use for road permit/way bills or return.</Text>
-              <Text style={styles.termsItem}>6. "Subject to 'HISAR' Jurisdiction only. E.&.O.E"</Text>
-              <Text style={styles.termsItem}>We hope you will find our offer acceptable and looking forward towards a long term business relationship with us.</Text>
-              <Text style={styles.termsItem}>Warm Regards,</Text>
+              {termsAndConditions.map((term, index) => (
+                <Text key={index} style={styles.termsItem}>{`${index + 1}. ${term}`}</Text>
+              ))}
             </View>
             <Text style={styles.computerGenerated}>
               This is a computer-generated document and does not require a signature.
