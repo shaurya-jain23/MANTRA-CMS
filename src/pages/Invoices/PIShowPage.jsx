@@ -273,7 +273,7 @@ function PIShowPage() {
           </div>
         </div>
         <div id="invoice-content-wrapper">
-          <div className="hidden lg:block border rounded-lg p-4 bg-gray-50">
+          {/* <div className="hidden lg:block border rounded-lg p-4 bg-gray-50">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">PDF Preview</h3>
                   <p className="text-sm text-gray-600">A4 Size Preview</p>
@@ -283,14 +283,14 @@ function PIShowPage() {
                     <PIPDFDocument piData={piData} />
                   </PDFViewer>
                 </div>
-              </div>
-          {/* <div
+              </div> */}
+          <div
             id="invoice-preview"
             className="bg-white p-2 sm:p-8 md:p-12 md:px-20 rounded-sm shadow-md border border-slate-200"
             ref={piRef}
           >
             <InvoiceDetail piData={piData} />
-          </div> */}
+          </div>
         </div>
       </div>
     </Container>

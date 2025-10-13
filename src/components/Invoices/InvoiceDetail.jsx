@@ -1,5 +1,6 @@
 import React from 'react';
 import { ToWords } from 'to-words';
+import { bankDetailsConfig, termsAndConditions } from '../../assets/utils';
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount || 0);
@@ -13,6 +14,27 @@ const toWords = new ToWords({
     ignoreZeroCurrency: false,
   },
 });
+
+const generateFullDescription = (item, type) => {
+    const descriptionModel = (item.description?.model)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+    if (['BATTERY', 'CHARGER'].includes((item.model || '').toUpperCase())) {
+        return descriptionModel;
+    }
+
+    const parts = [descriptionModel];
+    if (item.with_battery) parts.push(`With ${descriptionBattery} Battery`); else parts.push('Without Battery');
+    if (item.with_charger) parts.push(`With ${descriptionCharger} Charger`); else parts.push('Without Charger');
+
+    if (type === 'container') {
+        if (item.with_tyre) parts.push('With Tyre'); else parts.push('Without Tyre');
+        if (item.with_assembling) parts.push('With Assembling'); else parts.push('In CKD');
+    }
+    
+    return parts.join(', ');
+};
 
 function InvoiceDetail({ piData }, ref) {
   if (!piData) {
@@ -30,12 +52,15 @@ function InvoiceDetail({ piData }, ref) {
     items = [],
     transport = {},
     billing_remarks,
-    totals = {}
+    totals = {},
+    type= 'normal',
+    warranty_terms, 
+    pi_location='hisar'
   } = piData;
 
   const isShippingSame = shipping === 'same_as_billing';
   const shippingInfo = isShippingSame ? billing : shipping;
-
+  const bankInfo = (pi_location === 'noida' && type === 'normal') ? bankDetailsConfig.noida : bankDetailsConfig.hisar;
 
   return (
     <div className="bg-white border-2 border-gray-500 text-xs sm:text-sm md:text-base" ref={ref}>
@@ -94,32 +119,29 @@ function InvoiceDetail({ piData }, ref) {
 
       {/* --- Items Table --- */}
       <div className="overflow-x-auto">
-        <table className="w-full h-full table-fixed border-collapse text-md">
+        <table className="w-full h-full table-fixed border-collapse text-sm lg:text-md">
           <thead className="bg-gray-100 w-full">
-            <tr className="text-center border-b-2 border-gray-300 text-md font-bold text-gray-600 uppercase w-full">
+            <tr className="text-center border-b-2 border-gray-300 text-sm lg:text-md md:text-xs font-bold text-gray-600 uppercase w-full">
               <th className="p-2 border-r-2 border-gray-300 w-1/24">#</th>
-              <th className="p-2 text-left border-r-2 border-gray-300 w-5/12">Product Name & Description</th>
+              <th className="p-2 text-left border-r-2 border-gray-300 w-6/12">Product Name & Description</th>
               <th className="p-2 border-r-2 border-gray-300 w-1/12">Qty</th>
               <th className="p-2 border-r-2 border-gray-300 w-3/24">Unit Price (With GST)</th>
               <th className="p-2 border-r-2 border-gray-300 w-3/24">Unit Price (Without GST)</th>
               <th className="p-2 border-r-2 border-gray-300 w-1/12">GST %</th>
-              <th className="p-2 w-3/12">Amount</th>
+              <th className="p-2 w-2/12">Amount</th>
             </tr>
           </thead>
           <tbody className='h-80'>
             {items.map((item, index) => {
               const amount = (item.qty || 0) * ((item.unit_price)*(100/105) || 0);
               const model = (item.model).replace(/_/g, ' ').toUpperCase();
-              const descriptionModel = (item.description?.model)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-              const descriptionBattery = (item.description?.battery)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-              const descriptionCharger = (item.description?.charger)?.replace(/_/g, ' ')?.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-              const fullDescription= `${descriptionModel}, ${item.with_battery ? `With ${descriptionBattery} Battery` : 'Without Battey'}, ${item.with_charger ? `With ${descriptionCharger} Charger` : 'Without Charger'}, ${item.with_tyre ? 'With tyre' : 'Without tyre'}, ${item.with_assembling ? 'With Assembling' : 'In CKD'}`
+              const fullDescription = generateFullDescription(item, type);
               return (
                 <tr key={index} className="border-b-2 border-gray-300 align-top">
                   <td className="p-2 border-r-2 border-gray-300 text-center">{index + 1}</td>
                   <td className="p-2 border-r-2 border-gray-300">
-                    <p className="font-semibold">{model}</p>
-                    <p className="sm:text-base text-gray-500">{['BATTERY', 'CHARGER'].includes(model) ? descriptionModel : fullDescription}</p>
+                    <p className="font-semibold">{model} {item.with_accessories ? '(With Accessories)' : null}</p>
+                    <p className="text-sm text-gray-500">{fullDescription}</p>
                   </td>
                   <td className="p-2 border-r-2 border-gray-300 text-center">{item.qty}</td>
                   <td className="p-2 border-r-2 border-gray-300 text-right">{formatCurrency(item.unit_price)}</td>
@@ -144,7 +166,7 @@ function InvoiceDetail({ piData }, ref) {
       {/* --- Totals & Remarks --- */}
       <div className="border-b-2 w-full border-gray-500 grid grid-cols-3 text-left justify-between items-center">
         <div className=" pt-4 pb-0.5 px-2 border-r-2 h-full border-gray-500 flex flex-col justify-between gap-2 col-span-2">
-          <p className="text-md"><strong>Note:</strong> The container will be dispatched <b>{delivery_terms.replace(/_/g, ' ').toLowerCase()}</b> of receiving 30% advance payment.</p>
+          {type=== 'container' ? (<p className="text-md"><strong>Note:</strong> The container will be dispatched <b>{delivery_terms.replace(/_/g, ' ').toLowerCase()}</b> of receiving 30% advance payment.</p>) : null}
           <p className="text-md"><strong>Grand Total In Words:</strong> <span className='italic'>{toWords.convert(totals.grandTotal)}</span> </p>
         </div>
         <div className="pt-4 pb-0.5 px-2 flex flex-col gap-1 col-span-1">
@@ -156,27 +178,26 @@ function InvoiceDetail({ piData }, ref) {
       </div>
       <div className="border-b-2 w-full border-gray-500 grid grid-cols-2 text-left justify-between items-center">
         <div className="py-0.5 px-2 flex border-r-2 border-gray-500  flex-col gap-0.5 text-md">
-          <p>Bank Name:- Punjab National Bank Bank Branch:- Fatehabad</p>
-          <p>A/C Name:- MANTRA E-BIKES</p>
-          <p>A/C No. :- 0146108700000032</p>
-          <p>IFSC Code:- PUNB0014610</p>
+          <p>Bank Name:- {bankInfo.name}</p>
+          <p>A/C Name:- {bankInfo.branch}</p>
+          <p>A/C No. :- {bankInfo.acNo}</p>
+          <p>IFSC Code:- {bankInfo.ifsc}</p>
         </div>
-        <div className="py-0.5 px-2 h-full flex flex-col justify-start gap-2">
+        <div className="py-0.5 px-2 h-full flex flex-col justify-around gap-2">
           <p className="text-md"><strong>Remarks:</strong> {billing_remarks || 'N/A'}</p>
+           {!warranty_terms && 
+              <p className='text-md font-bold'>NO GUARANTEE NO WARRANTY</p>
+            }
         </div>
-        
       </div>
       
       {/* --- Footer --- */}
       <div className="w-full py-0.5 px-2 text-center flex flex-col justify-center items-start">
         <p className="font-bold">Terms & Conditions</p>
         <div className="text-start italic">
-          <p>1. Payment: 100% Advance</p>
-          <p>2. This quotation is valid for a period of 14 days only from the PI Date.</p>
-          <p>3. Goods once sold can not be returned in any case and once payment recieved , it can not be returned in any case</p>
-          <p>4. Goods will dispatch from 2-3 days after receiving full payment.</p>
-          <p>5. Please use this proforma invoice only for Payment Purpose & don’t use for road permit/way bills or return.</p>
-          <p>6. "Subject to 'HISAR' Jurisdiction only. E.&.O.E" <br /> We hope you will find our offer acceptable and looking forward towards a long term business relationship with us. <br /> Warm Regards,</p>
+          {termsAndConditions.map((term, index) => (
+            <p key={index}>{`${index + 1}. ${term}`}</p>
+          ))}
           <p className="mt-4">This is a computer-generated document and does not require a signature.</p>
         </div>
         <p className="w-full text-right">For, MANTRA E-BIKES</p>
