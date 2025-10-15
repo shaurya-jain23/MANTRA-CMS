@@ -5,6 +5,7 @@ import { useModal } from '../contexts/ModalContext';
 import piService from '../firebase/piService';
 import { setPIStatus } from '../features/performa-invoices/PISlice';
 import { FileText, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { PI_STATUS } from '../assets/utils';
 
 export const usePIActions = (onActionComplete = null) => {
   const dispatch = useDispatch();
@@ -73,26 +74,33 @@ export const usePIActions = (onActionComplete = null) => {
     setProcessingAction(true);
     const actionText = action === 'submit' ? 'Submitting' : 
                       action === 'delete' ? 'Deleting' : 
-                      action === 'approve' ? 'Approving' : 'Rejecting';
+                      action === 'approve' ? 'Approving' : 
+                      action === 'reject' ? 'Rejecting' : 'Processing';
     
     const toastId = toast.loading(`${actionText} PI...`);
     
     try {
       let result;
+      let newStatus;
       switch (action) {
         case 'submit':
           result = await piService.submitPIForApproval(performa_invoice.id, performa_invoice.pi_number);
+          newStatus = PI_STATUS.SUBMITTED;
           break;
         case 'delete':
           result = await piService.deletePI(performa_invoice.id, performa_invoice.pi_number);
+          newStatus = 'deleted'
           break;
         case 'approve':
-          // Will be implemented in Phase 2
-          result = await piService.approvePI(performa_invoice.id, performa_invoice.pi_number, userRole, reason);
+           // Get current user role (you'll need to pass this or get from context)
+          const approverRole = 'sales_manager'; // TODO: Get from user context
+          result = await piService.approvePI(performa_invoice.id, performa_invoice.pi_number, approverRole, reason);
+          newStatus = result; 
           break;
         case 'reject':
-          // Will be implemented in Phase 2
-          result = await piService.rejectPI(performa_invoice.id, performa_invoice.pi_number, userRole, reason);
+          const rejecterRole = 'sales_manager'; // TODO: Get from user context
+          result = await piService.rejectPI(performa_invoice.id, performa_invoice.pi_number, rejecterRole, reason);
+          newStatus = PI_STATUS.REJECTED; 
           break;
         default:
           break;
@@ -103,7 +111,7 @@ export const usePIActions = (onActionComplete = null) => {
         action,
         performa_invoice,
         result,
-        newStatus: getNewStatusAfterAction(action),
+        newStatus: newStatus,
         reason
       };
       
@@ -143,21 +151,6 @@ export const usePIActions = (onActionComplete = null) => {
   }, [alertState, executeAction ])
 
   
-
-  const getNewStatusAfterAction = (action) => {
-    switch (action) {
-      case 'submit':
-        return PI_STATUS.SUBMITTED;
-      case 'approve':
-        return PI_STATUS.APPROVED_BY_SALES_MANAGER; // This will be refined in Phase 2
-      case 'reject':
-        return PI_STATUS.REJECTED;
-      case 'delete':
-        return 'deleted';
-      default:
-        return null;
-    }
-  };
 
   return {
     processingAction,
