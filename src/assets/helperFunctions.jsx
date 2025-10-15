@@ -290,15 +290,64 @@ export const getSalesApprovalChain = (creatorRole) => {
 
     if (creatorRole === 'sales') {
       chain.push(
-        { role: 'sales_manager', status: 'pending', timestamp: null, comments: '' },
-        { role: 'admin', status: 'pending', timestamp: null, comments: '' }
+        { role: 'sales_manager', status: 'pending', order: 1, timestamp: null, comments: '', approved_by: null },
+        { role: 'admin', status: 'pending', order: 2, timestamp: null, comments: '', approved_by: null }
       );
+    
     } else if (creatorRole === 'admin' || creatorRole === 'sales_manager') {
       chain.push(
-        { role: 'admin', status: 'pending', timestamp: null, comments: '' }
+        { role: 'admin', status: 'pending', order: 1, timestamp: null, comments: '', approved_by: null }
       );
     }
     // superuser doesn't need approval chain
 
     return chain;
   }
+
+  // Helper method to update approval chain
+export const updateApprovalChain = (chain, role, action, comments = '') => {
+  return chain.map(step => {
+    if (step.role === role && step.status === 'pending') {
+      return {
+        ...step,
+        status: action,
+        timestamp: new Date(),
+        comments: comments,
+        approved_by: action === 'approved' ? 'current_user_id' : null // TODO: Get current user
+      };
+    }
+    return step;
+  });
+}
+
+export const getStatusFromApprovalChain = (approvalChain) => {
+  if (!approvalChain || approvalChain.length === 0) {
+    return PI_STATUS.APPROVED_BY_ADMIN; 
+  }
+
+  // Sort by order 
+  const sortedChain = [...approvalChain].sort((a, b) => a.order - b.order);
+  
+  // Check for any rejections first
+  // const rejectedStep = sortedChain.find(step => step.status === 'rejected');
+  // if (rejectedStep) {
+  //   return PI_STATUS.REJECTED;
+  // }
+// Find the first pending step
+  const firstPendingStep = sortedChain.find(step => step.status === 'pending');
+  
+  if (firstPendingStep) {
+    // There are still pending approvals
+    switch (firstPendingStep.order) {
+      case 1:
+        return PI_STATUS.SUBMITTED; // Still at first level
+      case 2:
+        return PI_STATUS.APPROVED_BY_SALES_MANAGER; // First level approved, waiting for second
+      default:
+        return PI_STATUS.SUBMITTED;
+    }
+  }
+
+  // All steps are approved
+  return PI_STATUS.APPROVED_BY_ADMIN;
+}

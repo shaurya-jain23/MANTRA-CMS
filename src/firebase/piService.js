@@ -12,7 +12,7 @@ import {
   updateDoc,
   deleteDoc
 } from 'firebase/firestore';
-import {convertTimestamps, convertStringsToTimestamps, getSalesApprovalChain} from '../assets/helperFunctions';
+import {convertTimestamps, convertStringsToTimestamps, getSalesApprovalChain, updateApprovalChain, getStatusFromApprovalChain} from '../assets/helperFunctions';
 import {PI_STATUS, PI_TYPES} from '../assets/utils';
 import {toast} from 'react-hot-toast';
 
@@ -110,11 +110,74 @@ class PIService {
         submitted_at: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+    // TODO: Add notification system here in Phase 3
       toast.success(`PI #${piNumber} submitted for approval`);
     } catch (error) {
       console.error('Error submitting PI for approval:', error);
       toast.error(`Failed to submit PI for approval`);
       throw new Error('Failed to submit PI for approval.');
+    }
+  }
+
+  async approvePI(piId, piNumber, approverRole, comments = '') {
+    try {
+      //TODO: Why need piNumber instead send piData
+      const piRef = doc(db, 'performa_invoices', piId);
+      const piDoc = await getDoc(piRef);
+      const piData = piDoc.data();
+      
+      const updatedApprovalChain = updateApprovalChain(
+        piData.approval_chain, 
+        approverRole, 
+        'approved', 
+        comments
+      );
+      
+      const nextStatus = getStatusFromApprovalChain(updatedApprovalChain);
+      
+      await updateDoc(piRef, {
+        status: nextStatus,
+        approval_chain: updatedApprovalChain,
+        updatedAt: serverTimestamp(),
+      });
+      
+      // TODO: Add notification system here in Phase 3
+      toast.success(`PI #${piNumber} approved successfully`);
+      return nextStatus;
+    } catch (error) {
+      console.error('Error approving PI:', error);
+      toast.error(`Failed to approve PI`);
+      throw new Error('Failed to approve PI.');
+    }
+  }
+
+  async rejectPI(piId, piNumber, rejecterRole, reason = '') {
+    try {
+      const piRef = doc(db, 'performa_invoices', piId);
+      const piDoc = await getDoc(piRef);
+      const piData = piDoc.data();
+      
+      const updatedApprovalChain = updateApprovalChain(
+        piData.approval_chain, 
+        rejecterRole, 
+        'rejected', 
+        reason
+      );
+      
+      await updateDoc(piRef, {
+        status: PI_STATUS.REJECTED,
+        approval_chain: updatedApprovalChain,
+        rejection_reason: reason,
+        updatedAt: serverTimestamp(),
+      });
+      
+      // TODO: Add notification system here in Phase 3
+      toast.success(`PI #${piNumber} rejected`);
+    } catch (error) {
+      console.error('Error rejecting PI:', error);
+      toast.error(`Failed to reject PI`);
+      throw new Error('Failed to reject PI.');
     }
   }
 
