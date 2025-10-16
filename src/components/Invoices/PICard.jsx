@@ -1,17 +1,39 @@
 import React from 'react'
 import { Button, Select } from '../index';
-import {NotebookText, SquarePen, Trash2} from 'lucide-react'
-import {piStatusOptions} from '../../assets/utils'
+import {NotebookText, Send, SendIcon, SquarePen, Trash2} from 'lucide-react'
+import {PI_STATUS, piStatusOptions} from '../../assets/utils'
 import { useNavigate } from 'react-router-dom';
 
-const PICard = ({invoice, onAction,onStatusChange, userData }) => {
+const getStatusConfig = (status) => {
+    switch (status) {
+      case PI_STATUS.DRAFT:
+        return { color: 'bg-yellow-100 text-yellow-800', label: 'DRAFT' };
+      case PI_STATUS.SUBMITTED:
+        return { color: 'bg-blue-100 text-blue-800', label: 'SUBMITTED' };
+      case PI_STATUS.APPROVED_BY_SALES_MANAGER:
+        return { color: 'bg-indigo-100 text-indigo-800', label: 'APPROVED BY SM' };
+      case PI_STATUS.APPROVED_BY_ADMIN:
+        return { color: 'bg-purple-100 text-purple-800', label: 'APPROVED BY ADMIN' };
+      case PI_STATUS.FINAL:
+        return { color: 'bg-green-100 text-green-800', label: 'FINAL' };
+      case PI_STATUS.REJECTED:
+        return { color: 'bg-red-100 text-red-800', label: 'REJECTED' };
+      default:
+        return { color: 'bg-gray-100 text-gray-800', label: status?.toUpperCase() || 'UNKNOWN' };
+    }
+  };
+
+const PICard = ({invoice, onAction,onStatusChange, userData, processingAction }) => {
   const navigate = useNavigate();
   const userRole = userData?.role;
   const isAuthor = invoice?.generated_by_id === userData?.uid;
   
-  const showEditButton = isAuthor || userRole === 'superuser';
+  const canApprove = (userData?.role === 'sales_manager' || userData?.role === 'admin' || userData?.role === 'superuser');
+  const canSubmit  = invoice?.status === PI_STATUS.DRAFT && isAuthor;
+  const canEdit  = (invoice?.status === PI_STATUS.DRAFT || invoice?.status === PI_STATUS.REJECTED) && (isAuthor || userRole === 'superuser');
+  const canDelete = isAuthor || userRole === 'superuser';
   const showGeneratedBy = userRole === 'admin' || userRole === 'superuser';
-  
+  const config = getStatusConfig(invoice?.status);
   return (
     <>
     <div className={`bg-white p-4 md:py-6 flex hover:bg-slate-50 flex-col cursor-pointer justify-start border border-gray-200 lg:border-0 lg:border-b-1 lg:grid ${showGeneratedBy? 'lg:grid-cols-9' : 'lg:grid-cols-8'} lg:gap-3 lg:items-center lg:text-center`} key={invoice.id}>
@@ -40,45 +62,79 @@ const PICard = ({invoice, onAction,onStatusChange, userData }) => {
       </div>) 
       }
       <div className="mb-2 lg:mb-0 flex lg:flex-col text-sm gap-1 lg:gap-0 flex-wrap lg:justify-center" onClick={() => navigate(`/performa-invoices/${invoice.id}`)} >
-          <div
+          {/* <div
             className={`py-1/2 px-2 flex lg:flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full outline ${
               invoice.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : invoice.status === 'unpaid' ?  'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'
             }`}>
             <div className='h-2 w-2 rounded-full bg-white outline'></div>{invoice.status.toUpperCase()}
+          </div> */}
+          <div className={`px-2 py-1 rounded-full text-sm font-medium flex items-center gap-2 outline ${config.color}`}>
+            <div className="w-2 h-2 rounded-full bg-current opacity-70"></div>
+            {config.label}
           </div>
       </div>
 
       <div className="lg:col-span-2 flex flex-row lg:justify-around justify-between lg:pt-0 lg:items-center cursor-default gap-2 lg:mt-0 pt-4">
-        <Select
+        {/* <Select
             placeholder="Select status"
             defaultValue={invoice.status}
             onChange={(e) => onStatusChange(invoice.id, e.target.value)}
             className="text-sm !w-fit !py-1"
             options={piStatusOptions}
-          />
-        {showEditButton &&
+          /> */}
+          {/* View PI Button */}
+          <Button
+            variant='ghost'
+            size='small'
+            onClick={() => navigate(`/performa-invoices/${invoice.id}`)}>
+            <NotebookText className='w-4 h-4 ' />
+          </Button>
+          {canEdit &&
+            <Button
+              variant='ghost'
+              size='small'
+              onClick={() => navigate(`/performa-invoices/${invoice.id}/edit`)}>
+              <SquarePen className='w-4 h-4'/>
+            </Button>
+          }
+          {canSubmit && (
+            <Button
+              textColor='text-blue-500'
+              variant='ghost'
+              size='small'
+              onClick={() => onAction('submit', invoice)}>
+                <SendIcon className='w-4 h-4 text-blue-500' />
+            </Button>
+          )}
+          {canApprove && invoice.status === PI_STATUS.SUBMITTED && (
             <>
               <Button
+                textColor='text-emerald-500'
                 variant='ghost'
                 size='small'
-                onClick={() => navigate(`/performa-invoices/${invoice.id}`)}>
-                <NotebookText className='w-4 h-4 text-blue-500' />
+                disabled= {processingAction}
+                onClick={() => onAction('approve', invoice)}>
+                  <CircleCheck className='w-4 h-4 text-emerald-500' />
               </Button>
               <Button
+                textColor='text-rose-500'
                 variant='ghost'
                 size='small'
-                onClick={() => navigate(`/performa-invoices/${invoice.id}/edit`)}>
-                <SquarePen className='w-4 h-4'/>
-              </Button>
-              <Button
-                textColor='text-red-700'
-                variant='ghost'
-                size='small'
-                onClick={() => onAction('delete', invoice)}>
-                <Trash2 className='w-4 h-4 text-red-500'/>
+                disabled= {processingAction}
+                onClick={() => onAction('reject', invoice)}>
+                  <CircleCheck className='w-4 h-4 text-rose-500' />
               </Button>
             </>
-          }
+          )}
+          {canDelete &&
+            <Button
+              textColor='text-red-700'
+              variant='ghost'
+              size='small'
+              onClick={() => onAction('delete', invoice)}>
+              <Trash2 className='w-4 h-4 text-red-500'/>
+            </Button>}
+          
       </div>
     </div>
     </>
