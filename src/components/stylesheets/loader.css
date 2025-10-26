@@ -1,4 +1,4 @@
- .container {
+ .container2 {
     --uib-size: 28;
     --uib-color: #1d4ed8;
     --uib-speed: 3.5s;
@@ -22,8 +22,8 @@
     transition: background-color 0.3s ease;
   }
 
-  .container::before,
-  .container::after {
+  .container2::before,
+  .container2::after {
     content: '';
     position: absolute;
     width: var(--uib-stroke-px);
@@ -33,7 +33,7 @@
     transition: background-color 0.3s ease;
   }
 
-  .container::after {
+  .container2::after {
     animation-delay: calc(var(--uib-speed) * -0.5);
   }
 
