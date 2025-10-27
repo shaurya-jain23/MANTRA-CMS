@@ -4,14 +4,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { selectUser, login } from '../../features/user/userSlice';
 import userService from '../../firebase/user'; 
+import officeService from '../../firebase/office'; 
+import departmentService from '../../firebase/departments';
 import { Input, Button, Select } from '../index';
 import { ArrowRight, BookUser, FileText, Mail, Phone, UserRound } from 'lucide-react';
-import { PLACES } from '../../assets/utils';
 
 function UpdateProfile() {
   const userData = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [offices, setOffices] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
@@ -23,6 +25,40 @@ function UpdateProfile() {
       phone: userData?.phone || '',
     },
   });
+
+  useEffect(() => {
+    const fetchOffices = async () => {
+      try {
+        // You'll need to create an officeService similar to userService
+        const officesList = await officeService.getAllOffices();
+        setOffices(officesList);
+      } catch (error) {
+        console.error('Error fetching offices:', error);
+      }
+    };
+    fetchOffices();
+  }, []);
+
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(()=> {
+    const subscription = watch((value, {name})=> {
+      if(name === 'office_id'){
+        const fetchDepartments = async () => {
+          try {
+            const departmentsForOffice = await departmentService.getDepartmentsByOffice(value.office_id);
+            setDepartments(departmentsForOffice);
+          } catch (error) {
+            console.error('Error fetching departments:', error);
+          }
+        };
+        fetchDepartments();
+      }
+    })
+    return () =>{
+      subscription.unsubscribe()
+    }
+  }, [watch, setDepartments])
 
   const onSubmit = async (data) => {
     setError('');
@@ -107,28 +143,35 @@ function UpdateProfile() {
             error={errors.phone?.message} 
           />
           <Select
-            label="Role/Post"
-            placeholder="Select your role"
-            defaultValue="Select your role"
-            options={['Manager', 'Sales', 'Accounts', 'Store', 'Transporter', 'Admin']}
-            {...register('role', {
-              required: 'Please select your role',
-              validate: value => value !== 'Select your role' || 'Please select your role'
-            })}  
-            error={errors.role?.message}          
+            label="Working Office"
+            placeholder="Choose your office location"
+            defaultValue="Choose your office location"
+            value={formData.office_id}
+            {...register('office_id', {
+              required: 'Please select your office location',
+              validate: value => value !== 'Choose your office location' || 'Please select your office location'
+            })}
+            options={offices.map(office => ({
+              value: office.officeId,
+              name: office.officeName
+            }))}
+            error={errors.office_id?.message} 
           />
           <Select
-            label="Work Location"
-            placeholder="Select your work location"
-            defaultValue="Select your work location"
-            options={PLACES.map(location => ({ value: location.value, name: location.label }))}
-            {...register('workplace', {
-              required: 'Please select your work location',
-              validate: value => value !== 'Select your work location' || 'Please select your work location'
+            label="Department"
+            disabled={departments.length === 0}
+            options={departments.map(dept => ({
+              value: dept.departmentId,
+              name: dept.departmentName
+            }))}
+            {...register('department', {
+              required: 'Please select your department',
+              validate: value => value !== 'Select your department' || 'Please select your department'
             })}
-            error={errors.role?.message} 
+            defaultValue="Select your department"
+            placeholder="Select your department"
           />
-           <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
+          <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
             {loading ? (
                         'Saving Details...'
                     ) : (

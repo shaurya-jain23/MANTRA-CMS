@@ -6,18 +6,52 @@ import {getDefaultRouteForRole} from '../../assets/helperFunctions'
 import {ArrowRight, FileText, Lock, Mail, Phone, UserRound} from 'lucide-react'
 // Imports for our services, components, and state management
 import authService from '../../firebase/auth'; 
+import officeService from '../../firebase/office'; 
+import departmentService from '../../firebase/departments';
 import { login as storeLogin } from '../../features/user/userSlice';
 import { Button, Input, Select } from '../index';
-import { PLACES } from '../../assets/utils';
 
 const Signup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm();
+  const [offices, setOffices] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+
+  useEffect(() => {
+    const fetchOffices = async () => {
+      try {
+        const officesList = await officeService.getAllOffices();
+        setOffices(officesList);
+      } catch (error) {
+        console.error('Error fetching offices:', error);
+      }
+    };
+    fetchOffices();
+  }, []);
+
+  useEffect(()=> {
+        const subscription = watch((value, {name})=> {
+            if(name === 'office_id'){
+              const fetchDepartments = async () => {
+                try {
+                  const departmentsForOffice = await departmentService.getDepartmentsByOffice(value.office_id);
+                  setDepartments(departmentsForOffice);
+                } catch (error) {
+                  console.error('Error fetching departments:', error);
+                }
+              };
+              fetchDepartments();
+            }
+        })
+        return () =>{
+            subscription.unsubscribe()
+        }
+    }, [watch, setDepartments])
 
   const handleSignup = async (data) => {
     setError('');
@@ -109,27 +143,35 @@ const Signup = () => {
             error={errors.password?.message} 
           />
           <Select
-            label="Role/Post"
-            placeholder="Select your role"
-            defaultValue="Select your role"
-            options={['Manager', 'Sales', 'Accounts', 'Store', 'Transporter', 'Admin']}
-            {...register('role', {
-              required: 'Please select your role',
-              validate: value => value !== 'Select your role' || 'Please select your role'
+            label="Working Office"
+            placeholder="Choose your office location"
+            defaultValue="Choose your office location"
+            value={formData.office_id}
+            {...register('office_id', {
+              required: 'Please select your office location',
+              validate: value => value !== 'Choose your office location' || 'Please select your office location'
             })}
-            error={errors.role?.message} 
+            options={offices.map(office => ({
+              value: office.officeId,
+              name: office.officeName
+            }))}
+            error={errors.office_id?.message} 
           />
           <Select
-            label="Work Location"
-            placeholder="Select your work location"
-            defaultValue="Select your work location"
-            options={PLACES.map(location => ({ value: location.value, name: location.label }))}
-            {...register('workplace', {
-              required: 'Please select your work location',
-              validate: value => value !== 'Select your work location' || 'Please select your work location'
+            label="Department"
+            options={departments.map(dept => ({
+              value: dept.departmentId,
+              name: dept.departmentName
+            }))}
+            disabled={departments.length === 0}
+            {...register('department', {
+              required: 'Please select your department',
+              validate: value => value !== 'Select your department' || 'Please select your department'
             })}
-            error={errors.role?.message} 
+            defaultValue="Select your department"
+            placeholder="Select your department"
           />
+        
           <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
             {loading ? (
                         'Creatng Account...'
