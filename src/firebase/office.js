@@ -1,6 +1,5 @@
-// src/firebase/office.js
 import { db } from '../config/firebase.js';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 
 class OfficeService {
@@ -9,7 +8,10 @@ class OfficeService {
     try {
       const officesCollectionRef = collection(db, 'offices');
       const officeSnapshot = await getDocs(officesCollectionRef);
-      const officeList = officeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const officeList = officeSnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
       return officeList;
     } catch (error) {
       console.error("Error fetching offices:", error);
@@ -33,7 +35,7 @@ class OfficeService {
     }
   }
 
-  // Create new office (superuser only)
+  // Create new office
   async createOffice(officeData) {
     try {
       const officesCollectionRef = collection(db, 'offices');
@@ -48,6 +50,38 @@ class OfficeService {
     } catch (error) {
       console.error("Error creating office:", error);
       toast.error('Error occurred while creating office');
+      throw error;
+    }
+  }
+
+  // Update office
+  async updateOffice(officeId, updateData) {
+    try {
+      const officeDocRef = doc(db, 'offices', officeId);
+      await updateDoc(officeDocRef, {
+        ...updateData,
+        updatedAt: new Date()
+      });
+      toast.success('Office updated successfully');
+    } catch (error) {
+      console.error("Error updating office:", error);
+      toast.error('Error occurred while updating office');
+      throw error;
+    }
+  }
+
+  // Delete office (soft delete)
+  async deleteOffice(officeId) {
+    try {
+      const officeDocRef = doc(db, 'offices', officeId);
+      await updateDoc(officeDocRef, {
+        status: 'inactive',
+        updatedAt: new Date()
+      });
+      toast.success('Office deleted successfully');
+    } catch (error) {
+      console.error("Error deleting office:", error);
+      toast.error('Error occurred while deleting office');
       throw error;
     }
   }
