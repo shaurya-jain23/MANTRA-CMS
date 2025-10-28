@@ -15,7 +15,7 @@ import {
 
 
 import {Protected} from './components'
-import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage, AccountDisabledPage} from './pages';
+import {DashboardPage, LoginPage, SignupPage, HomePage, PendingApprovalPage, UsersPage, NotFoundPage, UnauthorizedPage, ProfilePage, UpdateProfilePage, DealersPage, BookingsPage, SalesPage, PIFormPage, PerformaInvoicesPage, PIShowPage, BookingDetailsPage, AccountDisabledPage, AdminDashboardPage} from './pages';
 import BookingLayout from './Layouts/BookingLayout.jsx'
 import DealerLayout from './Layouts/DealerLayout.jsx'
 
@@ -78,7 +78,8 @@ const router = createBrowserRouter(
           } />
       </Route>
       <Route element={<Protected authentication allowedRoles={['superuser']} />}>
-        <Route path="/users" element={<UsersPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="admin/users" element={<UsersPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage/>} />
     </Route>
