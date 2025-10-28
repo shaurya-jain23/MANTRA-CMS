@@ -1,6 +1,5 @@
-// src/firebase/departmentService.js
 import { db } from '../config/firebase.js';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 
 class DepartmentService { 
@@ -56,15 +55,15 @@ class DepartmentService {
   // Create new department (superuser only)
   async createDepartment(departmentData) {
     try {
-      const departmentsCollectionRef = collection(db, 'departments');
+      const departmentsDocRef = doc(db, 'departments', departmentData.departmentId);
       const newDepartment = {
         ...departmentData,
         createdAt: new Date(),
         status: 'active'
       };
-      const docRef = await addDoc(departmentsCollectionRef, newDepartment);
+      await setDoc(departmentsDocRef, newDepartment);
       toast.success('Department created successfully');
-      return { id: docRef.id, ...newDepartment };
+      return { id: departmentsDocRef.id, ...newDepartment };
     } catch (error) {
       console.error("Error creating department:", error);
       toast.error('Error occurred while creating department');
@@ -92,10 +91,7 @@ class DepartmentService {
   async deleteDepartment(departmentId) {
     try {
       const departmentDocRef = doc(db, 'departments', departmentId);
-      await updateDoc(departmentDocRef, {
-        status: 'inactive',
-        updatedAt: new Date()
-      });
+      await deleteDoc(departmentDocRef);
       toast.success('Department deleted successfully');
     } catch (error) {
       console.error("Error deleting department:", error);
