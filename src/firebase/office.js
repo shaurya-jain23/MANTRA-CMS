@@ -1,5 +1,5 @@
 import { db } from '../config/firebase.js';
-import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 
 class OfficeService {
@@ -38,15 +38,15 @@ class OfficeService {
   // Create new office
   async createOffice(officeData) {
     try {
-      const officesCollectionRef = collection(db, 'offices');
+      const officesDocRef = doc(db, 'offices', officeData.officeId);
       const newOffice = {
         ...officeData,
         createdAt: new Date(),
         status: 'active'
       };
-      const docRef = await addDoc(officesCollectionRef, newOffice);
+      await setDoc(officesDocRef, newOffice);
       toast.success('Office created successfully');
-      return { id: docRef.id, ...newOffice };
+      return { id: officesDocRef.id, ...newOffice };
     } catch (error) {
       console.error("Error creating office:", error);
       toast.error('Error occurred while creating office');
