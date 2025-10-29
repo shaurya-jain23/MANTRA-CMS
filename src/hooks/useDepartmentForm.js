@@ -10,7 +10,7 @@ export const useDepartmentForm = () => {
   const [modalConfig, setModalConfig] = useState({});
 
   const formMethods = useForm({
-    defaultValues: editingDepartment || {status: 'active'},
+    defaultValues: editingDepartment || { status: 'active' },
   });
   const { reset } = formMethods;
 
@@ -54,7 +54,9 @@ export const useDepartmentForm = () => {
 
   const handleFormSubmit = async (data) => {
     setIsSubmitting(true);
-    const toastId = toast.loading(editingDepartment ? 'Updating department...' : 'Creating new department...');
+    const toastId = toast.loading(
+      editingDepartment ? 'Updating department...' : 'Creating new department...'
+    );
     try {
       if (editingDepartment) {
         await departmentService.updateDepartment(editingDepartment.id, data);
