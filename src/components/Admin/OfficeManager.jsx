@@ -9,48 +9,58 @@ function OfficeManager() {
   const [offices, setOffices] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const { formMethods ,isOfficeFormOpen, openOfficeForm ,closeOfficeForm ,editingOffice, handleFormSubmit, isSubmitting} = useOfficeForm();
-  const {register,handleSubmit,reset,formState: { errors },} = formMethods;
+  const {
+    formMethods,
+    isOfficeFormOpen,
+    openOfficeForm,
+    closeOfficeForm,
+    editingOffice,
+    handleFormSubmit,
+    isSubmitting,
+  } = useOfficeForm();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = formMethods;
   const { showModal } = useModal();
 
   useEffect(() => {
-      const fetchData = async () => {
-        try {
+    const fetchData = async () => {
+      try {
         setLoading(true);
         const officeList = await officeService.getAllOffices();
         setOffices(officeList);
-        } catch (error) {
+      } catch (error) {
         console.error('Error fetching offices:', error);
-        } finally {
+      } finally {
         setLoading(false);
-        }
+      }
     };
     fetchData();
   }, []);
 
-const handleOpenForm = (office = null) => { 
-    if(office){
-        openOfficeForm(office, {
-          onSuccess: (updatedOffice) => {
-            if(updatedOffice){
-              setOffices(offices.map(o => o.id === updatedOffice.id ? updatedOffice : o));
-            }
-            else{
-                fetchData();
-            }
-          }
-        });
-    }
-    else{
-      openOfficeForm(null, {
-        onSuccess: (newOffice) => {
-          if(newOffice){
-            setOffices(prevOffices => [newOffice, ...prevOffices]);
-          }
-          else{
+  const handleOpenForm = (office = null) => {
+    if (office) {
+      openOfficeForm(office, {
+        onSuccess: (updatedOffice) => {
+          if (updatedOffice) {
+            setOffices(offices.map((o) => (o.id === updatedOffice.id ? updatedOffice : o)));
+          } else {
             fetchData();
           }
-        }
+        },
+      });
+    } else {
+      openOfficeForm(null, {
+        onSuccess: (newOffice) => {
+          if (newOffice) {
+            setOffices((prevOffices) => [newOffice, ...prevOffices]);
+          } else {
+            fetchData();
+          }
+        },
       });
     }
   };
@@ -64,7 +74,7 @@ const handleOpenForm = (office = null) => {
       onConfirm: async () => {
         try {
           await officeService.deleteOffice(office.id);
-          setOffices(offices.filter(o => o.id !== office.id));
+          setOffices(offices.filter((o) => o.id !== office.id));
         } catch (error) {
           console.error('Error deleting office:', error);
           toast.error('Failed to delete office.');
@@ -72,7 +82,6 @@ const handleOpenForm = (office = null) => {
       },
     });
   };
-
 
   if (loading) return <Loading isOpen={true} message="Loading offices..." />;
 
@@ -85,7 +94,11 @@ const handleOpenForm = (office = null) => {
           <p className="text-gray-600">Create and manage office locations</p>
         </div>
         <div className="mt-6 flex justify-end">
-          <Button onClick={() => handleOpenForm()} variant="primary" className="!rounded-4xl !w-fit">
+          <Button
+            onClick={() => handleOpenForm()}
+            variant="primary"
+            className="!rounded-4xl !w-fit"
+          >
             <PlusCircle size={20} className="mr-2" /> Add Office
           </Button>
         </div>
@@ -152,7 +165,11 @@ const handleOpenForm = (office = null) => {
       )}
 
       {/* Office Form Modal */}
-      <ModalContainer isOpen={isOfficeFormOpen} onClose={closeOfficeForm}  className="max-w-2xl !p-0">
+      <ModalContainer
+        isOpen={isOfficeFormOpen}
+        onClose={closeOfficeForm}
+        className="max-w-2xl !p-0"
+      >
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
           <h2 className="text-2xl font-bold mb-2">
             {editingOffice ? 'Edit Office' : 'Register New Office'}
@@ -212,10 +229,18 @@ const handleOpenForm = (office = null) => {
           />
 
           <div className="flex justify-end space-x-4 pt-4">
-            <Button type="button" variant="secondary" onClick={closeOfficeForm} disabled={isSubmitting} className="!w-full">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={closeOfficeForm}
+              disabled={isSubmitting}
+              className="!w-full"
+            >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" disabled={isSubmitting} className="!w-full">{isSubmitting ? 'Saving...' : editingOffice ? 'Update Office' : 'Register Office'}</Button>
+            <Button type="submit" variant="primary" disabled={isSubmitting} className="!w-full">
+              {isSubmitting ? 'Saving...' : editingOffice ? 'Update Office' : 'Register Office'}
+            </Button>
           </div>
         </form>
       </ModalContainer>
