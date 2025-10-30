@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import departmentService from '../../firebase/departments';
 import officeService from '../../firebase/office';
-import { Button, Input, Select, Loading, ModalContainer } from '../index';
+import { Button, Input, Select, Loading, ModalContainer, CollapsibleSection } from '../index';
 import { useDepartmentForm } from '../../hooks/useDepartmentForm';
 import { useModal } from '../../contexts/ModalContext';
 import { PlusCircle, Edit, Trash2, Building, ChevronDown, ChevronRight } from 'lucide-react';
@@ -11,80 +11,73 @@ const OfficeDepartments = ({ office, departments, handleOpenForm, handleDelete }
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 mb-6">
-      <button
-        className="w-full flex justify-between items-center p-4 bg-gray-100 hover:bg-gray-200 focus:outline-none"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <div className="flex items-center">
-          <Building size={20} className="mr-3 text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-800">
-            {office ? office.officeName : 'Global Departments'}
-          </h3>
-        </div>
-        {isOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-      </button>
-
-      {isOpen && (
-        <div className="pb-1">
-          {departments.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department Id</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department Description</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" className="relative px-6 py-3">
-                      <span className="sr-only">Actions</span>
-                    </th>
+    <>
+    <CollapsibleSection
+      id={office}
+      title={office ? office.officeName : 'Global Departments'}
+      isOpen={isOpen}
+      onToggle={() => setIsOpen(!isOpen)}
+      contentClassName="p-0"
+      disabled={false}>
+      <div className="pb-1">
+        {departments.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department Id</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department Description</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" className="relative px-6 py-3">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {departments.map((dept) => (
+                  <tr key={dept.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">#{dept.departmentId}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{dept.departmentName}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{dept.description}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          dept.status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {dept.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-4">
+                        <button onClick={() => handleOpenForm(dept)} className="text-blue-600 hover:text-blue-900">
+                          <Edit size={18} />
+                        </button>
+                        <button onClick={() => handleDelete(dept)} className="text-red-600 hover:text-red-900">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {departments.map((dept) => (
-                    <tr key={dept.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">#{dept.departmentId}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{dept.departmentName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{dept.description}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            dept.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {dept.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-4">
-                          <button onClick={() => handleOpenForm(dept)} className="text-blue-600 hover:text-blue-900">
-                            <Edit size={18} />
-                          </button>
-                          <button onClick={() => handleDelete(dept)} className="text-red-600 hover:text-red-900">
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-center text-gray-500 py-4">No departments in this office.</p>
-          )}
-        </div>
-      )}
-    </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 py-4">No departments in this office.</p>
+        )}
+      </div>
+    </CollapsibleSection>
+    </>
   );
 };
 
@@ -165,8 +158,8 @@ function DepartmentManager() {
     const globalDepartments = [];
 
     departments.forEach(dept => {
-      if (dept.office_id && grouped[dept.office_id]) {
-        grouped[dept.office_id].departments.push(dept);
+      if (dept.officeId && grouped[dept.officeId]) {
+        grouped[dept.officeId].departments.push(dept);
       } else {
         globalDepartments.push(dept);
       }
@@ -190,7 +183,7 @@ function DepartmentManager() {
           <p className="text-gray-600">Create and manage departments across offices</p>
         </div>
         <div className="mt-6 flex justify-end">
-          <Button onClick={() => handleOpenForm()} variant="primary" className="!rounded-lg !w-fit">
+          <Button onClick={() => handleOpenForm()} variant="primary" className="!rounded-3xl !w-fit">
             <PlusCircle size={20} className="mr-2" /> Add Department
           </Button>
         </div>
@@ -251,7 +244,7 @@ function DepartmentManager() {
           />
           
           <Controller
-            name="office_id"
+            name="officeId"
             control={control}
             rules={{
               required: 'Please select Office',
@@ -270,7 +263,7 @@ function DepartmentManager() {
                     name: office.officeName
                   }))
                 ]}
-                error={errors.office_id?.message} 
+                error={errors.officeId?.message} 
               />
             )}
           />
