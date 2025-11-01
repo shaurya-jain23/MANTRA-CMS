@@ -4,6 +4,7 @@ import { Button, Input, Select, Loading, ModalContainer } from '../index';
 import { useOfficeForm } from '../../hooks/useOfficeForm';
 import { useModal } from '../../contexts/ModalContext';
 import { PlusCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 function OfficeManager() {
   const [offices, setOffices] = useState([]);
@@ -21,23 +22,22 @@ function OfficeManager() {
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = formMethods;
   const { showModal } = useModal();
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const officeList = await officeService.getAllOffices();
+      setOffices(officeList);
+    } catch (error) {
+      console.error('Error fetching offices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const officeList = await officeService.getAllOffices();
-        setOffices(officeList);
-      } catch (error) {
-        console.error('Error fetching offices:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
@@ -97,7 +97,7 @@ function OfficeManager() {
           <Button
             onClick={() => handleOpenForm()}
             variant="primary"
-            className="!rounded-4xl !w-fit"
+            className="!rounded-3xl !w-fit"
           >
             <PlusCircle size={20} className="mr-2" /> Add Office
           </Button>
