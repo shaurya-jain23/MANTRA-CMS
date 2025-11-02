@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ModalContainer, Input, Button, Select, Loading } from '../../index';
+import { ModalContainer, Input, Button, Select, FormStepper, SearchBar } from '../../index';
 import Checkbox from '../../CheckBox';
 import { Controller } from 'react-hook-form';
 import permissionService from '../../../firebase/permissions';
 import roleService from '../../../firebase/roles';
-import { ChevronLeft, ChevronRight, Copy, Shield, CheckCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Copy, Shield, CheckCircle, Wrench, FileText, ShieldCheck, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { roleLevels } from '../../../assets/utils';
 
 // Helper component for individual permission resource
 const PermissionResource = ({ 
@@ -23,13 +24,6 @@ const PermissionResource = ({
     <div className="border border-gray-200 rounded-lg mb-4">
       <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
         <div className="flex items-center">
-          <Checkbox
-            id={`select-all-${resource}`}
-            checked={allSelected}
-            indeterminate={someSelected}
-            onChange={() => onSelectAll(resource, resourcePermissions)}
-            className="mr-3"
-          />
           <label htmlFor={`select-all-${resource}`} className="font-medium text-gray-900">
             {resource.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </label>
@@ -39,7 +33,7 @@ const PermissionResource = ({
           variant="ghost"
           onClick={() => onSelectAll(resource, resourcePermissions)}
         >
-          {allSelected ? 'Deselect All' : 'Select All'}
+          {allSelected ? 'Full Control' : someSelected ? 'Partial Control' : 'Select All'}
         </Button>
       </div>
       
@@ -47,21 +41,17 @@ const PermissionResource = ({
         {resourcePermissions.map(permission => (
           <div key={permission.permissionId} className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <Checkbox
-                id={permission.permissionId}
-                checked={!!selectedPermissions[permission.permissionId]}
-                onChange={(e) => onPermissionChange(permission.permissionId, e.target.checked)}
-              />
               <div>
                 <label htmlFor={permission.permissionId} className="font-medium text-gray-900 text-sm">
-                  {permission.permissionName}
+                  {permission.permissionName} ({permission.action.replace(/_/g, ' ')})
                 </label>
                 <p className="text-xs text-gray-500">{permission.description}</p>
               </div>
             </div>
-            <span className="text-xs text-gray-400 capitalize">
-              {permission.action.replace(/_/g, ' ')}
-            </span>
+               <label className="inline-flex items-center cursor-pointer">
+                <input id={permission.permissionId} type="checkbox" checked={!!selectedPermissions[permission.permissionId]} onChange={(e) => onPermissionChange(permission.permissionId, e.target.checked)} className="sr-only peer" />
+                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
           </div>
         ))}
       </div>
@@ -73,44 +63,47 @@ const PermissionResource = ({
 const BasicInfoStep = ({ formMethods, offices, allDepartments, watch }) => {
   const { register, control, formState: { errors } } = formMethods;
   const [departments, setDepartments] = useState([]);
+  let isGlobal = watch('isGlobal');
+  let officeId = watch('officeId');
 
   useEffect(() => {
-    const officeId = watch('officeId');
     if (officeId && officeId !== 'Select an office') {
       const filteredDepartments = allDepartments.filter(dept => dept.officeId === officeId);
       setDepartments(filteredDepartments);
     } else {
       setDepartments([]);
     }
-  }, [watch('officeId'), allDepartments]);
+  }, [officeId, allDepartments]);
 
   return (
     <div className="space-y-4">
-      <Input
-        label="Role Name"
-        {...register('roleName', { required: 'Role name is required' })}
-        error={errors.roleName?.message}
-        placeholder="e.g., Sales Manager"
-      />
-      
-      <Input
-        label="Role ID"
-        {...register('roleId', {
-          required: 'Role ID is required',
-          pattern: {
-            value: /^[a-z0-9_]+$/,
-            message: 'Lowercase letters, numbers, and underscores only.',
-          },
-        })}
-        error={errors.roleId?.message}
-        placeholder="e.g., sales_manager"
-      />
-
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <Input
+          label="Role ID"
+          {...register('roleId', {
+            required: 'Role ID is required',
+            pattern: {
+              value: /^[a-z0-9_]+$/,
+              message: 'Lowercase letters, numbers, and underscores only.',
+            },
+          })}
+          error={errors.roleId?.message}
+          placeholder="e.g., sales_manager"
+        />
+        <Input
+          label="Role Name"
+          {...register('roleName', { 
+            required: 'Role name is required', 
+          })}
+          error={errors.roleName?.message}
+          placeholder="e.g., Sales Manager"
+        />
+      </div>
       <Input
         label="Description"
         {...register('description')}
         as="textarea"
-        rows={3}
+        rows={1}
         placeholder="Describe the role's responsibilities and scope..."
       />
 
@@ -118,23 +111,15 @@ const BasicInfoStep = ({ formMethods, offices, allDepartments, watch }) => {
         <Controller
           name="level"
           control={control}
-          rules={{ required: 'Level is required', min: 1, max: 10 }}
+          rules={{ required: 'Level is required', validate: (value) => value !== '-- Select Level --' || 'Please select level', }}
           render={({ field }) => (
             <Select
+              placeholder="-- Select Level --"
+              defaultValue="-- Select Level --"
               label="Hierarchy Level"
+              required
               {...field}
-              options={[
-                { value: 1, name: 'Level 1 - Entry' },
-                { value: 2, name: 'Level 2 - Junior' },
-                { value: 3, name: 'Level 3 - Intermediate' },
-                { value: 4, name: 'Level 4 - Senior' },
-                { value: 5, name: 'Level 5 - Team Lead' },
-                { value: 6, name: 'Level 6 - Manager' },
-                { value: 7, name: 'Level 7 - Senior Manager' },
-                { value: 8, name: 'Level 8 - Director' },
-                { value: 9, name: 'Level 9 - Executive' },
-                { value: 10, name: 'Level 10 - Admin' },
-              ]}
+              options={roleLevels}
               error={errors.level?.message}
             />
           )}
@@ -143,10 +128,12 @@ const BasicInfoStep = ({ formMethods, offices, allDepartments, watch }) => {
         <Controller
           name="status"
           control={control}
+          rules={{ required: 'Status is required' }}
           render={({ field }) => (
             <Select
               label="Status"
               {...field}
+              required
               options={[
                 { value: 'active', name: 'Active' },
                 { value: 'inactive', name: 'Inactive' },
@@ -161,58 +148,64 @@ const BasicInfoStep = ({ formMethods, offices, allDepartments, watch }) => {
         {...register('isGlobal')}
         description="This role will be available across all offices"
       />
-
-      {!watch('isGlobal') && (
+      <div className='grid grid-cols-2 gap-4'>
+      {!isGlobal && (
         <Controller
-          name="officeId"
+            name="officeId"
+            control={control}
+            rules={{
+              required: 'Office is required for non-global roles',
+              validate: (value) => value !== 'Select an office' || 'Please select Office',
+            }}
+            render={({ field }) => (
+              <Select
+                label="Office"
+                placeholder="Select an office"
+                defaultValue="Select an office"
+                {...field}
+                required
+                options={[
+                  ...offices.map((office) => ({
+                    value: office.officeId,
+                    name: office.officeName,
+                  })),
+                ]}
+                error={errors.officeId?.message}
+              />
+              )}
+          />
+      )}
+      <Controller
+          name="departmentId"
           control={control}
           rules={{
-            required: 'Office is required for non-global roles',
-            validate: (value) => value !== 'Select an office' || 'Please select Office',
+            required: 'Department is required',
+            validate: (value) => value !== 'Select department' || 'Please select department',
           }}
           render={({ field }) => (
             <Select
-              label="Office"
-              placeholder="Select an office"
+              label="Department"
+              defaultValue="Select department"
+              placeholder="Select department"
               {...field}
-              options={offices.map(office => ({
-                value: office.officeId,
-                name: office.officeName,
-              }))}
-              error={errors.officeId?.message}
+              required
+              options={
+                isGlobal
+                  ? allDepartments.map((dept) => ({
+                      value: dept.departmentId,
+                      name: dept.departmentName,
+                    }))
+                  : departments.map((dept) => ({
+                      value: dept.departmentId,
+                      name: dept.departmentName,
+                    }))
+              }
+              disabled={isGlobal && departments.length === 0}
+              error={errors.departmentId?.message}
             />
           )}
         />
-      )}
-
-      <Controller
-        name="departmentId"
-        control={control}
-        rules={{
-          required: 'Department is required',
-          validate: (value) => value !== 'Select department' || 'Please select department',
-        }}
-        render={({ field }) => (
-          <Select
-            label="Department"
-            placeholder="Select department"
-            {...field}
-            options={
-              watch('isGlobal') 
-                ? allDepartments.map(dept => ({
-                    value: dept.departmentId,
-                    name: dept.departmentName,
-                  }))
-                : departments.map(dept => ({
-                    value: dept.departmentId,
-                    name: dept.departmentName,
-                  }))
-            }
-            disabled={!watch('isGlobal') && departments.length === 0}
-            error={errors.departmentId?.message}
-          />
-        )}
-      />
+      </div>
     </div>
   );
 };
@@ -302,15 +295,15 @@ const PermissionsStep = ({
       </div>
 
       {/* Search */}
-      <Input
+      <SearchBar
+        query={searchTerm}
+        setQuery={setSearchTerm}
+        className="rounded-xs py-2"
+        resultCount={filteredPermissions.length}
         placeholder="Search permissions..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="mb-4"
       />
-
       {/* Permissions List */}
-      <div className="max-h-96 overflow-y-auto">
+      <div className="overflow-y-auto">
         {Object.entries(permissionsByResource).map(([resource, resourcePermissions]) => (
           <PermissionResource
             key={resource}
@@ -426,12 +419,11 @@ const ReviewStep = ({ formValues, selectedPermissions, permissions }) => {
   );
 };
 
-function RolePermissionsModal({ formProps, offices = [], allDepartments = [] }) {
+function RolePermissionsModal({ formProps, offices = [], allDepartments = [], allRoles=[] }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [permissions, setPermissions] = useState([]);
   const [loadingPermissions, setLoadingPermissions] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState({});
-  const [existingRoles, setExistingRoles] = useState([]);
   
   const {
     formMethods,
@@ -443,22 +435,16 @@ function RolePermissionsModal({ formProps, offices = [], allDepartments = [] }) 
   } = formProps;
   
   const {
-    register,
     handleSubmit,
-    control,
     watch,
     formState: { errors },
     getValues,
   } = formMethods;
 
-  const formValues = watch();
-
   // Fetch permissions and existing roles when modal opens
   useEffect(() => {
     if (isRoleFormOpen) {
       fetchPermissions();
-      fetchExistingRoles();
-      
       // If editing, set selected permissions
       if (editingRole && editingRole.permissions) {
         setSelectedPermissions(editingRole.permissions);
@@ -482,14 +468,6 @@ function RolePermissionsModal({ formProps, offices = [], allDepartments = [] }) 
     }
   };
 
-  const fetchExistingRoles = async () => {
-    try {
-      const roles = await roleService.getAllRoles();
-      setExistingRoles(roles);
-    } catch (error) {
-      console.error('Failed to load existing roles:', error);
-    }
-  };
 
   const handlePermissionChange = (permissionId, isSelected) => {
     setSelectedPermissions(prev => ({
@@ -531,20 +509,12 @@ function RolePermissionsModal({ formProps, offices = [], allDepartments = [] }) 
   };
 
   const steps = [
-    { number: 1, title: 'Basic Information' },
-    { number: 2, title: 'Assign Permissions' },
-    { number: 3, title: 'Review & Confirm' },
+    { number: 1, title: 'Basic Information', icon: FileText },
+    { number: 2, title: 'Assign Permissions', icon: Wrench },
+    { number: 3, title: 'Review & Confirm' , icon: ShieldCheck },
   ];
 
-  if (loadingPermissions) {
-    return (
-      <ModalContainer isOpen={isRoleFormOpen} onClose={closeRoleForm}>
-        <div className="p-8 text-center">
-          <Loading isOpen={true} message="Loading permissions..." />
-        </div>
-      </ModalContainer>
-    );
-  }
+ 
 
   return (
     <ModalContainer
@@ -553,120 +523,102 @@ function RolePermissionsModal({ formProps, offices = [], allDepartments = [] }) 
       title={editingRole ? 'Edit Role' : 'Create Role'}
       className="max-w-4xl !p-0"
     >
-      {/* Header with progress steps */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
-        <h2 className="text-2xl font-bold mb-2">
-          {editingRole ? 'Edit Role' : 'Create New Role'}
-        </h2>
-        <p className="text-blue-200 mb-6">Manage role details and permission assignments</p>
-        
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between">
-          {steps.map((step, index) => (
-            <React.Fragment key={step.number}>
-              <div className="flex flex-col items-center">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                  currentStep >= step.number 
-                    ? 'bg-white text-blue-600 border-white' 
-                    : 'border-blue-300 text-blue-300'
-                } font-bold`}>
-                  {currentStep > step.number ? '✓' : step.number}
+      {/* Header */}
+          <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6">
+            <h2 className="text-2xl font-bold mb-2">
+              {editingRole ? 'Edit Role' : 'Create New Role'}
+            </h2>
+            <p className="text-blue-100">Manage role details and permission assignments</p>
+          </div>
+           {loadingPermissions ? (
+                <div className="text-center p-6">
+                  <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading permissions...</p>
+                  </div>) :
+            (<div className="flex-1 px-6 pt-6">
+              <FormStepper steps={steps} currentStep={currentStep} />
+              <form onSubmit={handleSubmit(currentStep === 3? handleFormSubmitWithPermissions : nextStep)} className="">
+                {/* Step Content */}
+                <div className="">
+                  {currentStep === 1 && (
+                    <BasicInfoStep 
+                      formMethods={formMethods}
+                      offices={offices}
+                      allDepartments={allDepartments}
+                      watch={watch}
+                    />
+                  )}
+                  
+                  {currentStep === 2 && (
+                    <PermissionsStep
+                      permissions={permissions}
+                      selectedPermissions={selectedPermissions}
+                      onPermissionChange={handlePermissionChange}
+                      onSelectAll={handleSelectAll}
+                      existingRoles={allRoles}
+                      onCopyFromRole={() => {}}
+                    />
+                  )}
+                  
+                  {currentStep === 3 && (
+                    <ReviewStep
+                      formValues={getValues()}
+                      selectedPermissions={selectedPermissions}
+                      permissions={permissions}
+                    />
+                  )}
                 </div>
-                <span className={`text-sm mt-2 ${
-                  currentStep >= step.number ? 'text-white' : 'text-blue-300'
-                }`}>
-                  {step.title}
-                </span>
-              </div>
-              {index < steps.length - 1 && (
-                <div className={`flex-1 h-1 mx-4 ${
-                  currentStep > step.number ? 'bg-white' : 'bg-blue-300'
-                }`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
 
-      <form onSubmit={handleSubmit(handleFormSubmitWithPermissions)} className="p-6">
-        {/* Step Content */}
-        <div className="min-h-96">
-          {currentStep === 1 && (
-            <BasicInfoStep 
-              formMethods={formMethods}
-              offices={offices}
-              allDepartments={allDepartments}
-              watch={watch}
-            />
-          )}
-          
-          {currentStep === 2 && (
-            <PermissionsStep
-              permissions={permissions}
-              selectedPermissions={selectedPermissions}
-              onPermissionChange={handlePermissionChange}
-              onSelectAll={handleSelectAll}
-              existingRoles={existingRoles}
-              onCopyFromRole={() => {}}
-            />
-          )}
-          
-          {currentStep === 3 && (
-            <ReviewStep
-              formValues={getValues()}
-              selectedPermissions={selectedPermissions}
-              permissions={permissions}
-            />
-          )}
-        </div>
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6 border-t border-gray-200">
-          <div>
-            {currentStep > 1 && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={prevStep}
-                disabled={isSubmitting}
-              >
-                <ChevronLeft size={16} className="mr-1" />
-                Back
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex space-x-3">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={closeRoleForm}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            
-            {currentStep < 3 ? (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={nextStep}
-              >
-                Next
-                <ChevronRight size={16} className="ml-1" />
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Saving...' : editingRole ? 'Update Role' : 'Create Role'}
-              </Button>
-            )}
-          </div>
-        </div>
-      </form>
+                {/* Navigation Buttons */}
+                <div className='sticky bottom-0 bg-white'>
+                  <div className="flex justify-between items-center py-4 mt-4 border-t border-gray-200">
+                    <div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={closeRoleForm}
+                        disabled={isSubmitting}
+                        className="rounded-full">
+                        Cancel
+                      </Button>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      {currentStep > 1 && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={prevStep}
+                          disabled={isSubmitting}
+                          className="flex items-center gap-2 rounded-full"
+                        >
+                          <ChevronLeft size={16}/>
+                          Back
+                        </Button>
+                      )}
+                      <Button
+                      type="submit"
+                      variant="primary"
+                      disabled={isSubmitting}
+                      className="!w-fit gap-2 rounded-full"
+                    >
+                      {currentStep === 3 ? (
+                        <>
+                          {isSubmitting ? 'Saving...' : editingRole ? 'Update Role' : 'Create Role'}
+                          <ShieldCheck size={16} />
+                        </>
+                      ) : (
+                        <>
+                          Next
+                          <ChevronRight size={16} />
+                        </>
+                      )}
+                    </Button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+          </div>)}
     </ModalContainer>
   );
 }
