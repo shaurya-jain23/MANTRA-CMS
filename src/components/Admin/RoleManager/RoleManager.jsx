@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Button,
-  Loading,
-  CollapsibleSection
-} from '../../index';
+import { Button, Loading, CollapsibleSection } from '../../index';
 import RolePermissionsModal from './RolePermissionsModal';
 import Checkbox from '../../CheckBox';
 import { useRoleForm } from '../../../hooks/useRoleForm';
@@ -12,8 +8,17 @@ import roleService from '../../../firebase/roles';
 import officeService from '../../../firebase/office';
 import departmentService from '../../../firebase/departments';
 import { toast } from 'react-hot-toast';
-import { ChevronDown, ChevronRight, Copy, Eye, Trash2, Building, PlusCircle } from 'lucide-react';
-
+import {
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Eye,
+  Trash2,
+  Building,
+  PlusCircle,
+  PenSquareIcon,
+  Edit,
+} from 'lucide-react';
 
 function RoleManager() {
   const [roles, setRoles] = useState([]);
@@ -34,7 +39,14 @@ function RoleManager() {
     handleFormSubmit,
   } = useRoleForm();
 
-  const formProps = {formMethods, isRoleFormOpen, editingRole, isSubmitting, handleFormSubmit, closeRoleForm};
+  const formProps = {
+    formMethods,
+    isRoleFormOpen,
+    editingRole,
+    isSubmitting,
+    handleFormSubmit,
+    closeRoleForm,
+  };
 
   useEffect(() => {
     fetchData();
@@ -51,10 +63,9 @@ function RoleManager() {
       setRoles(rolesData);
       setOffices(officesData);
       setallDepartments(departmentsData);
-      const initialExpanded = officesData.reduce(
-        (acc, office) => ({ ...acc, [office.id]: true }),
-        { global: true }
-      );
+      const initialExpanded = officesData.reduce((acc, office) => ({ ...acc, [office.id]: true }), {
+        global: true,
+      });
       setExpanded(initialExpanded);
     } catch (error) {
       toast.error('Failed to fetch data.');
@@ -62,9 +73,9 @@ function RoleManager() {
       setLoading(false);
     }
   };
-  
+
   const onRoleSuccess = (role) => {
-    if (roles.some(r => r.id === role.id)) {
+    if (roles.some((r) => r.id === role.id)) {
       setRoles(roles.map((r) => (r.id === role.id ? role : r)));
     } else {
       setRoles((prev) => [role, ...prev]);
@@ -82,7 +93,6 @@ function RoleManager() {
         try {
           await roleService.deleteRole(role.id);
           setRoles(roles.filter((r) => r.id !== role.id));
-          toast.success('Role deleted successfully.');
         } catch (error) {
           toast.error('Failed to delete role.');
         }
@@ -102,7 +112,6 @@ function RoleManager() {
           await roleService.bulkDeleteRoles(selectedRoles);
           setRoles(roles.filter((r) => !selectedRoles.includes(r.id)));
           setSelectedRoles([]);
-          toast.success('Roles deleted successfully.');
         } catch (error) {
           toast.error('Failed to delete roles.');
         }
@@ -124,7 +133,6 @@ function RoleManager() {
         try {
           const newRole = await roleService.cloneRole(role, targetOffice.id, role.departmentId);
           setRoles([...roles, newRole]);
-          toast.success('Role cloned successfully.');
         } catch (error) {
           toast.error('Failed to clone role.');
         }
@@ -169,7 +177,9 @@ function RoleManager() {
             }
             const deptRoles = activeRoles.filter(
               (role) =>
-                  (!role.isGlobal && role.officeId === office.officeId && role.departmentId === dept.departmentId)
+                !role.isGlobal &&
+                role.officeId === office.officeId &&
+                role.departmentId === dept.departmentId
             );
             return { ...dept, roles: deptRoles };
           })
@@ -197,6 +207,11 @@ function RoleManager() {
         <div className="font-medium text-gray-800">{role.roleName}</div>
         <div className="text-xs text-gray-500">Level {role.level}</div>
       </td>
+      <td className="px-4 py-3">
+        <span className="bg-orange-100 text-orange-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+          {Object.keys(role.permissions).length} permissions
+        </span>
+      </td>
       <td className="px-4 py-3 text-center">
         <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
           {role.userCount} users
@@ -207,14 +222,25 @@ function RoleManager() {
           <Button
             size="small"
             variant="ghost"
-            onClick={() => openRoleForm(role, { onSuccess: handleRoleSuccess })}
+            className="text-blue-600 hover:text-blue-900"
+            onClick={() => openRoleForm(role, { onSuccess: onRoleSuccess })}
           >
-            <Eye size={16} />
+            <Edit size={16} />
           </Button>
-          <Button size="small" variant="ghost" onClick={() => handleClone(role)}>
+          <Button
+            size="small"
+            variant="ghost"
+            className="text-gray-600 hover:text-gray-900"
+            onClick={() => handleClone(role)}
+          >
             <Copy size={16} />
           </Button>
-          <Button size="small" variant="ghost" onClick={() => handleDelete(role)}>
+          <Button
+            size="small"
+            variant="ghost"
+            className="text-red-600 hover:text-red-900"
+            onClick={() => handleDelete(role)}
+          >
             <Trash2 size={16} />
           </Button>
         </div>
@@ -247,14 +273,16 @@ function RoleManager() {
                 <Checkbox
                   id={`select-all-${parentId}-${dept.id}`}
                   checked={
-                    dept.roles.length > 0 &&
-                    dept.roles.every((r) => selectedRoles.includes(r.id))
+                    dept.roles.length > 0 && dept.roles.every((r) => selectedRoles.includes(r.id))
                   }
                   onChange={() => handleSelectAll(dept.roles.map((r) => r.id))}
                 />
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Role
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Permissions Assigned
               </th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Users
@@ -289,14 +317,18 @@ function RoleManager() {
         </div>
         <div className="mt-6 flex gap-2 justify-end">
           {selectedRoles.length > 0 && (
-            <Button variant="ghost" className='border border-red-500 text-red-500 rounded-3xl' onClick={handleBulkDelete}>
+            <Button
+              variant="ghost"
+              className="border border-red-500 text-red-500 rounded-3xl"
+              onClick={handleBulkDelete}
+            >
               <Trash2 size={20} className="mr-2" />
               Delete Selected ({selectedRoles.length})
             </Button>
           )}
           <Button
             variant="primary"
-            className='!rounded-3xl !w-fit'
+            className="!rounded-3xl !w-fit"
             onClick={() => openRoleForm(null, { onSuccess: onRoleSuccess })}
           >
             <PlusCircle size={20} className="mr-2" />
@@ -312,30 +344,32 @@ function RoleManager() {
         onToggle={() => toggleExpansion('global')}
         titleClassName="space-x-3"
         badge={'🌐'}
-        disabled={false}>
-        {(structuredRoles.globalRoles.length > 0 ? (
-            structuredRoles.globalRoles.map((dept) => renderDepartmentSection(dept, 'global'))
-          ) : (
-            <p className="text-center py-4 text-gray-500">No global roles found.</p>
-          ))}
+        disabled={false}
+      >
+        {structuredRoles.globalRoles.length > 0 ? (
+          structuredRoles.globalRoles.map((dept) => renderDepartmentSection(dept, 'global'))
+        ) : (
+          <p className="text-center py-4 text-gray-500">No global roles found.</p>
+        )}
       </CollapsibleSection>
 
       {/* Office-specific Roles */}
-      
+
       {structuredRoles.officeRoles.map((office) => (
         <CollapsibleSection
-        id={office.id}
-        title={`${office.officeName} (${office.departments.reduce((acc, d) => acc + d.roles.length, 0)} roles)`}
-        isOpen={expanded[office.id]}
-        onToggle={() => toggleExpansion(office.id)}
-        contentClassName="p-0"
-        badge={<Building size={20} className="inline-block text-gray-600" />}
-        disabled={false}>
-          {(office.departments.length > 0 ? (
-              office.departments.map((dept) => renderDepartmentSection(dept, office.id))
-            ) : (
-              <p className="text-center py-4 text-gray-500">No roles in this office.</p>
-            ))}
+          id={office.id}
+          title={`${office.officeName} (${office.departments.reduce((acc, d) => acc + d.roles.length, 0)} roles)`}
+          isOpen={expanded[office.id]}
+          onToggle={() => toggleExpansion(office.id)}
+          contentClassName="p-0"
+          badge={<Building size={20} className="inline-block text-gray-600" />}
+          disabled={false}
+        >
+          {office.departments.length > 0 ? (
+            office.departments.map((dept) => renderDepartmentSection(dept, office.id))
+          ) : (
+            <p className="text-center py-4 text-gray-500">No roles in this office.</p>
+          )}
         </CollapsibleSection>
       ))}
 
@@ -344,6 +378,7 @@ function RoleManager() {
         formProps={formProps}
         offices={offices}
         allDepartments={allDepartments}
+        allRoles={roles}
       />
     </div>
   );
