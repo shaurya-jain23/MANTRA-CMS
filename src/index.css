@@ -1,12 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-display: "Urbanist", sans-serif;
-  --shadow-3xl: 0 4px 15px rgba(0, 0, 0, 0.2); 
+  --font-display: 'Urbanist', sans-serif;
+  --shadow-3xl: 0 4px 15px rgba(0, 0, 0, 0.2);
   --breakpoint-xs: 400px;
   --breakpoint-3xl: 1920px;
-  --color-primary: #ff9324
+  --color-primary: #ff9324;
 }
 
 @layer base {
@@ -18,13 +18,12 @@
   bpdy {
     background-color: #fcfbfc;
   }
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button {
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
 }
-
 
 .toast-custom-style {
   background: #ffffff;
@@ -34,7 +33,7 @@
   min-width: 200px;
   padding: 10px 15px;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -70,7 +69,6 @@
 .animate-leave {
   animation: leave 0.3s ease-in-out forwards;
 }
-
 
 .collapsible-content {
   max-height: 0;
