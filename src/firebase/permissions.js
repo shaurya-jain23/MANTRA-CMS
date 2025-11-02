@@ -71,6 +71,10 @@ class PermissionService {
   async deletePermission(permissionId) {
     try {
       const permissionDocRef = doc(db, 'permissions', permissionId);
+      const docSnap = await getDocs(permissionDocRef);
+      if(docSnap.data().isSystemPermission) {
+        throw new Error('System permissions cannot be deleted.');
+      }
       await deleteDoc(permissionDocRef);
       toast.success('Permission deleted successfully');
     } catch (error) {
@@ -86,34 +90,34 @@ class PermissionService {
     const permissionsCollectionRef = collection(db, 'permissions');
     const defaultPermissions = [
         // Proforma Invoices
-        { id: 'pi_create', name: 'Create PIs', resource: 'proforma_invoices', action: 'create', category: 'sales', risk: 'medium' },
-        { id: 'pi_read', name: 'Read PIs', resource: 'proforma_invoices', action: 'read', category: 'sales', risk: 'low' },
-        { id: 'pi_update', name: 'Update PIs', resource: 'proforma_invoices', action: 'update', category: 'sales', risk: 'medium' },
-        { id: 'pi_delete', name: 'Delete PIs', resource: 'proforma_invoices', action: 'delete', category: 'sales', risk: 'high' },
-        { id: 'pi_approve_level_1', name: 'Approve PIs Level 1', resource: 'proforma_invoices', action: 'approve', category: 'sales', risk: 'high' },
-        { id: 'pi_approve_level_2', name: 'Approve PIs Level 2', resource: 'proforma_invoices', action: 'approve', category: 'sales', risk: 'high' },
-        { id: 'pi_approve_level_3', name: 'Approve PIs Level 3', resource: 'proforma_invoices', action: 'approve', category: 'sales', risk: 'high' },
-        { id: 'pi_export', name: 'Export PI Data', resource: 'proforma_invoices', action: 'export', category: 'sales', risk: 'medium' },
+        { id: 'pi_create', permissionName: 'Create PIs', resource: 'proforma_invoices', action: 'create', category: 'sales' },
+        { id: 'pi_read', permissionName: 'Read PIs', resource: 'proforma_invoices', action: 'read', category: 'sales' },
+        { id: 'pi_update', permissionName: 'Update PIs', resource: 'proforma_invoices', action: 'update', category: 'sales' },
+        { id: 'pi_delete', permissionName: 'Delete PIs', resource: 'proforma_invoices', action: 'delete', category: 'sales' },
+        { id: 'pi_approve_level_1', permissionName: 'Approve PIs Level 1', resource: 'proforma_invoices', action: 'approve', category: 'sales' },
+        { id: 'pi_approve_level_2', permissionName: 'Approve PIs Level 2', resource: 'proforma_invoices', action: 'approve', category: 'sales' },
+        { id: 'pi_approve_level_3', permissionName: 'Approve PIs Level 3', resource: 'proforma_invoices', action: 'approve', category: 'sales' },
+        { id: 'pi_export', permissionName: 'Export PI Data', resource: 'proforma_invoices', action: 'export', category: 'sales' },
         
         // Bookings
-        { id: 'booking_create', name: 'Create Bookings', resource: 'bookings', action: 'create', category: 'operations', risk: 'medium' },
-        { id: 'booking_read', name: 'Read Bookings', resource: 'bookings', action: 'read', category: 'operations', risk: 'low' },
-        { id: 'booking_update', name: 'Update Bookings', resource: 'bookings', action: 'update', category: 'operations', risk: 'medium' },
-        { id: 'booking_delete', name: 'Delete Bookings', resource: 'bookings', action: 'delete', category: 'operations', risk: 'high' },
-        { id: 'booking_approve', name: 'Approve Bookings', resource: 'bookings', action: 'approve', category: 'operations', risk: 'high' },
+        { id: 'booking_create', permissionName: 'Create Bookings', resource: 'bookings', action: 'create', category: 'operations' },
+        { id: 'booking_read', permissionName: 'Read Bookings', resource: 'bookings', action: 'read', category: 'operations' },
+        { id: 'booking_update', permissionName: 'Update Bookings', resource: 'bookings', action: 'update', category: 'operations' },
+        { id: 'booking_delete', permissionName: 'Delete Bookings', resource: 'bookings', action: 'delete', category: 'operations' },
+        { id: 'booking_approve', permissionName: 'Approve Bookings', resource: 'bookings', action: 'approve', category: 'operations' },
         
         // Users
-        { id: 'user_read', name: 'Read Users', resource: 'users', action: 'read', category: 'hr', risk: 'low' },
-        { id: 'user_create', name: 'Create Users', resource: 'users', action: 'create', category: 'hr', risk: 'high' },
-        { id: 'user_update', name: 'Update Users', resource: 'users', action: 'update', category: 'hr', risk: 'medium' },
-        { id: 'user_delete', name: 'Delete Users', resource: 'users', action: 'delete', category: 'hr', risk: 'critical' },
-        { id: 'user_approve', name: 'Approve Users', resource: 'users', action: 'approve', category: 'hr', risk: 'high' },
+        { id: 'user_read', permissionName: 'Read Users', resource: 'users', action: 'read', category: 'hr' },
+        { id: 'user_create', permissionName: 'Create Users', resource: 'users', action: 'create', category: 'hr' },
+        { id: 'user_update', permissionName: 'Update Users', resource: 'users', action: 'update', category: 'hr' },
+        { id: 'user_delete', permissionName: 'Delete Users', resource: 'users', action: 'delete', category: 'hr' },
+        { id: 'user_approve', permissionName: 'Approve Users', resource: 'users', action: 'approve', category: 'hr' },
         
         // System Administration
-        { id: 'department_manage', name: 'Manage Departments', resource: 'departments', action: 'manage', category: 'system', risk: 'critical', isSystem: true },
-        { id: 'role_manage', name: 'Manage Roles', resource: 'roles', action: 'manage', category: 'system', risk: 'critical', isSystem: true },
-        { id: 'permission_manage', name: 'Manage Permissions', resource: 'permissions', action: 'manage', category: 'system', risk: 'critical', isSystem: true },
-        { id: 'hierarchy_manage', name: 'Manage Hierarchies', resource: 'hierarchies', action: 'manage', category: 'system', risk: 'critical', isSystem: true },
+        { id: 'department_manage', permissionName: 'Manage Departments', resource: 'departments', action: 'manage', category: 'system', isSystemPermission: true },
+        { id: 'role_manage', permissionName: 'Manage Roles', resource: 'roles', action: 'manage', category: 'system', isSystemPermission: true },
+        { id: 'permission_manage', permissionName: 'Manage Permissions', resource: 'permissions', action: 'manage', category: 'system', isSystemPermission: true },
+        { id: 'hierarchy_manage', permissionName: 'Manage Hierarchies', resource: 'hierarchies', action: 'manage', category: 'system', isSystemPermission: true },
       ];
 
     try {
