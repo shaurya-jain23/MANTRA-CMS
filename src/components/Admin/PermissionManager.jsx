@@ -94,12 +94,16 @@ const CategoryPermissions = ({ categoryId, permissions, handleOpenForm, handleDe
                         <div className="flex items-center justify-end gap-4">
                           <button
                             onClick={() => handleOpenForm(perm)}
+                            variant='ghost'
+                            size='small'
                             className="text-blue-600 hover:text-blue-900"
                           >
                             <Edit size={18} />
                           </button>
                           <button
                             onClick={() => handleDelete(perm)}
+                            variant='ghost'
+                            size='small'
                             className="text-red-600 hover:text-red-900"
                           >
                             <Trash2 size={18} />

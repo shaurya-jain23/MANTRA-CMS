@@ -257,7 +257,7 @@ function DepartmentManager() {
                 defaultValue="Select an office"
                 {...field}
                 options={[
-                  { value: '', name: 'Global (All Offices)' },
+                  { value: 'all', name: 'Global (All Offices)' },
                   ...offices.map(office => ({
                     value: office.officeId,
                     name: office.officeName
