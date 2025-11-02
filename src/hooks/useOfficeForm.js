@@ -11,7 +11,7 @@ export const useOfficeForm = () => {
   const [modalConfig, setModalConfig] = useState({});
 
   const formMethods = useForm({
-    defaultValues: editingOffice || {status: 'active'},
+    defaultValues: editingOffice || { status: 'active' },
   });
   const { reset } = formMethods;
 
@@ -45,7 +45,7 @@ export const useOfficeForm = () => {
     reset();
   }, [reset]);
 
- const handleOfficeSuccess = useCallback(
+  const handleOfficeSuccess = useCallback(
     (data) => {
       if (modalConfig.onSuccess) {
         modalConfig.onSuccess(data);
@@ -58,7 +58,9 @@ export const useOfficeForm = () => {
   // Enhanced error handling
   const handleFormSubmit = async (data) => {
     setIsSubmitting(true);
-    const toastId = toast.loading(editingOffice ? 'Updating office...' : 'Registering new office...');
+    const toastId = toast.loading(
+      editingOffice ? 'Updating office...' : 'Registering new office...'
+    );
     try {
       if (editingOffice) {
         await officeService.updateOffice(editingOffice.id, data);

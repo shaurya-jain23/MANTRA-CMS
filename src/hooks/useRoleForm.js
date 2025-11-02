@@ -23,6 +23,7 @@ export const useRoleForm = () => {
           roleId: '',
           roleName: '',
           departmentId: '',
+          permissions: [],
           officeId: '',
           isGlobal: false,
           status: 'active',
@@ -61,11 +62,9 @@ export const useRoleForm = () => {
     try {
       if (editingRole) {
         await roleService.updateRole(editingRole.id, data);
-        toast.success('Role updated successfully!');
         handleRoleSuccess({ ...editingRole, ...data });
       } else {
         const newRole = await roleService.createRole(data);
-        toast.success('Role created successfully!');
         handleRoleSuccess(newRole);
       }
     } catch (error) {

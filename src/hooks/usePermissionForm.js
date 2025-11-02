@@ -27,7 +27,6 @@ export const usePermissionForm = () => {
           resource: '',
           action: '',
           category: '',
-          riskLevel: 'low',
           isSystemPermission: false,
         });
       }
