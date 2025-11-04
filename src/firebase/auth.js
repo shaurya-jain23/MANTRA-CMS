@@ -34,26 +34,37 @@ export class AuthService{
         this.auth = getAuth(app);
     }
 
-    async getUserProfile(uid) {
-        if (!checkNetworkConnection()) {
-            throw new Error('Please check your internet connection.');
-        }
-        try {
-            const userRef = doc(db, "users", uid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-                const userProfileData = convertTimestamps(userSnap.data());
-                return userProfileData;
-            }
-            return null;
-        } catch (error) {
-            console.error('Error fetching user profile:', error);
-            const errorInfo = getErrorMessage(error);
-            toast.error(`Failed to fetch user info`)
-            toast.error(errorInfo.message)
-            throw new Error(errorInfo.message);
-        }
+  async getUserProfile(uid) {
+    if (!checkNetworkConnection()) {
+      throw new Error('Please check your internet connection.');
     }
+    try {
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userProfileData = userSnap.data();
+        // If user has a role, fetch role permissions
+        if (userProfileData.role) {
+            const roleRef = doc(db, "roles", userProfileData.role);
+            const roleSnap = await getDoc(roleRef);
+            if (roleSnap.exists()) {
+                const roleData = roleSnap.data();
+                userProfileData.permissions = roleData.permissions || {};
+                userProfileData.roleLevel = roleData.level || 1;
+                userProfileData.roleName = roleData.roleName;
+            }
+        }
+        return convertTimestamps(userProfileData);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      const errorInfo = getErrorMessage(error);
+      toast.error(`Failed to fetch user info`);
+      toast.error(errorInfo.message);
+      throw new Error(errorInfo.message);
+    }
+  }
     async createAccount(userData){
         if (!checkNetworkConnection()) {
             toast.error('Please check your internet connection.');
