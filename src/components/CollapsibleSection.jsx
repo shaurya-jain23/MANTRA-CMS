@@ -51,7 +51,7 @@ const CollapsibleSection = ({
         onClick={handleClick}
         role="button"
         tabIndex={0}
-        onKeyPress={(e) => e.key === 'Enter' && handleClick()}
+        keydown={(e) => e.key === 'Enter' && handleClick()}
         aria-expanded={isOpen}
       >
         <h2 className={`text-lg font-semibold text-slate-900 flex items-center gap-2 ${titleClassName}`}>
