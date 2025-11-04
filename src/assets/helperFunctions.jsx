@@ -353,7 +353,7 @@ export const updateApprovalChain = (chain, role, action, comments = '') => {
     return step;
   });
 };
-/*
+
 export const getStatusFromApprovalChain = (approvalChain) => {
   if (!approvalChain || approvalChain.length === 0) {
     return PI_STATUS.APPROVED_BY_ADMIN;
@@ -385,4 +385,3 @@ export const getStatusFromApprovalChain = (approvalChain) => {
   // All steps are approved
   return PI_STATUS.APPROVED_BY_ADMIN;
 };
-*/
