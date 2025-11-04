@@ -9,7 +9,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updatePassword,
-  EmailAuthProvider, 
+  EmailAuthProvider,
   reauthenticateWithCredential,
   reauthenticateWithPopup
 } from "firebase/auth";
@@ -176,8 +176,25 @@ export class AuthService{
             toast.error(`Failed to logout`)
             toast.error(errorInfo.message);
             console.log("Firebase service :: logout :: error", error);
-        }
     }
+  }
+
+  async refreshToken(forceRefresh = false) {
+    try {
+      const currentUser = this.auth.currentUser;
+      if(!currentUser) return null;
+      // Get fresh ID token (this will include latest custom claims)
+      const idToken = await getIdToken(currentUser, forceRefresh);
+      // Reload user to get latest auth state
+      await reload(currentUser);
+      return idToken;
+    } catch (error) {
+      const errorInfo = getErrorMessage(error);
+      toast.error(`Failed to refresh token`);
+      toast.error(errorInfo.message);
+      throw new Error(errorInfo.message);
+    }
+  }
     async changePassword(currentPassword, newPassword) {
         const toastId = toast.loading('Changing the password...');
         try {
