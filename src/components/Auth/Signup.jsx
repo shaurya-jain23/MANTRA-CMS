@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import {getDefaultRouteForRole} from '../../assets/helperFunctions'
 import {ArrowRight, FileText, Lock, Mail, Phone, UserRound} from 'lucide-react'
 // Imports for our services, components, and state management
@@ -17,7 +17,7 @@ const Signup = () => {
   const location = useLocation();
   const [offices, setOffices] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm();
+  const { register, handleSubmit, watch, control, formState: { errors, isSubmitting } } = useForm();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -36,10 +36,10 @@ const Signup = () => {
 
   useEffect(()=> {
         const subscription = watch((value, {name})=> {
-            if(name === 'office_id'){
+            if(name === 'officeId'){
               const fetchDepartments = async () => {
                 try {
-                  const departmentsForOffice = await departmentService.getDepartmentsByOffice(value.office_id);
+                  const departmentsForOffice = await departmentService.getDepartmentsByOffice(value.officeId);
                   setDepartments(departmentsForOffice);
                 } catch (error) {
                   console.error('Error fetching departments:', error);
@@ -75,7 +75,6 @@ const Signup = () => {
     }
   };
 
-
   return (
       <div className="w-19/20 max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         {/* Header */}
@@ -98,6 +97,7 @@ const Signup = () => {
             label="Full Name"
             type="text"
             icon={UserRound}
+            required
             placeholder="Enter your full name"
             {...register('fullname', { required: 'Full Name is required' })}
             error={errors.fullname?.message} 
@@ -106,6 +106,7 @@ const Signup = () => {
             label="Phone Number"
             type="tel"
             icon={Phone}
+            required
             placeholder="Enter your phone number"
             {...register('phone',  { required: 'Phone Number is required', pattern: {
             value: /^[0-9]{10}$/,
@@ -117,6 +118,7 @@ const Signup = () => {
             label="Email"
             type="email"
             icon={Mail}
+            required
             placeholder="Enter your email"
             {...register('email', { 
               required: 'Email is required',
@@ -132,6 +134,7 @@ const Signup = () => {
             label="Password"
             type="password"
             icon={Lock}
+            required
             placeholder="Enter your password"
             {...register('password', { 
               required: 'Password is required',
@@ -142,34 +145,50 @@ const Signup = () => {
             })}
             error={errors.password?.message} 
           />
-          <Select
-            label="Working Office"
-            placeholder="Choose your office location"
-            defaultValue="Choose your office location"
-            value={formData.office_id}
-            {...register('office_id', {
+          <Controller
+            name="officeId"
+            control={control}
+            rules={{
               required: 'Please select your office location',
-              validate: value => value !== 'Choose your office location' || 'Please select your office location'
-            })}
-            options={offices.map(office => ({
-              value: office.officeId,
-              name: office.officeName
-            }))}
-            error={errors.office_id?.message} 
+              validate: (value) => value !== 'Choose your office location' || 'Please select your office location',
+            }}
+            render={({ field }) => (
+              <Select
+                label="Working Office"
+                placeholder="Choose your office location"
+                {...field}
+                required
+                defaultValue="Choose your office location"
+                options={offices.map(office => ({
+                  value: office.officeId,
+                  name: office.officeName
+                }))}
+                error={errors.officeId?.message} 
+              />
+            )}
           />
-          <Select
-            label="Department"
-            options={departments.map(dept => ({
-              value: dept.departmentId,
-              name: dept.departmentName
-            }))}
-            disabled={departments.length === 0}
-            {...register('department', {
+          <Controller
+            name="department"
+            control={control}
+            rules={{
               required: 'Please select your department',
               validate: value => value !== 'Select your department' || 'Please select your department'
-            })}
-            defaultValue="Select your department"
-            placeholder="Select your department"
+            }}
+            render={({ field }) => (
+              <Select
+                label="Department"
+                defaultValue="Select your department"
+                placeholder="Select your department"
+                {...field}
+                required
+                options={departments.map(dept => ({
+                  value: dept.departmentId,
+                  name: dept.departmentName
+                }))}
+                disabled={departments.length === 0}
+                error={errors.departments?.message} 
+              />
+            )}
           />
         
           <Button type="submit" variant='primary' className="!mt-6 group text-md" disabled={loading || isSubmitting}>
