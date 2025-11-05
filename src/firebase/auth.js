@@ -54,10 +54,18 @@ export class AuthService {
             const roleSnap = await getDoc(roleRef);
             if (roleSnap.exists()) {
                 const roleData = roleSnap.data();
+                // Store full permissions map from role
                 userProfileData.permissions = roleData.permissions || {};
                 userProfileData.roleLevel = roleData.level || 1;
                 userProfileData.roleName = roleData.roleName;
+                userProfileData.isGlobal = roleData.isGlobal || false;
             }
+        } else {
+            // No role assigned yet
+            userProfileData.permissions = {};
+            userProfileData.roleLevel = 0;
+            userProfileData.roleName = null;
+            userProfileData.isGlobal = false;
         }
         return convertTimestamps(userProfileData);
       }
@@ -90,7 +98,7 @@ export class AuthService {
           email: user.email,
           displayName: userData.fullname,
           phone: userData.phone,
-          office_id: userData.office_id,
+          officeId: userData.officeId,
           department: userData.department,
           role: '',
           username: generateUsername(userData.fullname),
@@ -122,14 +130,18 @@ export class AuthService {
       const user = userCredential.user;
       if (user) {
         const profile = await this.getUserProfile(userCredential.user.uid);
+        
+        // Get fresh custom claims by forcing token refresh
+        const tokenResult = await this.refreshToken(true);
+        
         const userData = {
           email: user.email,
           uid: user.uid,
           displayName: user.displayName,
           ...profile,
+          customClaims: tokenResult?.customClaims || null,
         };
 
-        await this.refreshToken();
         toast.success(`Login successful`);
         return userData; // Combine auth data with profile data
       }
@@ -170,13 +182,17 @@ export class AuthService {
           toast.success(`Please complete your profile`);
           return profile;
         }
-        //Profile is complete
-        await this.refreshToken();
+        //Profile is complete - get fresh custom claims
+        const tokenResult = await this.refreshToken(true);
         toast.success(`Logged in with Google Auth successfully`);
-        return profile;
+        return {
+          ...profile,
+          customClaims: tokenResult?.customClaims || null,
+        };
       }
 
     } catch (error) {
+      console.error('Google authentication error:', error);
       const errorInfo = getErrorMessage(error);
       toast.error(`Google authentication failed`);
       toast.error(errorInfo.message);
@@ -195,12 +211,14 @@ export class AuthService {
           const profile = await this.getUserProfile(user.uid);
           if(!profile) return resolve(null);
 
-          await this.refreshToken();
+          // Force refresh to get latest custom claims (important for cached sessions)
+          const tokenResult = await this.refreshToken(true);
           const userData = {
             email: user.email,
             uid: user.uid,
             displayName: user.displayName,
             ...profile,
+            customClaims: tokenResult?.customClaims || null,
           };
           resolve(userData || null);
         } catch (error) {
@@ -226,17 +244,84 @@ export class AuthService {
   async refreshToken(forceRefresh = false) {
     try {
       const currentUser = this.auth.currentUser;
-      if(!currentUser) return null;
+      if(!currentUser) {
+        console.warn('No current user to refresh token');
+        return null;
+      }
       // Get fresh ID token (this will include latest custom claims)
       const idToken = await getIdToken(currentUser, forceRefresh);
       // Reload user to get latest auth state
       await reload(currentUser);
-      return idToken;
+      
+      // Get the token result to access custom claims
+      const tokenResult = await currentUser.getIdTokenResult(forceRefresh);
+      const customClaims = tokenResult.claims;
+      
+      console.log('Token refreshed with custom claims:', customClaims);
+      
+      return {
+        idToken,
+        customClaims
+      };
     } catch (error) {
       const errorInfo = getErrorMessage(error);
-      toast.error(`Failed to refresh token`);
-      toast.error(errorInfo.message);
+      console.error('Failed to refresh token:', errorInfo.message);
+      // Don't show toast error for token refresh failures in the background
       throw new Error(errorInfo.message);
+    }
+  }
+
+  async getCustomClaims() {
+    try {
+      const currentUser = this.auth.currentUser;
+      if (!currentUser) return null;
+      
+      const tokenResult = await currentUser.getIdTokenResult();
+      return tokenResult.claims;
+    } catch (error) {
+      console.error('Error getting custom claims:', error);
+      return null;
+    }
+  }
+
+  async refreshPermissions(uid) {
+    try {
+      if (!uid) {
+        const currentUser = this.auth.currentUser;
+        if (!currentUser) return null;
+        uid = currentUser.uid;
+      }
+      
+      const userRef = doc(db, 'users', uid);
+      const userSnap = await getDoc(userRef);
+      
+      if (!userSnap.exists()) return null;
+      
+      const userData = userSnap.data();
+      
+      if (!userData.role) {
+        return { permissions: {}, roleLevel: 0 };
+      }
+      
+      const roleRef = doc(db, 'roles', userData.role);
+      const roleSnap = await getDoc(roleRef);
+      
+      if (!roleSnap.exists()) {
+        console.error(`Role ${userData.role} not found`);
+        return { permissions: {}, roleLevel: 0 };
+      }
+      
+      const roleData = roleSnap.data();
+      
+      return {
+        permissions: roleData.permissions || {},
+        roleLevel: roleData.level || 1,
+        roleName: roleData.roleName,
+        isGlobal: roleData.isGlobal || false
+      };
+    } catch (error) {
+      console.error('Error refreshing permissions:', error);
+      return null;
     }
   }
   async changePassword(currentPassword, newPassword) {
@@ -287,8 +372,6 @@ export class AuthService {
       toast.dismiss(toastId);
     }
   }
-
-  // Add this method to the AuthService class in auth.js
 
   async deleteUserAccount(userId) {
     const toastId = toast.loading('Deleting user account...');
