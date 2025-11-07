@@ -23,6 +23,7 @@ function UserManagementModal({
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -46,34 +47,41 @@ function UserManagementModal({
     }
   }, [isOpen, user, reset]);
 
-  // Filter departments based on selected office
+  // Filter departments based on selected office and reset department/role when office changes
   useEffect(() => {
     if (selectedOffice && departments) {
       const depts = departments.filter(dept => dept.officeId === selectedOffice);
       setFilteredDepartments(depts);
+      
+      // Reset department and role when office changes (but not on initial load)
+      if (user?.officeId && selectedOffice !== user.officeId) {
+        setValue('department', '');
+        setValue('role', '');
+      }
     } else {
       setFilteredDepartments([]);
     }
-  }, [selectedOffice, departments]);
+  }, [selectedOffice, departments, setValue, user?.officeId]);
 
-  // Filter roles based on selected department
+  // Filter roles based on selected department and reset role when department changes
   useEffect(() => {
     if (selectedDepartment && roles) {
       const applicableRoles = roles.filter(role => {
-        // Global roles are available to everyone
         if (role.isGlobal) return true;
-        
-        // Department-specific roles must match selected department
         if (role.departmentId === selectedDepartment) return true;
-        
         return false;
       });
       
       setFilteredRoles(applicableRoles);
+      
+      // Reset role when department changes (but not on initial load)
+      if (user?.department && selectedDepartment !== user.department) {
+        setValue('role', '');
+      }
     } else {
       setFilteredRoles([]);
     }
-  }, [selectedDepartment, roles]);
+  }, [selectedDepartment, roles, setValue, user?.department]);
 
   const onSubmit = async (data) => {
     const { officeId, department, role } = data;
@@ -155,19 +163,18 @@ function UserManagementModal({
             control={control}
             rules={{ 
               required: 'Office is required',
-              validate: value => value !== '' || 'Please select an office'
+              validate: value => value !== '-- Select Office --' || 'Please select an office'
             }}
             render={({ field }) => (
               <Select
-                label="Select Office *"
+                label="Select Office"
                 {...field}
-                options={[
-                  { value: '', name: '-- Select Office --' },
-                  ...offices.map(office => ({
+                placeholder="-- Select Office --"
+                defaultValue="-- Select Office --"
+                options={offices.map(office => ({
                     value: office.officeId,
                     name: office.officeName
-                  }))
-                ]}
+                  }))}
                 error={errors.officeId?.message}
                 required
               />
@@ -180,19 +187,18 @@ function UserManagementModal({
             control={control}
             rules={{ 
               required: 'Department is required',
-              validate: value => value !== '' || 'Please select a department'
+              validate: value => value !== '-- Select Department --' || 'Please select a department'
             }}
             render={({ field }) => (
               <Select
-                label="Select Department *"
+                label="Select Department"
                 {...field}
-                options={[
-                  { value: '', name: '-- Select Department --' },
-                  ...filteredDepartments.map(dept => ({
+                placeholder="-- Select Department --"
+                defaultValue="-- Select Department --"
+                options={filteredDepartments.map(dept => ({
                     value: dept.departmentId,
                     name: dept.departmentName
-                  }))
-                ]}
+                  }))}
                 error={errors.department?.message}
                 required
                 disabled={!selectedOffice}
@@ -215,19 +221,18 @@ function UserManagementModal({
             control={control}
             rules={{ 
               required: 'Role is required',
-              validate: value => value !== '' || 'Please select a role'
+              validate: value => value !== '-- Assign Role --' || 'Please select a role'
             }}
             render={({ field }) => (
               <Select
-                label="Assign Role *"
+                label="Assign Role"
                 {...field}
-                options={[
-                  { value: '', name: '-- Select Role --' },
-                  ...filteredRoles.map(role => ({
+                placeholder="-- Assign Role --"
+                defaultValue="-- Assign Role --"
+                options={filteredRoles.map(role => ({
                     value: role.roleId,
                     name: `${role.roleName}${role.isGlobal ? ' (Global)' : ''}`
-                  }))
-                ]}
+                  }))}
                 error={errors.role?.message}
                 required
                 disabled={!selectedDepartment}
