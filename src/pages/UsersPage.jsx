@@ -5,8 +5,7 @@ import officeService from '../firebase/office';
 import departmentService from '../firebase/departments';
 import roleService from '../firebase/roles';
 import { useModal } from '../contexts/ModalContext';
-import { Button, SearchBar, Select, Container, Loading } from '../components';
-import UserManagementModal from '../components/Admin/ApproveUserModal';
+import { Button, SearchBar, Select, Container, Loading, UserManagementModal } from '../components';
 import { ROLES, STATUSES } from '../assets/utils';
 import { AlertCircle, CheckCircle, FileText, XCircle } from 'lucide-react';
 

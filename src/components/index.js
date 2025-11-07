@@ -62,6 +62,7 @@ import DepartmentManager from './Admin/DepartmentManager';
 import RoleManager from './Admin/RoleManager/RoleManager';
 import OfficeManager from './Admin/OfficeManager';
 import PermissionManager from './Admin/PermissionManager';
+import UserManagementModal from './Admin/UserManagementModal';
 
 export {
   Header,
@@ -120,5 +121,6 @@ export {
   RoleManager,
   OfficeManager,
   PermissionManager,
-  FormStepper
+  FormStepper,
+  UserManagementModal
 };
