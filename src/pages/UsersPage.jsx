@@ -6,7 +6,7 @@ import departmentService from '../firebase/departments';
 import roleService from '../firebase/roles';
 import { useModal } from '../contexts/ModalContext';
 import { Button, SearchBar, Select, Container, Loading } from '../components';
-import ApproveUserModal from '../components/Admin/ApproveUserModal';
+import UserManagementModal from '../components/Admin/ApproveUserModal';
 import { ROLES, STATUSES } from '../assets/utils';
 import { AlertCircle, CheckCircle, FileText, XCircle } from 'lucide-react';
 
@@ -28,8 +28,9 @@ function UsersPage() {
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
-  const [showApproveModal, setShowApproveModal] = useState(false);
-  const [userToApprove, setUserToApprove] = useState(null);
+  const [showManagementModal, setShowManagementModal] = useState(false);
+  const [userToManage, setUserToManage] = useState(null);
+  const [isApprovalMode, setIsApprovalMode] = useState(false);
 
   const { showModal } = useModal();
 
@@ -131,28 +132,55 @@ function UsersPage() {
     setFilteredUsers(filtered);
   };
 
-  const handleFieldChange = async (userId, field, value) => {
+  // Open modal for editing user details
+  const handleEditUser = (user) => {
+    setUserToManage(user);
+    setIsApprovalMode(false);
+    setShowManagementModal(true);
+  };
+
+  // Open modal for approving pending user
+  const handleApproveUser = (user) => {
+    setUserToManage(user);
+    setIsApprovalMode(true);
+    setShowManagementModal(true);
+  };
+
+  // Handle confirmation from modal (both approve and edit)
+  const handleConfirmManagement = async (roleId, officeId, departmentId) => {
+    if (!userToManage || !roleId || !officeId || !departmentId) return;
+    
     try {
-      const updates = { [field]: value };
-      
-      // If changing office, reset department and role
-      if (field === 'officeId') {
-        updates.department = '';
-        updates.role = '';
+      const updates = { 
+        officeId: officeId,
+        department: departmentId,
+        role: roleId
+      };
+
+      // If approving a pending user, also set status to active
+      if (isApprovalMode) {
+        updates.status = 'active';
       }
+
+      await userService.updateUser(userToManage.id, updates);
       
-      // If changing department, reset role
-      if (field === 'department') {
-        updates.role = '';
-      }
-      
-      await userService.updateUser(userId, updates);
-      setUsers(users.map((user) => (user.id === userId ? { ...user, ...updates } : user)));
-    } catch (err) {
-      setError('Failed to update user. Please try again.');
-      // Revert the local state change on error
+      // Close modal and refresh data
+      setShowManagementModal(false);
+      setUserToManage(null);
+      setIsApprovalMode(false);
       await fetchData();
+      
+      // Success message handled by userService
+    } catch (err) {
+      setError(`Failed to ${isApprovalMode ? 'approve' : 'update'} user.`);
+      console.error(err);
     }
+  };
+
+  const handleCancelManagement = () => {
+    setShowManagementModal(false);
+    setUserToManage(null);
+    setIsApprovalMode(false);
   };
 
   const handleDeleteUser = async (user) => {
@@ -173,57 +201,6 @@ function UsersPage() {
     });
   };
 
-  const handleApproveUser = async (user) => {
-    // Open the approve modal with role selection
-    setUserToApprove(user);
-    setShowApproveModal(true);
-  };
-
-  const handleConfirmApprove = async (roleId, officeId, departmentId) => {
-    if (!userToApprove || !roleId || !officeId || !departmentId) return;
-    
-    try {
-      // Update user status to active, assign office, department, and role
-      await userService.updateUser(userToApprove.id, { 
-        status: 'active',
-        officeId: officeId,
-        department: departmentId,
-        role: roleId
-      });
-      
-      // Close modal and refresh data
-      setShowApproveModal(false);
-      setUserToApprove(null);
-      await fetchData();
-      
-      // Success message handled by userService
-    } catch (err) {
-      setError('Failed to approve user.');
-      console.error(err);
-    }
-  };
-
-  const handleCancelApprove = () => {
-    setShowApproveModal(false);
-    setUserToApprove(null);
-  };
-
-  // Get departments filtered by user's office
-  const getDepartmentsForUser = (officeId) => {
-    if (!officeId) return allDepartments;
-    return allDepartments.filter(dept => dept.officeId === officeId);
-  };
-
-  // Get roles filtered by user's department and office
-  const getRolesForUser = (departmentId, officeId) => {
-    if (!departmentId) return allRoles;
-    return allRoles.filter(role => {
-      if (role.isGlobal) return true; // Global roles available everywhere
-      if (role.departmentId === departmentId) return true;
-      return false;
-    });
-  };
-
   const handleDisableUser = async (user) => {
     const action = user.status === 'disabled' ? 'enable' : 'disable';
 
@@ -241,13 +218,23 @@ function UsersPage() {
         try {
           const newStatus = action === 'enable' ? 'active' : 'disabled';
           await userService.updateUser(user.id, { status: newStatus });
-          await fetchUsers();
+          await fetchData();
         } catch (err) {
           setError(`Failed to ${action} user.`);
           console.error(err);
         }
       },
     });
+  };
+
+  const handleStatusChange = async (userId, newStatus) => {
+    try {
+      await userService.updateUser(userId, { status: newStatus });
+      await fetchData();
+    } catch (err) {
+      setError('Failed to update user status.');
+      console.error(err);
+    }
   };
 
   const handleResetPassword = async (user) => {
@@ -439,52 +426,24 @@ function UsersPage() {
                             <div className="text-sm text-gray-500">{user.phone || 'No phone'}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Select
-                              value={user.officeId}
-                              onChange={(e) =>
-                                handleFieldChange(user.id, 'officeId', e.target.value)
-                              }
-                              options={offices.map((office) => ({
-                                value: office.officeId,
-                                name: office.officeName,
-                              }))}
-                              outerClasses="min-w-[120px]"
-                            />
+                            <div className="text-sm text-gray-900">
+                              {offices.find(o => o.officeId === user.officeId)?.officeName || 'Not assigned'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Select
-                              value={user.department}
-                              onChange={(e) =>
-                                handleFieldChange(user.id, 'department', e.target.value)
-                              }
-                              options={getDepartmentsForUser(user.officeId).map((department) => ({
-                                value: department.departmentId,
-                                name: department.departmentName,
-                              }))}
-                              outerClasses="min-w-[120px]"
-                              className="!w-fit"
-                              disabled={!user.officeId}
-                            />
+                            <div className="text-sm text-gray-900">
+                              {allDepartments.find(d => d.departmentId === user.department)?.departmentName || 'Not assigned'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <Select
-                              value={user.role}
-                              placeholder="--Assign Role--"
-                              defaultValue="--Assign Role--"
-                              onChange={(e) => handleFieldChange(user.id, 'role', e.target.value)}
-                              options={getRolesForUser(user.department, user.officeId).map((role) => ({
-                                value: role.roleId,
-                                name: role.roleName,
-                              }))}
-                              outerClasses="min-w-[120px]"
-                              className="!w-fit"
-                              disabled={!user.department}
-                            />
+                            <div className="text-sm text-gray-900">
+                              {allRoles.find(r => r.roleId === user.role)?.roleName || 'Not assigned'}
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <Select
                               value={user.status}
-                              onChange={(e) => handleFieldChange(user.id, 'status', e.target.value)}
+                              onChange={(e) => handleStatusChange(user.id, e.target.value)}
                               options={STATUSES.map((status) => ({
                                 value: status.value,
                                 name: status.label,
@@ -497,9 +456,9 @@ function UsersPage() {
                               ? new Date(user.created_at.seconds * 1000).toLocaleDateString()
                               : 'Unknown'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium min-w-[300px]">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium min-w-[350px]">
                             <div className="flex flex-wrap gap-2">
-                              {user.status === 'pending' && (
+                              {user.status === 'pending' ? (
                                 <Button
                                   variant="primary"
                                   size="small"
@@ -507,6 +466,15 @@ function UsersPage() {
                                   className="!w-fit !px-3 !text-xs"
                                 >
                                   Approve
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="secondary"
+                                  size="small"
+                                  onClick={() => handleEditUser(user)}
+                                  className="!w-fit !px-3 !text-xs !bg-blue-100 !text-blue-700 hover:!bg-blue-200"
+                                >
+                                  Edit Details
                                 </Button>
                               )}
 
@@ -559,15 +527,17 @@ function UsersPage() {
         {/* Users Table */}
       </div>
       
-      {/* Approve User Modal */}
-      {showApproveModal && userToApprove && (
-        <ApproveUserModal
-          user={userToApprove}
+      {/* User Management Modal */}
+      {showManagementModal && userToManage && (
+        <UserManagementModal
+          isOpen={showManagementModal}
+          user={userToManage}
           offices={offices}
           departments={allDepartments}
           roles={allRoles}
-          onConfirm={handleConfirmApprove}
-          onCancel={handleCancelApprove}
+          onConfirm={handleConfirmManagement}
+          onCancel={handleCancelManagement}
+          isApprovalMode={isApprovalMode}
         />
       )}
     </Container>
