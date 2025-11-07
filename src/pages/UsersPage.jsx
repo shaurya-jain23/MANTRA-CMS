@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import userService from '../firebase/user';
 import authService from '../firebase/auth';
 import officeService from '../firebase/office';
@@ -37,40 +37,43 @@ function UsersPage() {
     fetchData();
   }, []);
 
-  // Cascade filter: When office changes, filter departments
-  useEffect(() => {
+  // Memoize filtered departments based on office filter - prevents recalculation on every render
+  const filteredDepartmentsList = useMemo(() => {
     if (officeFilter === 'all') {
-      setFilteredDepartments(allDepartments);
-      setDepartmentFilter('all');
-      setRoleFilter('all');
-    } else {
-      const depts = allDepartments.filter(dept => dept.officeId === officeFilter);
-      setFilteredDepartments(depts);
-      setDepartmentFilter('all');
-      setRoleFilter('all');
+      return allDepartments;
     }
+    return allDepartments.filter(dept => dept.officeId === officeFilter);
   }, [officeFilter, allDepartments]);
 
-  // Cascade filter: When department changes, filter roles
-  useEffect(() => {
+  // Memoize filtered roles based on department filter - prevents recalculation on every render
+  const filteredRolesList = useMemo(() => {
     if (departmentFilter === 'all') {
-      setFilteredRoles(allRoles);
-      setRoleFilter('all');
-    } else {
-      const rolesForDept = allRoles.filter(role => {
-        if (role.isGlobal) return true; // Global roles available everywhere
-        return role.departmentId === departmentFilter;
-      });
-      setFilteredRoles(rolesForDept);
-      setRoleFilter('all');
+      return allRoles;
     }
+    return allRoles.filter(role => {
+      if (role.isGlobal) return true;
+      return role.departmentId === departmentFilter;
+    });
   }, [departmentFilter, allRoles]);
 
+  // Update state when memoized lists change
   useEffect(() => {
-    filterAndSortUsers();
-  }, [users, searchTerm, roleFilter, officeFilter, departmentFilter, statusFilter, sortBy]);
+    setFilteredDepartments(filteredDepartmentsList);
+    if (officeFilter !== 'all') {
+      setDepartmentFilter('all');
+      setRoleFilter('all');
+    }
+  }, [filteredDepartmentsList, officeFilter]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    setFilteredRoles(filteredRolesList);
+    if (departmentFilter !== 'all') {
+      setRoleFilter('all');
+    }
+  }, [filteredRolesList, departmentFilter]);
+
+  // Memoize fetchData to prevent recreation on every render
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [userList, officeList, departmentList, roleList] = await Promise.all([
@@ -82,16 +85,20 @@ function UsersPage() {
       setUsers(userList);
       setOffices(officeList);
       setAllDepartments(departmentList);
-      setFilteredDepartments(departmentList); // Initially show all departments
+      setFilteredDepartments(departmentList);
       setAllRoles(roleList);
-      setFilteredRoles(roleList); // Initially show all roles
+      setFilteredRoles(roleList);
     } catch (err) {
       setError('Failed to fetch users.');
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    filterAndSortUsers();
+  }, [users, searchTerm, roleFilter, officeFilter, departmentFilter, statusFilter, sortBy]);
 
   const filterAndSortUsers = () => {
     let filtered = users.filter((user) => {
@@ -131,22 +138,20 @@ function UsersPage() {
     setFilteredUsers(filtered);
   };
 
-  // Open modal for editing user details
-  const handleEditUser = (user) => {
+  // Wrap handlers in useCallback to prevent recreation on every render
+  const handleEditUser = useCallback((user) => {
     setUserToManage(user);
     setIsApprovalMode(false);
     setShowManagementModal(true);
-  };
+  }, []);
 
-  // Open modal for approving pending user
-  const handleApproveUser = (user) => {
+  const handleApproveUser = useCallback((user) => {
     setUserToManage(user);
     setIsApprovalMode(true);
     setShowManagementModal(true);
-  };
+  }, []);
 
-  // Handle confirmation from modal (both approve and edit)
-  const handleConfirmManagement = async (roleId, officeId, departmentId) => {
+  const handleConfirmManagement = useCallback(async (roleId, officeId, departmentId) => {
     if (!userToManage || !roleId || !officeId || !departmentId) return;
     
     try {
@@ -156,33 +161,30 @@ function UsersPage() {
         role: roleId
       };
 
-      // If approving a pending user, also set status to active
       if (isApprovalMode) {
         updates.status = 'active';
       }
 
       await userService.updateUser(userToManage.id, updates);
       
-      // Close modal and refresh data
       setShowManagementModal(false);
       setUserToManage(null);
       setIsApprovalMode(false);
       await fetchData();
       
-      // Success message handled by userService
     } catch (err) {
       setError(`Failed to ${isApprovalMode ? 'approve' : 'update'} user.`);
       console.error(err);
     }
-  };
+  }, [userToManage, isApprovalMode, fetchData]);
 
-  const handleCancelManagement = () => {
+  const handleCancelManagement = useCallback(() => {
     setShowManagementModal(false);
     setUserToManage(null);
     setIsApprovalMode(false);
-  };
+  }, []);
 
-  const handleDeleteUser = async (user) => {
+  const handleDeleteUser = useCallback(async (user) => {
     showModal({
       title: 'Delete User',
       message: `Are you sure you want to delete user ${user.displayName} (${user.email})? This action cannot be undone.`,
@@ -198,9 +200,9 @@ function UsersPage() {
         }
       },
     });
-  };
+  }, [showModal, fetchData]);
 
-  const handleDisableUser = async (user) => {
+  const handleDisableUser = useCallback(async (user) => {
     const action = user.status === 'disabled' ? 'enable' : 'disable';
 
     showModal({
@@ -224,9 +226,9 @@ function UsersPage() {
         }
       },
     });
-  };
+  }, [showModal, fetchData]);
 
-  const handleStatusChange = async (userId, newStatus) => {
+  const handleStatusChange = useCallback(async (userId, newStatus) => {
     try {
       await userService.updateUser(userId, { status: newStatus });
       await fetchData();
@@ -234,21 +236,20 @@ function UsersPage() {
       setError('Failed to update user status.');
       console.error(err);
     }
-  };
+  }, [fetchData]);
 
-  const handleResetPassword = async (user) => {
+  const handleResetPassword = useCallback(async (user) => {
     showModal({
       title: 'Reset Password',
       message: `Send password reset email to ${user.email}?`,
       confirmText: 'Send Reset Email',
       confirmColor: 'bg-blue-600',
       onConfirm: async () => {
-        // This would integrate with out password reset service
-        // For now, we'll just show a success message
+        // This would integrate with password reset service
         console.log('Password reset email would be sent to:', user.email);
       },
     });
-  };
+  }, [showModal]);
 
   // const getStatusColor = (status) => {
   //   const statusObj = STATUSES.find(s => s.value === status);
