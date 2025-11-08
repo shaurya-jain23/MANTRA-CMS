@@ -1,20 +1,30 @@
 import { db } from '../config/firebase.js';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+} from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 
-class DepartmentService { 
+class DepartmentService {
   // Get all departments
   async getAllDepartments() {
     try {
       const departmentsCollectionRef = collection(db, 'departments');
       const departmentSnapshot = await getDocs(departmentsCollectionRef);
-      const departmentList = departmentSnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
+      const departmentList = departmentSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
       }));
       return departmentList;
     } catch (error) {
-      console.error("Error fetching departments:", error);
+      console.error('Error fetching departments:', error);
       toast.error('Error occurred while fetching departments');
       throw error;
     }
@@ -24,15 +34,15 @@ class DepartmentService {
   async getDepartmentsByOffice(officeId) {
     try {
       const departmentsCollectionRef = collection(db, 'departments');
-      const q = query(departmentsCollectionRef, where("office_id", "==", officeId));
+      const q = query(departmentsCollectionRef, where('officeId', '==', officeId));
       const departmentSnapshot = await getDocs(q);
-      const departmentList = departmentSnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
+      const departmentList = departmentSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
       }));
       return departmentList;
     } catch (error) {
-      console.error("Error fetching departments by office:", error);
+      console.error('Error fetching departments by office:', error);
       throw error;
     }
   }
@@ -47,7 +57,7 @@ class DepartmentService {
       }
       return null;
     } catch (error) {
-      console.error("Error fetching department:", error);
+      console.error('Error fetching department:', error);
       throw error;
     }
   }
@@ -59,13 +69,13 @@ class DepartmentService {
       const newDepartment = {
         ...departmentData,
         createdAt: new Date(),
-        status: 'active'
+        status: 'active',
       };
       await setDoc(departmentsDocRef, newDepartment);
       toast.success('Department created successfully');
       return { id: departmentsDocRef.id, ...newDepartment };
     } catch (error) {
-      console.error("Error creating department:", error);
+      console.error('Error creating department:', error);
       toast.error('Error occurred while creating department');
       throw error;
     }
@@ -77,11 +87,11 @@ class DepartmentService {
       const departmentDocRef = doc(db, 'departments', departmentId);
       await updateDoc(departmentDocRef, {
         ...updateData,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       toast.success('Department updated successfully');
     } catch (error) {
-      console.error("Error updating department:", error);
+      console.error('Error updating department:', error);
       toast.error('Error occurred while updating department');
       throw error;
     }
@@ -94,7 +104,7 @@ class DepartmentService {
       await deleteDoc(departmentDocRef);
       toast.success('Department deleted successfully');
     } catch (error) {
-      console.error("Error deleting department:", error);
+      console.error('Error deleting department:', error);
       toast.error('Error occurred while deleting department');
       throw error;
     }
