@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback, useReducer } from 'react';
 import userService from '../firebase/user';
 import authService from '../firebase/auth';
 import officeService from '../firebase/office';
@@ -9,115 +9,222 @@ import { Button, SearchBar, Select, Container, Loading, UserManagementModal } fr
 import { ROLES, STATUSES } from '../assets/utils';
 import { AlertCircle, CheckCircle, FileText, XCircle } from 'lucide-react';
 
-// Define the available roles and statuses with hierarchical permissions
+// Reducer action types
+const ACTIONS = {
+  SET_LOADING: 'SET_LOADING',
+  SET_ERROR: 'SET_ERROR',
+  SET_DATA: 'SET_DATA',
+  SET_FILTERED_USERS: 'SET_FILTERED_USERS',
+  SET_SEARCH_TERM: 'SET_SEARCH_TERM',
+  SET_FILTERS: 'SET_FILTERS',
+  SET_OFFICE_FILTER: 'SET_OFFICE_FILTER',
+  SET_DEPARTMENT_FILTER: 'SET_DEPARTMENT_FILTER',
+  SET_ROLE_FILTER: 'SET_ROLE_FILTER',
+  SET_STATUS_FILTER: 'SET_STATUS_FILTER',
+  SET_SORT_BY: 'SET_SORT_BY',
+  SET_FILTERED_DEPARTMENTS: 'SET_FILTERED_DEPARTMENTS',
+  SET_FILTERED_ROLES: 'SET_FILTERED_ROLES',
+  OPEN_MODAL: 'OPEN_MODAL',
+  CLOSE_MODAL: 'CLOSE_MODAL',
+};
+
+// Initial state
+const initialState = {
+  loading: true,
+  error: '',
+  users: [],
+  offices: [],
+  allDepartments: [],
+  allRoles: [],
+  filteredDepartments: [],
+  filteredRoles: [],
+  filteredUsers: [],
+  searchTerm: '',
+  roleFilter: 'all',
+  officeFilter: 'all',
+  departmentFilter: 'all',
+  statusFilter: 'all',
+  sortBy: 'name',
+  showManagementModal: false,
+  userToManage: null,
+  isApprovalMode: false,
+};
+
+// Reducer function
+function usersReducer(state, action) {
+  switch (action.type) {
+    case ACTIONS.SET_LOADING:
+      return { ...state, loading: action.payload };
+    
+    case ACTIONS.SET_ERROR:
+      return { ...state, error: action.payload };
+    
+    case ACTIONS.SET_DATA:
+      return {
+        ...state,
+        users: action.payload.users,
+        offices: action.payload.offices,
+        allDepartments: action.payload.departments,
+        allRoles: action.payload.roles,
+        filteredDepartments: action.payload.departments,
+        filteredRoles: action.payload.roles,
+        loading: false,
+      };
+    
+    case ACTIONS.SET_FILTERED_USERS:
+      return { ...state, filteredUsers: action.payload };
+    
+    case ACTIONS.SET_SEARCH_TERM:
+      return { ...state, searchTerm: action.payload };
+    
+    case ACTIONS.SET_OFFICE_FILTER:
+      return {
+        ...state,
+        officeFilter: action.payload,
+        departmentFilter: action.payload !== 'all' ? 'all' : state.departmentFilter,
+        roleFilter: action.payload !== 'all' ? 'all' : state.roleFilter,
+      };
+    
+    case ACTIONS.SET_DEPARTMENT_FILTER:
+      return {
+        ...state,
+        departmentFilter: action.payload,
+        roleFilter: action.payload !== 'all' ? 'all' : state.roleFilter,
+      };
+    
+    case ACTIONS.SET_ROLE_FILTER:
+      return { ...state, roleFilter: action.payload };
+    
+    case ACTIONS.SET_STATUS_FILTER:
+      return { ...state, statusFilter: action.payload };
+    
+    case ACTIONS.SET_SORT_BY:
+      return { ...state, sortBy: action.payload };
+    
+    case ACTIONS.SET_FILTERED_DEPARTMENTS:
+      return { ...state, filteredDepartments: action.payload };
+    
+    case ACTIONS.SET_FILTERED_ROLES:
+      return { ...state, filteredRoles: action.payload };
+    
+    case ACTIONS.OPEN_MODAL:
+      return {
+        ...state,
+        showManagementModal: true,
+        userToManage: action.payload.user,
+        isApprovalMode: action.payload.isApprovalMode,
+      };
+    
+    case ACTIONS.CLOSE_MODAL:
+      return {
+        ...state,
+        showManagementModal: false,
+        userToManage: null,
+        isApprovalMode: false,
+      };
+    
+    default:
+      return state;
+  }
+}
 
 function UsersPage() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [users, setUsers] = useState([]);
-  const [offices, setOffices] = useState([]);
-  const [allDepartments, setAllDepartments] = useState([]); // All departments
-  const [allRoles, setAllRoles] = useState([]); // All roles
-  const [filteredDepartments, setFilteredDepartments] = useState([]); // Departments filtered by office
-  const [filteredRoles, setFilteredRoles] = useState([]); // Roles filtered by department
-  const [filteredUsers, setFilteredUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [officeFilter, setOfficeFilter] = useState('all');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
-  const [showManagementModal, setShowManagementModal] = useState(false);
-  const [userToManage, setUserToManage] = useState(null);
-  const [isApprovalMode, setIsApprovalMode] = useState(false);
-
+  const [state, dispatch] = useReducer(usersReducer, initialState);
   const { showModal } = useModal();
+  // Memoize filtered departments based on office filter
+  const filteredDepartmentsList = useMemo(() => {
+    if (state.officeFilter === 'all') {
+      return state.allDepartments;
+    }
+    return state.allDepartments.filter(dept => dept.officeId === state.officeFilter);
+  }, [state.officeFilter, state.allDepartments]);
 
+  // Memoize filtered roles based on department filter
+  const filteredRolesList = useMemo(() => {
+    if (state.departmentFilter === 'all') {
+      return state.allRoles;
+    }
+    return state.allRoles.filter(role => {
+      if (role.isGlobal) return true;
+      return role.departmentId === state.departmentFilter;
+    });
+  }, [state.departmentFilter, state.allRoles]);
+
+  // Update filtered departments and roles when memoized lists change
+  useEffect(() => {
+    dispatch({ type: ACTIONS.SET_FILTERED_DEPARTMENTS, payload: filteredDepartmentsList });
+  }, [filteredDepartmentsList]);
+
+  useEffect(() => {
+    dispatch({ type: ACTIONS.SET_FILTERED_ROLES, payload: filteredRolesList });
+  }, [filteredRolesList]);
+
+  // Fetch data on mount
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Memoize filtered departments based on office filter - prevents recalculation on every render
-  const filteredDepartmentsList = useMemo(() => {
-    if (officeFilter === 'all') {
-      return allDepartments;
-    }
-    return allDepartments.filter(dept => dept.officeId === officeFilter);
-  }, [officeFilter, allDepartments]);
-
-  // Memoize filtered roles based on department filter - prevents recalculation on every render
-  const filteredRolesList = useMemo(() => {
-    if (departmentFilter === 'all') {
-      return allRoles;
-    }
-    return allRoles.filter(role => {
-      if (role.isGlobal) return true;
-      return role.departmentId === departmentFilter;
-    });
-  }, [departmentFilter, allRoles]);
-
-  // Update state when memoized lists change
+  // Fetch data on mount
   useEffect(() => {
-    setFilteredDepartments(filteredDepartmentsList);
-    if (officeFilter !== 'all') {
-      setDepartmentFilter('all');
-      setRoleFilter('all');
-    }
-  }, [filteredDepartmentsList, officeFilter]);
+    fetchData();
+  }, []);
 
+  // Filter and sort users when dependencies change
   useEffect(() => {
-    setFilteredRoles(filteredRolesList);
-    if (departmentFilter !== 'all') {
-      setRoleFilter('all');
-    }
-  }, [filteredRolesList, departmentFilter]);
+    filterAndSortUsers();
+  }, [
+    state.users,
+    state.searchTerm,
+    state.roleFilter,
+    state.officeFilter,
+    state.departmentFilter,
+    state.statusFilter,
+    state.sortBy,
+  ]);
 
-  // Memoize fetchData to prevent recreation on every render
+  // Memoize fetchData
   const fetchData = useCallback(async () => {
     try {
-      setLoading(true);
+      dispatch({ type: ACTIONS.SET_LOADING, payload: true });
       const [userList, officeList, departmentList, roleList] = await Promise.all([
         userService.getAllUsers(),
         officeService.getAllOffices(),
         departmentService.getAllDepartments(),
         roleService.getAllRoles(),
       ]);
-      setUsers(userList);
-      setOffices(officeList);
-      setAllDepartments(departmentList);
-      setFilteredDepartments(departmentList);
-      setAllRoles(roleList);
-      setFilteredRoles(roleList);
+      dispatch({
+        type: ACTIONS.SET_DATA,
+        payload: {
+          users: userList,
+          offices: officeList,
+          departments: departmentList,
+          roles: roleList,
+        },
+      });
     } catch (err) {
-      setError('Failed to fetch users.');
+      dispatch({ type: ACTIONS.SET_ERROR, payload: 'Failed to fetch users.' });
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    filterAndSortUsers();
-  }, [users, searchTerm, roleFilter, officeFilter, departmentFilter, statusFilter, sortBy]);
-
-  const filterAndSortUsers = () => {
-    let filtered = users.filter((user) => {
+  const filterAndSortUsers = useCallback(() => {
+    let filtered = state.users.filter((user) => {
       const matchesSearch =
-        user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.username?.toLowerCase().includes(searchTerm.toLowerCase());
+        user.displayName?.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
+        user.username?.toLowerCase().includes(state.searchTerm.toLowerCase());
 
-      const matchesOffice = officeFilter === 'all' || user.officeId === officeFilter;
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesDepartment = departmentFilter === 'all' || user.department === departmentFilter;
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      const matchesOffice = state.officeFilter === 'all' || user.officeId === state.officeFilter;
+      const matchesRole = state.roleFilter === 'all' || user.role === state.roleFilter;
+      const matchesDepartment = state.departmentFilter === 'all' || user.department === state.departmentFilter;
+      const matchesStatus = state.statusFilter === 'all' || user.status === state.statusFilter;
 
       return matchesSearch && matchesRole && matchesOffice && matchesDepartment && matchesStatus;
     });
 
     // Sort users
     filtered.sort((a, b) => {
-      switch (sortBy) {
+      switch (state.sortBy) {
         case 'name':
           return (a.displayName || '').localeCompare(b.displayName || '');
         case 'email':
@@ -135,24 +242,34 @@ function UsersPage() {
       }
     });
 
-    setFilteredUsers(filtered);
-  };
+    dispatch({ type: ACTIONS.SET_FILTERED_USERS, payload: filtered });
+  }, [
+    state.users,
+    state.searchTerm,
+    state.roleFilter,
+    state.officeFilter,
+    state.departmentFilter,
+    state.statusFilter,
+    state.sortBy,
+  ]);
 
-  // Wrap handlers in useCallback to prevent recreation on every render
+  // Wrap handlers in useCallback
   const handleEditUser = useCallback((user) => {
-    setUserToManage(user);
-    setIsApprovalMode(false);
-    setShowManagementModal(true);
+    dispatch({ 
+      type: ACTIONS.OPEN_MODAL, 
+      payload: { user, isApprovalMode: false } 
+    });
   }, []);
 
   const handleApproveUser = useCallback((user) => {
-    setUserToManage(user);
-    setIsApprovalMode(true);
-    setShowManagementModal(true);
+    dispatch({ 
+      type: ACTIONS.OPEN_MODAL, 
+      payload: { user, isApprovalMode: true } 
+    });
   }, []);
 
   const handleConfirmManagement = useCallback(async (roleId, officeId, departmentId) => {
-    if (!userToManage || !roleId || !officeId || !departmentId) return;
+    if (!state.userToManage || !roleId || !officeId || !departmentId) return;
     
     try {
       const updates = { 
@@ -161,27 +278,26 @@ function UsersPage() {
         role: roleId
       };
 
-      if (isApprovalMode) {
+      if (state.isApprovalMode) {
         updates.status = 'active';
       }
 
-      await userService.updateUser(userToManage.id, updates);
+      await userService.updateUser(state.userToManage.id, updates);
       
-      setShowManagementModal(false);
-      setUserToManage(null);
-      setIsApprovalMode(false);
+      dispatch({ type: ACTIONS.CLOSE_MODAL });
       await fetchData();
       
     } catch (err) {
-      setError(`Failed to ${isApprovalMode ? 'approve' : 'update'} user.`);
+      dispatch({ 
+        type: ACTIONS.SET_ERROR, 
+        payload: `Failed to ${state.isApprovalMode ? 'approve' : 'update'} user.` 
+      });
       console.error(err);
     }
-  }, [userToManage, isApprovalMode, fetchData]);
+  }, [state.userToManage, state.isApprovalMode, fetchData]);
 
   const handleCancelManagement = useCallback(() => {
-    setShowManagementModal(false);
-    setUserToManage(null);
-    setIsApprovalMode(false);
+    dispatch({ type: ACTIONS.CLOSE_MODAL });
   }, []);
 
   const handleDeleteUser = useCallback(async (user) => {
@@ -195,7 +311,7 @@ function UsersPage() {
           await authService.deleteUserAccount(user.id);
           await fetchData();
         } catch (err) {
-          setError('Failed to delete user.');
+          dispatch({ type: ACTIONS.SET_ERROR, payload: 'Failed to delete user.' });
           console.error(err);
         }
       },
@@ -221,7 +337,7 @@ function UsersPage() {
           await userService.updateUser(user.id, { status: newStatus });
           await fetchData();
         } catch (err) {
-          setError(`Failed to ${action} user.`);
+          dispatch({ type: ACTIONS.SET_ERROR, payload: `Failed to ${action} user.` });
           console.error(err);
         }
       },
@@ -233,7 +349,7 @@ function UsersPage() {
       await userService.updateUser(userId, { status: newStatus });
       await fetchData();
     } catch (err) {
-      setError('Failed to update user status.');
+      dispatch({ type: ACTIONS.SET_ERROR, payload: 'Failed to update user status.' });
       console.error(err);
     }
   }, [fetchData]);
@@ -245,23 +361,12 @@ function UsersPage() {
       confirmText: 'Send Reset Email',
       confirmColor: 'bg-blue-600',
       onConfirm: async () => {
-        // This would integrate with password reset service
         console.log('Password reset email would be sent to:', user.email);
       },
     });
   }, [showModal]);
 
-  // const getStatusColor = (status) => {
-  //   const statusObj = STATUSES.find(s => s.value === status);
-  //   return statusObj?.color || 'gray';
-  // };
-
-  // const getRoleLabel = (role) => {
-  //   const roleObj = ROLES.find(r => r.value === role);
-  //   return roleObj?.label || role;
-  // };
-
-  if (loading) return <Loading isOpen={true} message="Loading User Data..." />;
+  if (state.loading) return <Loading isOpen={true} message="Loading User Data..." />;
 
   return (
     <Container>
@@ -275,9 +380,9 @@ function UsersPage() {
         <div className="bg-white py-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <SearchBar
-              query={searchTerm}
-              setQuery={setSearchTerm}
-              resultCount={filteredUsers.length}
+              query={state.searchTerm}
+              setQuery={(value) => dispatch({ type: ACTIONS.SET_SEARCH_TERM, payload: value })}
+              resultCount={state.filteredUsers.length}
               placeholder="Search by name, email, or username..."
               className="flex-grow"
               outerClasses='md:w-3/4 lg:w-1/2'
@@ -285,49 +390,49 @@ function UsersPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full md:w-auto">
               <Select
                 label="Filter by Office"
-                value={officeFilter}
-                onChange={(e) => setOfficeFilter(e.target.value)}
+                value={state.officeFilter}
+                onChange={(e) => dispatch({ type: ACTIONS.SET_OFFICE_FILTER, payload: e.target.value })}
                 options={[
                   { value: 'all', name: 'All Offices' },
-                  ...offices.map((office) => ({ value: office.officeId, name: office.officeName })),
+                  ...state.offices.map((office) => ({ value: office.officeId, name: office.officeName })),
                 ]}
                 outerClasses="min-w-[150px]"
               />
               
               <Select
                 label="Filter by Department"
-                value={departmentFilter}
-                onChange={(e) => setDepartmentFilter(e.target.value)}
+                value={state.departmentFilter}
+                onChange={(e) => dispatch({ type: ACTIONS.SET_DEPARTMENT_FILTER, payload: e.target.value })}
                 options={[
                   { value: 'all', name: 'All Departments' },
-                  ...filteredDepartments.map((dept) => ({ 
+                  ...state.filteredDepartments.map((dept) => ({ 
                     value: dept.departmentId, 
                     name: dept.departmentName 
                   })),
                 ]}
                 outerClasses="min-w-[150px]"
-                disabled={officeFilter === 'all'}
+                disabled={state.officeFilter === 'all'}
               />
               
               <Select
                 label="Filter by Role"
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
+                value={state.roleFilter}
+                onChange={(e) => dispatch({ type: ACTIONS.SET_ROLE_FILTER, payload: e.target.value })}
                 options={[
                   { value: 'all', name: 'All Roles' },
-                  ...filteredRoles.map((role) => ({ 
+                  ...state.filteredRoles.map((role) => ({ 
                     value: role.roleId, 
                     name: role.roleName 
                   })),
                 ]}
                 outerClasses="min-w-[150px]"
-                disabled={departmentFilter === 'all'}
+                disabled={state.departmentFilter === 'all'}
               />
 
               <Select
                 label="Filter by Status"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={state.statusFilter}
+                onChange={(e) => dispatch({ type: ACTIONS.SET_STATUS_FILTER, payload: e.target.value })}
                 options={[
                   { value: 'all', name: 'All Statuses' },
                   ...STATUSES.map((status) => ({ value: status.value, name: status.label })),
@@ -337,8 +442,8 @@ function UsersPage() {
 
               <Select
                 label="Sort By"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                value={state.sortBy}
+                onChange={(e) => dispatch({ type: ACTIONS.SET_SORT_BY, payload: e.target.value })}
                 options={[
                   { value: 'name', name: 'Name' },
                   { value: 'email', name: 'Email' },
@@ -351,17 +456,17 @@ function UsersPage() {
             </div>
           </div>
         </div>
-        {error && (
+        {state.error && (
           <div className="flex flex-col items-center py-12 text-center">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
             <h3 className="text-lg font-medium text-slate-900 mb-2">Error Occured</h3>
-            <p className="text-red-500  mb-6 max-w-md">Error: {error}</p>
+            <p className="text-red-500  mb-6 max-w-md">Error: {state.error}</p>
           </div>
         )}
-        {!error &&
-          (filteredUsers.length === 0 ? (
+        {!state.error &&
+          (state.filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center py-12 text-center">
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-slate-400" />
@@ -406,7 +511,7 @@ function UsersPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredUsers.map((user) => (
+                      {state.filteredUsers.map((user) => (
                         <tr key={user.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -427,17 +532,17 @@ function UsersPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
-                              {offices.find(o => o.officeId === user.officeId)?.officeName || 'Not assigned'}
+                              {state.offices.find(o => o.officeId === user.officeId)?.officeName || 'Not assigned'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
-                              {allDepartments.find(d => d.departmentId === user.department)?.departmentName || 'Not assigned'}
+                              {state.allDepartments.find(d => d.departmentId === user.department)?.departmentName || 'Not assigned'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">
-                              {allRoles.find(r => r.roleId === user.role)?.roleName || 'Not assigned'}
+                              {state.allRoles.find(r => r.roleId === user.role)?.roleName || 'Not assigned'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -516,7 +621,7 @@ function UsersPage() {
                   </table>
                 </div>
 
-                {filteredUsers.length === 0 && (
+                {state.filteredUsers.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     No users found matching your criteria.
                   </div>
@@ -528,16 +633,16 @@ function UsersPage() {
       </div>
       
       {/* User Management Modal */}
-      {showManagementModal && userToManage && (
+      {state.showManagementModal && state.userToManage && (
         <UserManagementModal
-          isOpen={showManagementModal}
-          user={userToManage}
-          offices={offices}
-          departments={allDepartments}
-          roles={allRoles}
+          isOpen={state.showManagementModal}
+          user={state.userToManage}
+          offices={state.offices}
+          departments={state.allDepartments}
+          roles={state.allRoles}
           onConfirm={handleConfirmManagement}
           onCancel={handleCancelManagement}
-          isApprovalMode={isApprovalMode}
+          isApprovalMode={state.isApprovalMode}
         />
       )}
     </Container>
