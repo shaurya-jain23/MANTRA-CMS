@@ -27,6 +27,7 @@ export const manageUserCustomClaims = functions.firestore
                                             const roleData = roleDoc.data();
                                             const customClaims = {
                                                 role: after.role,
+                                                roleName: roleData.roleName,
                                                 roleLevel: roleData.level || 1,
                                                 officeId: after.officeId,
                                                 departmentId: after.departmentId,
@@ -77,6 +78,7 @@ export const manageUserCustomClaims = functions.firestore
 
                                             const customClaims = {
                                                 role: after.role || null,
+                                                roleName: roleData.roleName || null,
                                                 roleLevel: roleData.level || 1,
                                                 officeId: after.officeId || null,
                                                 departmentId: after.departmentId || null,
